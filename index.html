@@ -503,7 +503,7 @@ const DEF={wine:'red',bottle:'bordeaux',glass:'antique',capsule:'black',closure:
 /* ═════════ 2. Diagnosis questions (20 × 6) ═════════ */
 const P6=(sub,l,t,th)=>`P:${sub},${l},${t},${th}`;
 /* ═════════ 3. Store ═════════ */
-const APPVER=35,APPDATE='17.11.2026';
+const APPVER=36,APPDATE='17.11.2026';
 const KD='wl-draft-v2',KI='wl-items-v2';
 const clone=o=>JSON.parse(JSON.stringify(o));
 const S={view:'home',step:1,p:clone(DEF),started:false,shot:false,b:{q:0,best:{},worst:{},flag:[]},props:[],sel:0,items:[],caps:{},from:''};
@@ -572,7 +572,7 @@ function recDims(p){
 }
 function recType(p){return Math.round(p.h*({top:.27,full:.24,window:.26,medallion:.28,side:.27,minimal:.32}[p.division]));}
 function setParam(k,v){
-  const p=S.p;p[k]=v;if(k==='painting'){p.pz=1;p.px=0;p.py=0;p.paintAR=0;if(v)setAR(p);}S.shot=false;S.photo='';if(k[0]==='s')applyStory(p);
+  const p=S.p;p[k]=v;if(k==='painting'){p.bank='';p.pz=1;p.px=0;p.py=0;p.paintAR=0;if(v)setAR(p);}S.shot=false;S.photo='';if(k[0]==='s')applyStory(p);
   if(k==='bottle'||k==='cut'){[p.w,p.h]=recDims(p);p.typeH=recType(p);}
   if(k==='division')p.typeH=recType(p);
   const ch=normalize(p);S.note=ch.length?'עודכנו בהתאם: '+ch.join(', ')+'.':'';
@@ -868,6 +868,7 @@ function stepGroups(n,p){
       <button class="opt" id="own-upload" data-action="own" data-v="upload" aria-pressed="${p.own==='upload'}"><svg class="ico" viewBox="0 0 44 44" aria-hidden="true"><rect x="7" y="9" width="30" height="26" ${L}/><path d="M22 29V16M16.5 21l5.5-5.5 5.5 5.5" ${L}/></svg><span>להעלות ציור קיים</span></button></div>
       ${p.own==='story'?`<div class="fld" style="margin-top:12px"><div class="lblrow"><label for="vision">איך אתם מדמיינים את הציור</label><button class="link" data-action="clearvision">לנקות</button></div><textarea id="vision" data-k="vision" rows="6" placeholder="אפשר לכתוב בחופשיות: מה רואים, איפה, באיזה אור, ומה חשוב שיהיה שם.">${esc(p.vision)}</textarea></div>`:''}
       ${p.own==='upload'?`<div class="row" style="margin-top:12px"><span class="btn filebtn">${p.painting?'להחליף קובץ':'לבחור קובץ'}<input type="file" id="up" accept="image/*" multiple aria-label="לבחור קובץ אחד או כמה ציורים"></span><span class="btn alt filebtn">לצלם עכשיו<input type="file" id="cam" accept="image/*" capture="environment" aria-label="לצלם את הציור"></span>${p.painting?`<button class="btn alt" data-action="rmpaint">להוציא מהתווית</button>`:''}</div><p class="lead" style="margin:8px 0 0;font-size:13.5px">${p.painting?'הציור שהעליתם משובץ בתווית.':'קובץ אחד ישובץ בתווית כמו שהוא. אפשר גם לבחור כמה יחד, עד 20, והם יישמרו בציורים שלכם.'}</p>`:''}`},
+    ...(S.bank.length?[{html:bankHtml()}]:[]),
     ...(S.uploads.length?[{html:`<h3>הציורים שלכם</h3><p class="lead" style="margin:4px 0 0;font-size:13.5px">הציורים משותפים לכל התוויות. לחיצה על ציור בוחרת אותו, ו־✕ מוחק אותו מהמערכת.</p>${uploadsHtml()}<div style="margin-top:10px">${UPALL()}</div>`}]:[]),
     ...(p.painting?[{html:PLACE(p)}]:[])];}
   if(n===7)return[
@@ -886,7 +887,7 @@ function brief(p){
     ['התווית הכוללת',[['צורה',nm('cut',p.cut)],['מידות',`${p.w} × ${p.h} מ״מ (רוחב × גובה)`],['יחס התווית',`1 : ${(p.h/p.w).toFixed(2)}`],['פינות',g.R?'R=1.5 מ״מ, מכונת הדבקה אוטומטית':'חיתוך חד, הדבקה ידנית'],['מסגרת נייר',`${p.margin} מ״מ`],['עטיפה על הבקבוק',`${Math.round(g.deg)}°, רוחב נראה מהחזית ${r1(g.apparent)} מ״מ`]]],
     ['חלוקת השטח',[['פריסה',nm('division',p.division)],['שטח ציור נטו',`${r1(a.w)} × ${r1(a.h)} מ״מ${a.round?', עיגול':''}`],['רצועת אותיות',p.division==='side'?'לצד הציור':`${p.typeH} מ״מ`],['שורת הפרטים שבחוק',`${p.regH} מ״מ בתחתית`]]],
     ['קנבס לסטודיו',[['יחס הציור נטו',a.round?'1 : 1 (עיגול)':`1 : ${(a.h/a.w).toFixed(3)}`],['קנבס מומלץ',`${f(g.cbw)} × ${f(g.cbh)} ס״מ, כולל גלישה`],['שטח הדימוי בקנבס',`${f(g.cw)} × ${f(g.ch)} ס״מ`],['שולי גלישה בקנבס',`${r1(g.bl*g.k)} מ״מ מכל צד (2 מ״מ בהדפסה)`],['קנה מידה',`פי ${g.k.toFixed(2)} מגודל ההדפסה`],['קובץ סופי ב־600 DPI',`${g.px[0]} × ${g.px[1]} פיקסלים`],['סריקת הקנבס',`${g.scan} DPI לפחות`]]],
-    ['הציור',[['טכניקה','שמן על בד, פיגורטיבי, ארז אהרון'],['נושא',p.painting?'ציור קיים שהועלה':(p.subjectText||nm('subject',p.subject))],...(p.painting?[['מה נראה מהציור בתווית',(c=>`${c.vw}% מרוחב הציור ו־${c.vh}% מגובהו, החל מ־${c.l}% משמאל ו־${c.t}% מלמעלה`)(paintCrop(p))]]:[]),...(p.vision&&p.vision.trim()?[['איך היינן מדמיין את הציור',p.vision.trim()]]:[]),...(p.subjectText&&!p.painting?[['מאיפה הנושא',`היינן בחר: ${p.sFocus.map(x=>FOCUS[x]).join(' ו')}, ${HUMAN[p.sHuman]}, ${DIST[p.sPick]}`]]:[]),['אור',nm('light',p.light)],['טמפרטורת צבע',nm('temp',p.temp)],['חוט הצמר האדום',nm('thread',p.thread)],['רמת הפשטה',nm('detail',p.detail)],['הנחיות',[p.division==='full'?'להשאיר אזור שקט ואחיד בשליש התחתון, מאחורי האותיות':'',g.R?'להרחיק פרטים חשובים מפינות התווית':'',p.cut==='oval'||p.cut==='arch'?'הגזרה חותכת את פינות הציור':'',`נושא עיקרי במרכז, ברוחב ${r1(Math.min(a.w,g.r*Math.PI/3))} מ״מ שנראה מהחזית בלי עיוות`].filter(Boolean).join('. ')]]],
+    ['הציור',[['טכניקה','שמן על בד, פיגורטיבי, ארז אהרון'],['נושא',p.painting?(p.bank?'ציור קיים מהסטודיו: '+bankTitle(p.bank):'ציור קיים שהועלה'):(p.subjectText||nm('subject',p.subject))],...(p.painting?[['מה נראה מהציור בתווית',(c=>`${c.vw}% מרוחב הציור ו־${c.vh}% מגובהו, החל מ־${c.l}% משמאל ו־${c.t}% מלמעלה`)(paintCrop(p))]]:[]),...(p.vision&&p.vision.trim()?[['איך היינן מדמיין את הציור',p.vision.trim()]]:[]),...(p.subjectText&&!p.painting?[['מאיפה הנושא',`היינן בחר: ${p.sFocus.map(x=>FOCUS[x]).join(' ו')}, ${HUMAN[p.sHuman]}, ${DIST[p.sPick]}`]]:[]),['אור',nm('light',p.light)],['טמפרטורת צבע',nm('temp',p.temp)],['חוט הצמר האדום',nm('thread',p.thread)],['רמת הפשטה',nm('detail',p.detail)],['הנחיות',[p.division==='full'?'להשאיר אזור שקט ואחיד בשליש התחתון, מאחורי האותיות':'',g.R?'להרחיק פרטים חשובים מפינות התווית':'',p.cut==='oval'||p.cut==='arch'?'הגזרה חותכת את פינות הציור':'',`נושא עיקרי במרכז, ברוחב ${r1(Math.min(a.w,g.r*Math.PI/3))} מ״מ שנראה מהחזית בלי עיוות`].filter(Boolean).join('. ')]]],
     ['נייר ודפוס',[['נייר',nm('paper',p.paper)+(COLD.has(p.wine)?', עם טיפול עמידות במים':'')],['שיטת הדפסה',nm('print',p.print)],['גימורים',p.enh.map(x=>nm('enh',x)).join(', ')||'ללא'],['פרוטוקול קובץ','TIFF 16-bit, Adobe RGB, 600 DPI, עם ColorChecker']]],
     ['נקודות פתוחות',open.length?open.map(x=>[x.t,x.x]):[['מצב','אין התראות פתוחות']]]
   ];
@@ -1306,7 +1307,7 @@ const ACT={
   dlphoto:async()=>{const b=await (await fetch(S.photo)).blob(),n='wine-label-photo.'+(b.type.includes('jpeg')?'jpg':'png');if(S.caps.downloads)return dl(n,b);const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;document.body.appendChild(a);a.click();a.remove();},
   rmpaint:()=>{setParam('painting','');render();},
   pzreset:()=>{Object.assign(S.p,{pz:1,px:0,py:0});S.photo='';persist();render(true);updatePlacer();},
-  useupload:e=>{const u=S.uploads.find(x=>x.id===e.dataset.id);if(u){S.p.own='upload';if(S.p.painting!==u.data)setParam('painting',u.data);if(S.view==='saved'){S.step=6;nav('build');}else render(true);}},
+  usebank:e=>pickBank(e.dataset.n),useupload:e=>{const u=S.uploads.find(x=>x.id===e.dataset.id);if(u){S.p.own='upload';if(S.p.painting!==u.data)setParam('painting',u.data);if(S.view==='saved'){S.step=6;nav('build');}else render(true);}},
   delupload:e=>{const id=e.dataset.id;if(S.delId===id){const u=S.uploads.find(x=>x.id===id);S.uploads=S.uploads.filter(x=>x.id!==id);tx('uploads','readwrite',s=>s.delete(id));S.delId=null;
     if(u&&S.p.painting===u.data){setParam('painting','');S.note='הציור נמחק מהמערכת והוסר מהתווית הזו.';}else S.note='הציור נמחק מהמערכת.';}
     else{S.delId=id;clearTimeout(S.delT);S.delT=setTimeout(()=>{if(S.delId===id){S.delId=null;render(true);}},4000);}render(true);},
@@ -1372,6 +1373,25 @@ async function onUploads(list,embed){
   S.note=parts.join(' ');render(true);
 }
 const UPALL=()=>`<span class="btn alt filebtn">+ להוסיף ציורים (עד 20)<input type="file" id="upall" accept="image/*" multiple aria-label="להוסיף כמה ציורים לספרייה"></span>`;
+const BANK_REPO='erezaharon3rd/Wine',BANK_DIR='paintings';S.bank=[];
+const bankTitle=n=>n.replace(/\.[^.]+$/,'').replace(/[-_]+/g,' ').trim();
+function loadBank(){
+  if(!/^https?:$/.test(location.protocol))return;
+  const use=l=>{S.bank=l;render(true);};
+  try{const c=JSON.parse(localStorage.getItem('wl-bank')||'null');if(c&&Date.now()-c.t<36e5&&Array.isArray(c.l)){use(c.l);return;}}catch(e){}
+  const local=/netlify\.app$/i.test(location.hostname);
+  fetch(`https://api.github.com/repos/${BANK_REPO}/contents/${BANK_DIR}`,{headers:{Accept:'application/vnd.github+json'}}).then(r=>r.ok?r.json():[]).then(a=>{
+    const l=(Array.isArray(a)?a:[]).filter(f=>f.type==='file'&&/\.(jpe?g|png|webp)$/i.test(f.name)).sort((x,y)=>x.name.localeCompare(y.name,'he',{numeric:true}))
+      .map(f=>({name:f.name,title:bankTitle(f.name),url:local?`/${BANK_DIR}/${encodeURIComponent(f.name)}`:f.download_url}));
+    try{localStorage.setItem('wl-bank',JSON.stringify({t:Date.now(),l}));}catch(e){}use(l);}).catch(()=>{});
+}
+function pickBank(name){const b=S.bank.find(x=>x.name===name);if(!b)return;S.note='הציור נטען…';render(true);
+  const img=new Image();img.crossOrigin='anonymous';
+  img.onload=()=>{let d='';try{d=shrink(img,720,.82);}catch(e){}if(!d){S.note='לא הצלחנו לטעון את הציור. כדאי לנסות שוב.';render(true);return;}
+    S.p.own='upload';setParam('painting',d);S.p.bank=b.name;persist();S.note='';render(true);};
+  img.onerror=()=>{S.note='לא הצלחנו לטעון את הציור. כדאי לנסות שוב.';render(true);};img.src=b.url;}
+function bankHtml(){return`<h3>ציורים מהסטודיו</h3><p class="lead" style="margin:4px 0 0;font-size:13.5px">ציורים קיימים של ארז אהרון. לחיצה על ציור משבצת אותו בתווית.</p>
+  <div class="ups">${S.bank.map(b=>{const on=!!S.p.painting&&S.p.bank===b.name;return`<div class="up ${on?'on':''}"><button class="pick" data-action="usebank" data-n="${esc(b.name)}" aria-label="לבחור את הציור ${esc(b.title)}" aria-pressed="${on}"><img src="${b.url}" alt="" loading="lazy"></button></div>`;}).join('')}</div>`;}
 function uploadsHtml(){
   if(!S.uploads.length)return'';
   return`<div class="ups">${S.uploads.map(u=>{const on=S.p.painting===u.data,ask=S.delId===u.id;
@@ -1407,7 +1427,7 @@ function start(){
   });
   const endDrag=ev=>{if(!drag||ev.pointerId!==drag.id)return;if(drag.pl)drag.pl.classList.remove('dragging');drag=null;S.photo='';persist();refreshMock();};
   document.addEventListener('pointerup',endDrag);document.addEventListener('pointercancel',endDrag);
-  loadStore().then(()=>{render(true);loadPhoto();});probeServer();
+  loadStore().then(()=>{render(true);loadPhoto();});probeServer();loadBank();
   if(window.claude&&window.claude.use)window.claude.use('downloads').then(d=>{if(d){S.caps.downloads=d;render(true);}}).catch(()=>{});
 }
 document.addEventListener('DOMContentLoaded',()=>{
