@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html lang="he" dir="rtl" data-theme="light">
 <head>
-<meta charset="utf-8">
+<meta charset="utf-8"><meta name="color-scheme" content="light">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>סדנת התווית</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -507,7 +507,7 @@ const DEF={wine:'red',bottle:'bordeaux',glass:'antique',capsule:'black',closure:
 /* ═════════ 2. Diagnosis questions (20 × 6) ═════════ */
 const P6=(sub,l,t,th)=>`P:${sub},${l},${t},${th}`;
 /* ═════════ 3. Store ═════════ */
-const APPVER=37,APPDATE='17.11.2026';
+const APPVER=38,APPDATE='17.11.2026';
 const KD='wl-draft-v2',KI='wl-items-v2';
 const clone=o=>JSON.parse(JSON.stringify(o));
 const S={view:'home',step:1,p:clone(DEF),started:false,shot:false,b:{q:0,best:{},worst:{},flag:[]},props:[],sel:0,items:[],caps:{},from:''};
@@ -1391,12 +1391,14 @@ const bankTitle=n=>n.replace(/\.[^.]+$/,'').replace(/[-_]+/g,' ').trim();
 function loadBank(){
   if(!/^https?:$/.test(location.protocol))return;
   const use=l=>{S.bank=l;render(true);};
-  try{const c=JSON.parse(localStorage.getItem('wl-bank')||'null');if(c&&Date.now()-c.t<36e5&&Array.isArray(c.l)){use(c.l);return;}}catch(e){}
+  let cached=null;try{const c=JSON.parse(localStorage.getItem('wl-bank2')||'null');if(c&&Array.isArray(c.l)&&c.l.length){cached=c;use(c.l);if(Date.now()-c.t<6e5)return;}}catch(e){}
   const local=/netlify\.app$/i.test(location.hostname);
-  fetch(`https://api.github.com/repos/${BANK_REPO}/contents/${BANK_DIR}`,{headers:{Accept:'application/vnd.github+json'}}).then(r=>r.ok?r.json():[]).then(a=>{
-    const l=(Array.isArray(a)?a:[]).filter(f=>f.type==='file'&&/\.(jpe?g|png|webp)$/i.test(f.name)).sort((x,y)=>x.name.localeCompare(y.name,'he',{numeric:true}))
-      .map(f=>({name:f.name,title:bankTitle(f.name),url:local?`/${BANK_DIR}/${encodeURIComponent(f.name)}`:f.download_url}));
-    try{localStorage.setItem('wl-bank',JSON.stringify({t:Date.now(),l}));}catch(e){}use(l);}).catch(()=>{});
+  const get=dir=>fetch(`https://api.github.com/repos/${BANK_REPO}/contents/${dir}`,{headers:{Accept:'application/vnd.github+json'}}).then(r=>r.ok?r.json().then(a=>({dir,a})):null).catch(()=>null);
+  get(BANK_DIR).then(x=>x||get('Paintings')).then(x=>{if(!x)return;
+    const l=(Array.isArray(x.a)?x.a:[]).filter(f=>f.type==='file'&&/\.(jpe?g|png|webp)$/i.test(f.name)).sort((a,b)=>a.name.localeCompare(b.name,'he',{numeric:true}))
+      .map(f=>({name:f.name,title:bankTitle(f.name),url:local?`/${x.dir}/${encodeURIComponent(f.name)}`:f.download_url}));
+    if(l.length)try{localStorage.setItem('wl-bank2',JSON.stringify({t:Date.now(),l}));}catch(e){}
+    if(l.length||!cached)use(l);});
 }
 function pickBank(name){const b=S.bank.find(x=>x.name===name);if(!b)return;S.note='הציור נטען…';render(true);
   const img=new Image();img.crossOrigin='anonymous';
