@@ -35,3 +35,10 @@ export default async (req) => {
         clearInterval(beat);
         ctrl.enqueue(enc.encode(JSON.stringify({ status: 502, data: { error: { message: String(e && e.message || e) } } })));
       }
+      ctrl.close();
+    }
+  });
+  return new Response(stream, { headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
+};
+
+export const config = { path: '/api/gemini' };
