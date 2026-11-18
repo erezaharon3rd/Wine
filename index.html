@@ -584,7 +584,7 @@ const DEF={wine:'red',bottle:'bordeaux',glass:'antique',capsule:'black',closure:
 /* ═════════ 2. Diagnosis questions (20 × 6) ═════════ */
 const P6=(sub,l,t,th)=>`P:${sub},${l},${t},${th}`;
 /* ═════════ 3. Store ═════════ */
-const APPVER=47,APPDATE='17.11.2026';
+const APPVER=48,APPDATE='17.11.2026';
 const KD='wl-draft-v2',KI='wl-items-v2';
 const clone=o=>JSON.parse(JSON.stringify(o));
 const S={view:'home',step:1,p:clone(DEF),started:false,shot:false,b:{q:0,best:{},worst:{},flag:[]},props:[],sel:0,items:[],caps:{},from:''};
@@ -751,7 +751,7 @@ function painting(sub,light,temp,thread,id){
   <rect width="100" height="100" fill="url(#${id}s)"/><g filter="url(#${id}b)">${S_[sub]||S_.vine}</g>${tp}${th}<rect width="100" height="100" filter="url(#${id}c)" opacity=".5"/>`;
 }
 function paintBox(p,a){
-  const AR=p.paintAR||a.w/a.h,z=Math.max(1,+p.pz||1);
+  const AR=p.paintAR||a.w/a.h,z=Math.max(.4,+p.pz||1);
   let iw,ih;if(AR>a.w/a.h){ih=a.h;iw=a.h*AR;}else{iw=a.w;ih=a.w/AR;}
   iw*=z;ih*=z;const ox=iw-a.w,oy=ih-a.h,cl=v=>Math.max(-1,Math.min(1,+v||0));
   return{iw,ih,ox,oy,x:a.x-ox*(1-cl(p.px))/2,y:a.y-oy*(1-cl(p.py))/2};
@@ -909,7 +909,7 @@ const PLACE=p=>{if(!p.painting)return'';const{a,b,css}=placerStyle(p),still=b.ox
   return`<div class="placebox"><h3 style="margin-top:16px">מיקום הציור בתווית</h3>
   <p class="lead" id="place-hint" style="margin:4px 0 8px;font-size:13.5px">${still?'הציור ממלא את החלון בדיוק. אפשר להגדיל אותו, ואז לגרור ולבחור איזה חלק ממנו ייראה.':'אפשר לגרור את הציור באצבע ולבחור איזה חלק ממנו ייראה בתווית.'}</p>
   <div class="placer ${a.round?'round':''}" id="placer" style="aspect-ratio:${a.w.toFixed(2)}/${a.h.toFixed(2)};width:min(100%,${Math.round(320*a.w/a.h)}px)"><img id="placer-img" src="${p.painting}" alt="הציור בתוך החלון שלו בתווית" draggable="false" style="${css}"></div>
-  <div class="rng"><label for="pz">גודל</label><input type="range" id="pz" data-pz="pz" min="1" max="3" step="0.05" value="${p.pz}" dir="ltr"><output id="pz-o" class="num">×${(+p.pz).toFixed(2)}</output></div>
+  <div class="rng"><label for="pz">גודל</label><input type="range" id="pz" data-pz="pz" min="0.5" max="3" step="0.05" value="${p.pz}" dir="ltr"><output id="pz-o" class="num">×${(+p.pz).toFixed(2)}</output></div>
   <button class="link" data-action="pzreset">חזרה לגודל המלא ולמרכז</button></div>`;};
 function updatePlacer(){const p=S.p;if(!p.painting)return;const{b,css}=placerStyle(p),im=$('placer-img');if(im)im.setAttribute('style',css);
   const mi=document.querySelector('#mock image[data-paint]');if(mi){mi.setAttribute('x',b.x);mi.setAttribute('y',b.y);mi.setAttribute('width',b.iw);mi.setAttribute('height',b.ih);}
@@ -1179,23 +1179,23 @@ const NOF=[
 ['white','burgundy','flint','capsule','tin','wave','top','smooth',[],10,'שרדונה · רמת הגולן',0,{abv:'13'}],
 ['white','alsace','leaf','screw','gold','strip','full','felt',[],8,'ריסלינג · רמת הגולן',0,{abv:'12'}],
 ['white','bordeaux','flint','screw','tin','landscape','top','laid',[],2,'סוביניון בלאן · גליל עליון',0,{abv:'12.5'}],
-['white','burgheavy','antique','capsule','gold','cartouche','window','deep',['emboss'],1,'ויונייה · הרי יהודה',0,{abv:'13.5'}],
+['white','burgheavy','antique','capsule','gold','cartouche','window','deep',['emboss'],3,'ויונייה · הרי יהודה',0,{abv:'13.5'}],
 ['white','rhone','flint','capsule','tin','rounded','top','smooth',[],3,'רוסאן · הרי יהודה',-.4,{abv:'13'}],
-['white','alsace','blue','screw','tin','oval','full','felt',[],9,'גוורצטרמינר · גליל עליון',0,{abv:'13'}],
+['white','alsace','blue','screw','tin','oval','full','felt',[],9,'גוורצטרמינר · גליל עליון',0,{abv:'13',pz:.85}],
 ['white','bordeaux','leaf','capsule','green','arch','top','felt',[],4,'שנן בלאן · שומרון',0,{abv:'12.5'}],
-['white','burgundy','flint','wax','white','rounded','window','felt',['foil','emboss'],5,'מראווי · הרי יהודה',0,{abv:'12.5',pz:1.2,py:.3}],
-['white','bordeaux','flint','capsule','gold','hexagon','top','smooth',['foil'],11,'חמדאני · הרי יהודה',0,{abv:'12.5'}],
+['white','burgundy','flint','wax','white','rounded','window','felt',['foil','emboss'],5,'מראווי · הרי יהודה',0,{abv:'12.5',pz:1.2,py:0}],
+['white','bordeaux','flint','capsule','gold','hexagon','top','smooth',['foil'],11,'חמדאני · הרי יהודה',0,{abv:'12.5',pz:.78}],
 ['white','bordeaux','flint','screw','tin','slant','minimal','smooth',[],12,'קולומבר · נגב',0,{abv:'12'}],
 ['rose','provence','flint','glass','white','rounded','minimal','smooth',[],9,'גרנאש רוזה · הרי יהודה',0,{abv:'12.5'}],
-['rose','provence','flint','capsule','copper','oval','top','felt',['foil'],12,'סירה רוזה · גליל עליון',0,{abv:'13'}],
+['rose','provence','flint','capsule','copper','oval','top','felt',['foil'],12,'סירה רוזה · גליל עליון',0,{abv:'13',pz:.85,py:.4}],
 ['rose','bordeaux','flint','screw','gold','landscape','top','smooth',[],10,'רוזה ים תיכוני · שפלת יהודה',0,{abv:'12'}],
 ['rose','alsace','flint','capsule','tin','strip','full','smooth',[],7,'פינו נואר רוזה · רמת הגולן',0,{abv:'12.5'}],
 ['rose','burgundy','flint','capsule','gold','arch','window','deep',['emboss'],1,'מורבדר רוזה · הרי יהודה',0,{abv:'13'}],
 ['rose','rhone','flint','glass','white','circle','medallion','felt',['foil'],11,'קריניאן רוזה · שומרון',0,{abv:'12.5'}],
 ['rose','provence','flint','glass','white','gothic','top','smooth',[],5,'סנסו רוזה · גליל',0,{abv:'12'}],
 ['rose','bordeaux','flint','capsule','copper','torn','top','heavy',[],2,'קברנה רוזה · גליל עליון',.2,{abv:'12.5'}],
-['rose','burgundy','flint','screw','copper','cartouche','top','smooth',[],6,'גרנאש־סירה רוזה · ירושלים',0,{abv:'12.5'}],
-['rose','bordeaux','flint','capsule','tin','diamond','top','smooth',[],3,'מלבק רוזה · גליל מערבי',0,{abv:'12.5'}]];
+['rose','burgundy','flint','screw','copper','cartouche','top','smooth',[],3,'גרנאש־סירה רוזה · ירושלים',0,{abv:'12.5'}],
+['rose','bordeaux','flint','capsule','tin','diamond','top','smooth',[],5,'מלבק רוזה · גליל מערבי',0,{abv:'12.5',pz:.62}]];
 function nofP(r,pt){const[wine,bottle,glass,closure,capsule,cut,division,paper,enh,pi,line,px,o={}]=r;
   const p=fixp(Object.assign(clone(DEF),{wine,bottle,glass,closure,capsule,cut,division,paper,enh:enh.slice(),name:'NOF',winery:line,vintage:wine==='red'?'2023':'2025',abv:wine==='red'?'14':'12.5',
     labeler:'auto',margin:4,own:'upload',thread:'none',print:'indigo',moment:'gift',pz:o.pz||1,px,py:o.py||0,painting:pt.data,paintAR:pt.ar,bank:pt.name},o.abv?{abv:o.abv}:{},o.vintage?{vintage:o.vintage}:{}));
@@ -1205,6 +1205,14 @@ function nofUpgrade(){let v=0;try{v=+localStorage.getItem('wl-nofv')||0;}catch(e
     const p=nofP(r,{data:old.painting,ar:old.paintAR,name:old.bank});Object.assign(p,{id:old.id,c:old.c,title:old.title,code:old.code});
     if(JSON.stringify(p)!==JSON.stringify(old)){it.p=p;ch=1;delete S.thumbs[it.id];if(S.p.id===it.id){S.p=clone(p);S.photo='';}}});
   try{localStorage.setItem('wl-nofv','2');}catch(e){}if(ch){saveThumbs();persist();}}
+S.noRepair=new Set();
+async function nofFix3(){let v=0;try{v=+localStorage.getItem('wl-nofv')||0;}catch(e){}if(v>=3||!S.bank.length||!S.loaded||S.fix3)return;S.fix3=1;
+  const map={nof14:14,nof16:16,nof18:18,nof19:19,nof22:22,nof29:29,nof30:30};const pics={};let ch=0;
+  for(const it of S.items){const n=map[it.id];if(!n)continue;const r=NOF[n-1],nm=NOF_PAINT[r[9]-1],b=S.bank.find(x=>x.name===nm);if(!b)continue;
+    if(!pics[nm]){try{const im=await loadImg(b.url);pics[nm]={data:shrink(im,900,.86),ar:im.width/im.height};}catch(e){continue;}}
+    const o=r[12]||{};Object.assign(it.p,{painting:pics[nm].data,paintAR:pics[nm].ar,bank:nm,pz:o.pz||1,px:r[11]||0,py:o.py||0});
+    delete S.thumbs[it.id];S.noRepair.add(it.id);ch=1;if(S.p.id===it.id){S.p=clone(it.p);S.photo='';}}
+  try{localStorage.setItem('wl-nofv','3');}catch(e){}if(ch){await saveThumbs();persist();render(true);}}
 async function seedNof(){
   try{if(localStorage.getItem('wl-nof'))return;}catch(e){return;}
   if(!S.bank.length||S.nofBusy)return;S.nofBusy=true;
@@ -1215,7 +1223,7 @@ async function seedNof(){
   const now=Date.now();let n=S.items.reduce((m,x)=>Math.max(m,x.n||0),0);
   NOF.forEach((r,i)=>{const pt=pics[PM[r[9]-1]],p=nofP(r,pt),id='nof'+(i+1);if(S.items.some(x=>x.id===id))return;
     p.id=id;p.code=['R','W','RS'][Math.floor(i/10)]+String(i%10+1).padStart(2,'0');p.c=now-60000+i*1000;S.items.push({id,n:++n,c:p.c,t:p.c,step:8,p});});
-  try{localStorage.setItem('wl-nof','1');localStorage.setItem('wl-nofv','2');}catch(e){}
+  try{localStorage.setItem('wl-nof','1');localStorage.setItem('wl-nofv','3');}catch(e){}
   ensureCodes();ensureNums();
   S.nofBusy=false;persist();render(true);
 }
@@ -1270,11 +1278,12 @@ const cpre=w=>CPRE[w]||'X';
 function nextCode(w,skip){const pre=cpre(w),re=new RegExp('^'+pre+'(\\d+)$');let m=0;S.items.forEach(it=>{if(it===skip)return;const x=re.exec(it.p.code||'');if(x)m=Math.max(m,+x[1]);});return pre+String(m+1).padStart(2,'0');}
 const BNAME=n=>'בקבוק '+n;
 function nextNum(){return S.items.reduce((m,it)=>Math.max(m,+it.p.num||0),0)+1;}
-async function repairPhotos(){let fixed=0;
-  for(const it of S.items){const h=await tx('kv','readonly',s=>s.get('phs:'+it.id));if(!Array.isArray(h)||!h.length)continue;let ch=0;
+async function repairPhotos(){let fixed=0,once=0;try{once=+localStorage.getItem('wl-rep')||0;}catch(e){}
+  for(const it of S.items){if(S.noRepair.has(it.id))continue;const h=await tx('kv','readonly',s=>s.get('phs:'+it.id));if(!Array.isArray(h)||!h.length)continue;let ch=0;
     const nu=psig(it.p),old=psigOld(it.p);h.forEach(x=>{if(x.sig===old&&x.sig!==nu){x.sig=nu;ch=1;}});
     if(ch)await tx('kv','readwrite',s=>s.put(h,'phs:'+it.id));
-    if(!S.thumbs[it.id]&&h[0]){S.thumbs[it.id]=h[0].th||h[0].data;fixed++;}}
+    if(!once&&!S.thumbs[it.id]&&h[0]){S.thumbs[it.id]=h[0].th||h[0].data;fixed++;}}
+  try{localStorage.setItem('wl-rep','1');}catch(e){}
   if(fixed){await saveThumbs();render(true);}
   try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}}
 function ensureNums(){let ch=0;
@@ -1708,7 +1717,7 @@ const BANK_REPO='erezaharon3rd/Wine',BANK_DIR='paintings';S.bank=[];
 const bankTitle=n=>n.replace(/\.[^.]+$/,'').replace(/[-_]+/g,' ').trim();
 function loadBank(){
   if(!/^https?:$/.test(location.protocol))return;
-  const use=l=>{S.bank=l;render(true);if(l.length)seedNof();};
+  const use=l=>{S.bank=l;render(true);if(l.length){seedNof();nofFix3();}};
   let cached=null;try{const c=JSON.parse(localStorage.getItem('wl-bank2')||'null');if(c&&Array.isArray(c.l)&&c.l.length){cached=c;use(c.l);if(Date.now()-c.t<6e5)return;}}catch(e){}
   const local=/netlify\.app$/i.test(location.hostname);
   const get=dir=>fetch(`https://api.github.com/repos/${BANK_REPO}/contents/${dir}`,{headers:{Accept:'application/vnd.github+json'}}).then(r=>r.ok?r.json().then(a=>Array.isArray(a)&&a.length?{dir,a}:null):null).catch(()=>null);
@@ -1760,7 +1769,7 @@ function start(){
   });
   const endDrag=ev=>{if(!drag||ev.pointerId!==drag.id)return;if(drag.pl)drag.pl.classList.remove('dragging');drag=null;S.photo='';persist();refreshMock();};
   document.addEventListener('pointerup',endDrag);document.addEventListener('pointercancel',endDrag);
-  loadStore().then(()=>{let ch=0;S.items.forEach(it=>{const m=/^nof(\d+)$/.exec(it.id);if(false&&m){it.p.title=NOF_TITLES[m[1]-1];ch=1;if(S.p.id===it.id)S.p.title=it.p.title;}});if(ch)persist();ensureCodes();nofUpgrade();ensureNums();render(true);repairPhotos().then(loadPhoto);});probeServer();loadBank();
+  loadStore().then(()=>{let ch=0;S.items.forEach(it=>{const m=/^nof(\d+)$/.exec(it.id);if(false&&m){it.p.title=NOF_TITLES[m[1]-1];ch=1;if(S.p.id===it.id)S.p.title=it.p.title;}});if(ch)persist();ensureCodes();nofUpgrade();ensureNums();S.loaded=1;render(true);repairPhotos().then(()=>{loadPhoto();nofFix3();});});probeServer();loadBank();
   if(window.claude&&window.claude.use)window.claude.use('downloads').then(d=>{if(d){S.caps.downloads=d;render(true);}}).catch(()=>{});
 }
 document.addEventListener('DOMContentLoaded',()=>{
