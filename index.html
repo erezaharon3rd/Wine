@@ -584,7 +584,7 @@ const DEF={wine:'red',bottle:'bordeaux',glass:'antique',capsule:'black',closure:
 /* ═════════ 2. Diagnosis questions (20 × 6) ═════════ */
 const P6=(sub,l,t,th)=>`P:${sub},${l},${t},${th}`;
 /* ═════════ 3. Store ═════════ */
-const APPVER=46,APPDATE='17.11.2026';
+const APPVER=47,APPDATE='17.11.2026';
 const KD='wl-draft-v2',KI='wl-items-v2';
 const clone=o=>JSON.parse(JSON.stringify(o));
 const S={view:'home',step:1,p:clone(DEF),started:false,shot:false,b:{q:0,best:{},worst:{},flag:[]},props:[],sel:0,items:[],caps:{},from:''};
@@ -1226,8 +1226,8 @@ function vGallery(){
   const cats=GCATS.filter(c=>c[0]!=='other'||S.items.some(it=>gcat(it.p)==='other'));
   const cur=cats.find(c=>c[0]===S.gtab)?S.gtab:'red';
   const list=[...S.items].filter(it=>gcat(it.p)===cur).sort((a,b)=>(a.c||0)-(b.c||0));
-  const miss=S.items.filter(it=>!S.thumbs[it.id]).length;
-  return`<h2>גלריית העיצובים</h2><p class="lead">כל תווית נשמרת כאן לפי סוג היין. נגיעה בבקבוק פותחת אותו בגדול.</p>${S.gmsg&&!S.pdfBusy?`<p class="note" role="status">${esc(S.gmsg)}</p>`:''}
+  const miss=S.items.filter(it=>!S.thumbs[it.id]).length,have=S.items.length-miss;
+  return`<h2>גלריית העיצובים</h2><p class="lead">כל תווית נשמרת כאן לפי סוג היין. נגיעה בבקבוק פותחת אותו בגדול.${S.items.length?` <span class="num">${have}</span> מתוך <span class="num">${S.items.length}</span> כבר צולמו.`:''}</p>${S.gmsg&&!S.pdfBusy?`<p class="note" role="status">${esc(S.gmsg)}</p>`:''}
   ${S.items.length?`<div class="gpdf"><button class="btn alt sm" data-action="gpdf" id="gpdf" ${S.pdfBusy?'disabled':''}>${ICO.dl}<span>${S.pdfBusy?'מכינים את הקטלוג…':'להפיק קטלוג PDF של כל הדגמים'}</span></button>
     ${S.pdfBusy?`<p class="gpdf-msg minor">${esc(S.gmsg||'')}</p>`:''}
     ${S.pdf&&!S.pdfBusy?`<div class="pdfcard"><div><b>הקטלוג מוכן</b><small>${esc(S.pdf.name)} · ${(S.pdf.size/1048576).toFixed(1)}MB · הקובץ ירד למכשיר</small></div><div class="pdfbtns"><button class="btn sm" data-action="pdfopen">לפתוח</button><button class="btn alt sm" data-action="pdfsave">להוריד שוב</button><button class="btn alt sm" data-action="pdfshare">לשתף</button></div></div>`:''}</div>`:''}
@@ -1253,15 +1253,16 @@ async function gDelete(id){tx('kv','readwrite',s=>s.delete('phs:'+id));tx('kv','
   S.items=S.items.filter(x=>x.id!==id);if(S.p.id===id){S.p=clone(DEF);S.started=false;S.photo='';S.hist=[];}persist();$('layer').innerHTML='';S.lb='';render(true);}
 async function gShootAll(){
   const todo=S.items.filter(it=>!S.thumbs[it.id]).map(it=>it.id);if(!todo.length)return;
-  const keep={p:S.p,photo:S.photo,hist:S.hist,hsel:S.hsel};S.gstop=false;let done=0,fail=0,last='';
+  const keep={p:S.p,photo:S.photo,hist:S.hist,hsel:S.hsel};S.gstop=false;let done=0,fail=0,last='';const failed=[];
   for(let i=0;i<todo.length&&!S.gstop;i++){const it=S.items.find(x=>x.id===todo[i]);if(!it)continue;
     S.p=fixp(Object.assign(clone(DEF),clone(it.p)));S.photo='';S.hist=[];
     startShoot();const t=document.querySelector('.sh-head h2');if(t)t.textContent=`מצלמים בקבוק ${i+1} מתוך ${todo.length}`;
     const hd=document.querySelector('.sh-head');if(hd&&!$('gstop'))hd.insertAdjacentHTML('beforeend','<p style="margin-top:10px"><button class="link" id="gstop" data-action="gstop">לעצור אחרי הצילום הזה</button></p>');
-    try{S.photo=await shootCore(S.p);await savePhoto();done++;}catch(err){fail++;last=err instanceof TypeError?NONET:err.message;if(/חיוב|billing|quota|429|מכסה/i.test(last))S.gstop=true;}
+    let ok=false;for(let a=0;a<2&&!ok;a++){try{S.photo=await shootCore(S.p);await savePhoto();ok=true;}catch(err){last=err instanceof TypeError?NONET:err.message;if(/חיוב|billing|quota|429|מכסה|מקום/i.test(last)){S.gstop=true;break;}}}
+    if(ok)done++;else{fail++;failed.push(it.p.code||it.p.title);}
     stopTimers();}
   $('layer').innerHTML='';Object.assign(S,{p:keep.p,photo:keep.photo,hist:keep.hist,hsel:keep.hsel});S.gshootAsk=false;
-  S.gmsg=(done?`צולמו ${done} בקבוקים${fail?`, ו־${fail} לא הצליחו`:''}.`:`הצילום לא הצליח: ${last}`);render(true);}
+  S.gmsg=(done?`צולמו ונשמרו ${done} בקבוקים.${fail?` ${fail} לא הצליחו (${failed.join(', ')}), ואפשר לצלם רק אותם שוב באותו כפתור.`:''}`:`הצילום לא הצליח: ${last}`);render(true);}
 
 /* ── design codes, stamped shares, PDF catalogue ── */
 const CPRE={red:'R',white:'W',rose:'RS'};
@@ -1269,6 +1270,13 @@ const cpre=w=>CPRE[w]||'X';
 function nextCode(w,skip){const pre=cpre(w),re=new RegExp('^'+pre+'(\\d+)$');let m=0;S.items.forEach(it=>{if(it===skip)return;const x=re.exec(it.p.code||'');if(x)m=Math.max(m,+x[1]);});return pre+String(m+1).padStart(2,'0');}
 const BNAME=n=>'בקבוק '+n;
 function nextNum(){return S.items.reduce((m,it)=>Math.max(m,+it.p.num||0),0)+1;}
+async function repairPhotos(){let fixed=0;
+  for(const it of S.items){const h=await tx('kv','readonly',s=>s.get('phs:'+it.id));if(!Array.isArray(h)||!h.length)continue;let ch=0;
+    const nu=psig(it.p),old=psigOld(it.p);h.forEach(x=>{if(x.sig===old&&x.sig!==nu){x.sig=nu;ch=1;}});
+    if(ch)await tx('kv','readwrite',s=>s.put(h,'phs:'+it.id));
+    if(!S.thumbs[it.id]&&h[0]){S.thumbs[it.id]=h[0].th||h[0].data;fixed++;}}
+  if(fixed){await saveThumbs();render(true);}
+  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}}
 function ensureNums(){let ch=0;
   try{if(!localStorage.getItem('wl-num')){const ci={red:0,white:1,rose:2};const ord=[...S.items].sort((a,b)=>((ci[a.p.wine]??3)-(ci[b.p.wine]??3))||String(a.p.code).localeCompare(String(b.p.code),'en',{numeric:true})||((a.c||0)-(b.c||0)));
     ord.forEach((it,i)=>{it.p.num=i+1;it.p.title=BNAME(i+1);});ch=1;localStorage.setItem('wl-num','1');}}catch(e){}
@@ -1403,7 +1411,7 @@ async function realShot(){
   if(!canShoot()){openEngine();return;}
   const p=S.p;S.photoMsg='';S.shot=true;saveItem();startShoot();
   try{
-    S.photo=await shootCore(p);S.photoMsg='';S.pv='photo';savePhoto();
+    S.photo=await shootCore(p);S.photoMsg='';S.pv='photo';await savePhoto();
   }catch(err){S.photoMsg=err instanceof TypeError?NONET:err.message;}
   await endShoot(!!S.photo&&!S.photoMsg);S.tab='shot';render();window.scrollTo(0,0);
 }
@@ -1638,7 +1646,9 @@ const ACT={
 /* ── durable store on this device: every uploaded file (original kept) and every finished label ── */
 let _db;
 function odb(){return _db||(_db=new Promise((res,rej)=>{try{const r=indexedDB.open('wine-label-studio',1);r.onupgradeneeded=()=>{r.result.createObjectStore('uploads',{keyPath:'id'});r.result.createObjectStore('kv');};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);}catch(e){rej(e)}}));}
-const psig=p=>{const o={};Object.keys(p).sort().forEach(k=>{if(k!=='t')o[k]=p[k];});const s=JSON.stringify(o);let h=5381;for(let i=0;i<s.length;i++)h=((h*33)^s.charCodeAt(i))>>>0;return h.toString(36)+'.'+s.length;};
+const PMETA=new Set(['t','title','num','code','id','c']);
+const psigOld=p=>{const o={};Object.keys(p).sort().forEach(k=>{if(k!=='t')o[k]=p[k];});const s=JSON.stringify(o);let h=5381;for(let i=0;i<s.length;i++)h=((h*33)^s.charCodeAt(i))>>>0;return h.toString(36)+'.'+s.length;};
+const psig=p=>{const o={};Object.keys(p).sort().forEach(k=>{if(!PMETA.has(k))o[k]=p[k];});const s=JSON.stringify(o);let h=5381;for(let i=0;i<s.length;i++)h=((h*33)^s.charCodeAt(i))>>>0;return h.toString(36)+'.'+s.length;};
 const MAXHIST=12;S.hist=[];S.thumbs={};
 const thumbOf=d=>new Promise(r=>{const i=new Image();i.onload=()=>{try{r(shrink(i,260,.75));}catch(e){r(d);}};i.onerror=()=>r('');i.src=d;});
 const saveThumbs=()=>tx('kv','readwrite',s=>s.put(S.thumbs,'thumbs'));
@@ -1646,7 +1656,9 @@ async function readHist(id){let h=await tx('kv','readonly',s=>s.get('phs:'+id));
 async function setThumb(id,h){const top=h[0];if(top&&top.th)S.thumbs[id]=top.th;else delete S.thumbs[id];await saveThumbs();}
 async function savePhoto(){const id=S.p.id;if(!id||!S.photo)return;const rec={t:Date.now(),sig:psig(S.p),data:S.photo,th:await thumbOf(S.photo)};
   const h=(await readHist(id)).filter(x=>x.data!==rec.data);h.unshift(rec);h.length=Math.min(h.length,MAXHIST);
-  await tx('kv','readwrite',s=>s.put(h,'phs:'+id));if(S.p.id===id){S.hist=h;S.hsel=rec.t;}await setThumb(id,h);render(true);}
+  const ok=await tx('kv','readwrite',s=>s.put(h,'phs:'+id));
+  if(ok===null){const ok2=await tx('kv','readwrite',s=>s.put(h.slice(0,3),'phs:'+id));if(ok2===null){S.photoMsg=S.gmsg='הצילום לא נשמר: אין מספיק מקום פנוי בטלפון. כדאי לפנות מקום ולצלם שוב.';throw new Error(S.photoMsg);}h.length=Math.min(h.length,3);}
+  if(S.p.id===id){S.hist=h;S.hsel=rec.t;}await setThumb(id,h);render(true);return true;}
 async function loadPhoto(){const id=S.p.id;if(!id)return;const h=await readHist(id);if(S.p.id!==id)return;S.hist=h;
   const m=h.find(x=>x.sig===psig(S.p));if(m&&!S.photo){S.photo=m.data;S.hsel=m.t;S.pv='photo';S.shot=true;}render(true);}
 async function delPhoto(t){const id=S.p.id;const h=(await readHist(id)).filter(x=>x.t!==t);await tx('kv','readwrite',s=>s.put(h,'phs:'+id));S.hist=h;
@@ -1748,7 +1760,7 @@ function start(){
   });
   const endDrag=ev=>{if(!drag||ev.pointerId!==drag.id)return;if(drag.pl)drag.pl.classList.remove('dragging');drag=null;S.photo='';persist();refreshMock();};
   document.addEventListener('pointerup',endDrag);document.addEventListener('pointercancel',endDrag);
-  loadStore().then(()=>{let ch=0;S.items.forEach(it=>{const m=/^nof(\d+)$/.exec(it.id);if(false&&m){it.p.title=NOF_TITLES[m[1]-1];ch=1;if(S.p.id===it.id)S.p.title=it.p.title;}});if(ch)persist();ensureCodes();nofUpgrade();ensureNums();render(true);loadPhoto();});probeServer();loadBank();
+  loadStore().then(()=>{let ch=0;S.items.forEach(it=>{const m=/^nof(\d+)$/.exec(it.id);if(false&&m){it.p.title=NOF_TITLES[m[1]-1];ch=1;if(S.p.id===it.id)S.p.title=it.p.title;}});if(ch)persist();ensureCodes();nofUpgrade();ensureNums();render(true);repairPhotos().then(loadPhoto);});probeServer();loadBank();
   if(window.claude&&window.claude.use)window.claude.use('downloads').then(d=>{if(d){S.caps.downloads=d;render(true);}}).catch(()=>{});
 }
 document.addEventListener('DOMContentLoaded',()=>{
