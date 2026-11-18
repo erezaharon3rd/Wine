@@ -446,6 +446,33 @@ textarea{width:100%;font:inherit;color:var(--ink);background:var(--surface);bord
   .pc-meta p{margin:1mm 0 0;font-size:7.3pt;line-height:1.35;color:#555}
   .pc-note{color:#999!important;font-style:italic}
 }
+
+[data-hold]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+[data-hold] img{-webkit-user-drag:none;pointer-events:none}
+.holdhint{margin:6px 0 0;text-align:center;font-size:12px;color:var(--muted)}
+#holdv{position:fixed;inset:0;z-index:60;background:#0e0e0d;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:18px;opacity:0;pointer-events:none;transition:opacity .16s ease}
+#holdv.on{opacity:1}
+#holdv img{max-width:100%;max-height:86vh;object-fit:contain;box-shadow:0 10px 40px rgba(0,0,0,.5);transform:scale(.97);transition:transform .2s ease}
+#holdv.on img{transform:none}
+#holdv span{color:#d8d6d0;font-size:13px}
+
+.gpdf{margin:4px 0 12px}
+.gpdf #gpdf{margin:0}
+.pdfcard{margin-top:10px;border:1px solid var(--line);background:var(--surface);border-radius:var(--rad);padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.pdfcard b{display:block;font-size:15px}
+.pdfcard small{display:block;font-size:12px;color:var(--muted);word-break:break-all}
+.pdfbtns{display:flex;gap:6px;flex-wrap:wrap}
+
+.gcell{display:flex}
+.gzoom{position:absolute;bottom:10px;inset-inline-end:8px;width:34px;height:34px;display:grid;place-items:center;border:0;background:none;border-radius:50%;cursor:pointer;color:#8e8c86;padding:0}
+.gzoom:active{background:var(--line)}
+.gzoom svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.gzoom.inline{position:static;display:inline-grid;width:26px;height:26px;vertical-align:middle}
+.gzoom.inline svg{width:17px;height:17px}
+.gcap{padding-inline-end:44px}
+#holdv.tap{pointer-events:auto;cursor:zoom-out}
+.gcell .gcode{inset-inline-end:auto;right:8px;left:auto}
+.gcell .gtag{inset-inline-start:auto;left:8px;right:auto}
 </style>
 </head>
 <body>
@@ -557,7 +584,7 @@ const DEF={wine:'red',bottle:'bordeaux',glass:'antique',capsule:'black',closure:
 /* ═════════ 2. Diagnosis questions (20 × 6) ═════════ */
 const P6=(sub,l,t,th)=>`P:${sub},${l},${t},${th}`;
 /* ═════════ 3. Store ═════════ */
-const APPVER=41,APPDATE='17.11.2026';
+const APPVER=46,APPDATE='17.11.2026';
 const KD='wl-draft-v2',KI='wl-items-v2';
 const clone=o=>JSON.parse(JSON.stringify(o));
 const S={view:'home',step:1,p:clone(DEF),started:false,shot:false,b:{q:0,best:{},worst:{},flag:[]},props:[],sel:0,items:[],caps:{},from:''};
@@ -576,7 +603,7 @@ const pname=t=>new Date(t).toLocaleString('he-IL',{day:'2-digit',month:'2-digit'
 function syncProject(){
   if(!S.started)return;
   const cur=JSON.stringify(S.p);
-  if(!S.p.id){if(S.step<2&&cur===(S.base||JSON.stringify(DEF)))return;const now=Date.now();S.p.id='w'+now.toString(36);S.p.c=now;if(!S.p.code)S.p.code=nextCode(S.p.wine);}
+  if(!S.p.id){if(S.step<2&&cur===(S.base||JSON.stringify(DEF)))return;const now=Date.now();S.p.id='w'+now.toString(36);S.p.c=now;if(!S.p.code)S.p.code=nextCode(S.p.wine);if(!S.p.num){S.p.num=nextNum();S.p.title=BNAME(S.p.num);}}
   let it=S.items.find(x=>x.id===S.p.id);
   if(!it){it={id:S.p.id,n:S.items.reduce((m,x)=>Math.max(m,x.n||0),0)+1,c:S.p.c||Date.now()};S.items.push(it);}
   else if(it.step===S.step&&JSON.stringify(it.p)===JSON.stringify(S.p))return;
@@ -907,7 +934,7 @@ function stepGroups(n,p){
     {k:'division',t:'כמה ציור וכמה אותיות',term:'net',o:opts('division',x=>'L:'+x)},
     ...(p.division==='side'?[]:[{stp:'typeH',t:'גובה רצועת האותיות',u:'מ״מ',min:12,max:70}]),
     {stp:'regH',t:'גובה שורת הפרטים שבחוק',term:'reg',u:'מ״מ',min:5,max:16},
-    {txt:[['title','שם העיצוב, לגלריה בלבד (לא מודפס)'],['winery','שם היקב'],['name','שם היין']]},{txt:[['vintage','בציר'],['abv','אלכוהול %']],two:1}];
+    {txt:[['title','שם הבקבוק בגלריה (לא מודפס)'],['winery','שם היקב'],['name','שם היין']]},{txt:[['vintage','בציר'],['abv','אלכוהול %']],two:1}];
   if(n===5)return[
     {k:'paper',t:'נייר כותנה',term:'cotton',o:opts('paper',x=>'W:'+x)},
     {k:'print',t:'שיטת הדפסה',term:'print',o:opts('print',x=>'K:'+x)},
@@ -937,7 +964,7 @@ function stepGroups(n,p){
 function brief(p){
   const g=geo(p),a=g.art,f=n=>n.toFixed(1),open=rules(p).filter(x=>x.lv==='bad'||x.lv==='warn');
   return[
-    ['היין והבקבוק',[...(p.code?[['קוד הדגם',p.code]]:[]),...(p.title?[['שם העיצוב',p.title]]:[]),['יין',`${p.name}, ${p.winery}, ${p.vintage}`],['סוג',nm('wine',p.wine)],['בקבוק',`${nm('bottle',p.bottle)}, קוטר ${g.B.d} מ״מ, דופן ישרה ${g.B.panel} מ״מ`],['זכוכית ופקק',`${nm('glass',p.glass)}, ${nm('closure',p.closure)}${['bare','glass'].includes(p.closure)?'':', '+nm('capsule',p.capsule)}`]]],
+    ['היין והבקבוק',[...(p.code?[['קוד הדגם',p.code]]:[]),...(p.title?[['שם הבקבוק',p.title]]:[]),['יין',`${p.name}, ${p.winery}, ${p.vintage}`],['סוג',nm('wine',p.wine)],['בקבוק',`${nm('bottle',p.bottle)}, קוטר ${g.B.d} מ״מ, דופן ישרה ${g.B.panel} מ״מ`],['זכוכית ופקק',`${nm('glass',p.glass)}, ${nm('closure',p.closure)}${['bare','glass'].includes(p.closure)?'':', '+nm('capsule',p.capsule)}`]]],
     ['התווית הכוללת',[['צורה',nm('cut',p.cut)],['מידות',`${p.w} × ${p.h} מ״מ (רוחב × גובה)`],['יחס התווית',`1 : ${(p.h/p.w).toFixed(2)}`],['פינות',g.R?'R=1.5 מ״מ, מכונת הדבקה אוטומטית':'חיתוך חד, הדבקה ידנית'],['מסגרת נייר',`${p.margin} מ״מ`],['עטיפה על הבקבוק',`${Math.round(g.deg)}°, רוחב נראה מהחזית ${r1(g.apparent)} מ״מ`]]],
     ['חלוקת השטח',[['פריסה',nm('division',p.division)],['שטח ציור נטו',`${r1(a.w)} × ${r1(a.h)} מ״מ${a.round?', עיגול':''}`],['רצועת אותיות',p.division==='side'?'לצד הציור':`${p.typeH} מ״מ`],['שורת הפרטים שבחוק',`${p.regH} מ״מ בתחתית`]]],
     ['קנבס לסטודיו',[['יחס הציור נטו',a.round?'1 : 1 (עיגול)':`1 : ${(a.h/a.w).toFixed(3)}`],['קנבס מומלץ',`${f(g.cbw)} × ${f(g.cbh)} ס״מ, כולל גלישה`],['שטח הדימוי בקנבס',`${f(g.cw)} × ${f(g.ch)} ס״מ`],['שולי גלישה בקנבס',`${r1(g.bl*g.k)} מ״מ מכל צד (2 מ״מ בהדפסה)`],['קנה מידה',`פי ${g.k.toFixed(2)} מגודל ההדפסה`],['קובץ סופי ב־600 DPI',`${g.px[0]} × ${g.px[1]} פיקסלים`],['סריקת הקנבס',`${g.scan} DPI לפחות`]]],
@@ -1108,7 +1135,7 @@ const FACTS=[
 ['מדף ומכירות','תוויות שקופות מצליחות בעיקר ביין רוזה ולבן. ביין אדום שמתיישן הן מחמיצות את המסורת שהקונים מחפשים.'],
 ['טכנולוגיה','יש תוויות שמחוברות לשבב NFC: נגיעה בטלפון בבקבוק פותחת את הסיפור של היין ושל הכרם.']
 ];
-const ICO={edit:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/></svg>',trash:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/></svg>',x:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',share:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5L12 3l4.5 4.5M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>',dl:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 10.5L12 15l4.5-4.5M5 19h14"/></svg>',cam:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',copy:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/></svg>'};
+const ICO={zoom:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.4 15.4L20 20M10.5 8v5M8 10.5h5"/></svg>',edit:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/></svg>',trash:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/></svg>',x:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',share:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5L12 3l4.5 4.5M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>',dl:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 10.5L12 15l4.5-4.5M5 19h14"/></svg>',cam:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',copy:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/></svg>'};
 const SHOOT_PH=[[0,'מתארים לצלם את הבקבוק, את התווית ואת הציור'],[4,'שולחים את הכול לסטודיו של Google'],[9,'מעמידים את הבקבוק ומכוונים את התאורה'],[16,'מצלמים. התמונה נבנית עכשיו, שכבה אחר שכבה'],[26,'מלטשים את ההשתקפויות בזכוכית ואת פרטי התווית'],[36,'עוד רגע הבקבוק שלכם מגיע. כדאי להתכונן'],[52,'זה לוקח קצת יותר מהרגיל. הצילום ממש בדרך']];
 let SH=null;
 function factAt(){let i=0;try{i=+localStorage.getItem('wl-fact2')||0;}catch(e){}i=((i%FACTS.length)+FACTS.length)%FACTS.length;try{localStorage.setItem('wl-fact2',String(i+1));}catch(e){}return FACTS[i];}
@@ -1139,40 +1166,45 @@ const NOF_TITLES=["כוכב הכותנה", "החורשה", "סגול עמוק", 
 const NOF_PAINT=['_DSC1428_1_small (1).jpg','_DSC1460_small.jpg','_DSC1470_small.jpg','_DSF0143-Edit (1).jpg','_DSF0146-Edit (1).jpg','_DSF0149-Edit (1).jpg','_DSF1430-Edit.jpg','_DSF1431-Edit (1).jpg','_DSF1446-Edit (1).jpg','_DSF1708-Edit.jpg','_DSF8346-Edit-1.jpg','_DSF83542 (1).jpg'];
 /* [wine,bottle,glass,closure,capsule,cut,division,paper,enh,painting#,line,px] */
 const NOF=[
-['red','bordeaux','antique','capsule','black','rect','top','felt',['foil'],11,'קברנה סוביניון · גליל עליון',0],
-['red','heavy','dark','wax','burgundy','shield','window','deep',['emboss'],3,'בלנד אדום · הרי יהודה',.3],
-['red','burgundy','antique','capsule','copper','arch','full','smooth',[],9,'פינו נואר · רמת הגולן',0],
-['red','bordeaux','dark','capsule','gold','landscape','top','laid',['foil'],2,'מרלו · הרי יהודה',0],
-['red','rhone','amber','bare','black','cartouche','top','felt',[],8,'קריניאן · שומרון',0],
-['red','burgheavy','antique','wax','red','rect','minimal','heavy',['emboss'],12,'סירה · רמת הגולן',0],
-['red','bordeaux','black','capsule','black','gothic','top','deep',['foil'],6,'פטי ורדו · גליל עליון',0],
-['red','burgundy','dark','capsule','black','scallop','window','laid',['foil'],4,'גרנאש · הרי יהודה',0],
-['red','bordeaux','antique','capsule','red','octagon','medallion','felt',['emboss'],5,'מרסלאן · גליל מערבי',0],
-['red','rhone','dark','wax','black','strip','full','heavy',[],7,'קברנה פרנק · הרי ירושלים',0],
-['white','burgundy','flint','screw','tin','wave','top','smooth',[],10,'שרדונה · רמת הגולן',0],
-['white','alsace','leaf','screw','gold','strip','full','felt',[],8,'ריסלינג · רמת הגולן',0],
-['white','bordeaux','flint','capsule','white','landscape','top','laid',['foil'],2,'סוביניון בלאן · גליל עליון',0],
-['white','burgheavy','antique','capsule','gold','cartouche','window','deep',['emboss'],1,'ויונייה · הרי יהודה',0],
-['white','rhone','flint','capsule','tin','rounded','top','smooth',[],3,'רוסאן · הרי יהודה',-.4],
-['white','alsace','blue','screw','tin','oval','full','felt',[],9,'גוורצטרמינר · גליל עליון',0],
-['white','bordeaux','leaf','capsule','green','arch','top','felt',[],4,'שנן בלאן · שומרון',0],
-['white','burgundy','flint','wax','white','circle','full','heavy',['emboss'],5,'מראווי · הרי יהודה',0],
-['white','bordeaux','flint','capsule','gold','hexagon','full','smooth',['foil'],11,'חמדאני · הרי יהודה',0],
-['white','provence','flint','capsule','tin','slant','minimal','smooth',[],12,'קולומבר · נגב',0],
-['rose','provence','flint','glass','white','rounded','minimal','smooth',[],9,'גרנאש רוזה · הרי יהודה',0],
-['rose','provence','flint','capsule','copper','oval','full','felt',['foil'],12,'סירה רוזה · גליל עליון',0],
-['rose','bordeaux','flint','screw','gold','landscape','top','laid',[],10,'רוזה ים תיכוני · שפלת יהודה',0],
-['rose','alsace','flint','capsule','tin','strip','full','smooth',[],7,'פינו נואר רוזה · רמת הגולן',0],
-['rose','burgundy','flint','capsule','gold','arch','window','deep',['emboss'],1,'מורבדר רוזה · הרי יהודה',0],
-['rose','rhone','flint','wax','white','circle','medallion','felt',['foil'],11,'קריניאן רוזה · שומרון',0],
-['rose','provence','flint','glass','white','gothic','top','smooth',[],5,'סנסו רוזה · גליל',0],
-['rose','bordeaux','flint','capsule','red','torn','top','heavy',[],2,'קברנה רוזה · גליל עליון',.2],
-['rose','burgundy','flint','screw','copper','cartouche','full','smooth',['foil'],6,'גרנאש־סירה רוזה · ירושלים',0],
-['rose','alsace','flint','capsule','tin','diamond','full','laid',[],3,'מלבק רוזה · גליל מערבי',0]];
-function nofP(r,pt){const[wine,bottle,glass,closure,capsule,cut,division,paper,enh,pi,line,px]=r;
+['red','bordeaux','antique','capsule','black','rect','top','felt',[],11,'קברנה סוביניון · גליל עליון',0,{abv:'14'}],
+['red','heavy','dark','wax','burgundy','shield','window','deep',['foil','emboss'],3,'בלנד אדום · הרי יהודה',.3,{abv:'14.5',vintage:'2022'}],
+['red','burgundy','antique','capsule','copper','arch','full','smooth',[],9,'פינו נואר · רמת הגולן',0,{abv:'13.5'}],
+['red','bordeaux','dark','capsule','black','landscape','top','felt',[],2,'מרלו · הרי יהודה',0,{abv:'14'}],
+['red','burgundy','antique','bare','black','cartouche','top','felt',[],8,'קריניאן ותיק · שומרון',0,{abv:'13.5'}],
+['red','burgheavy','antique','wax','red','rect','minimal','deep',['emboss'],12,'סירה · רמת הגולן',0,{abv:'14.5'}],
+['red','bordeaux','black','capsule','black','gothic','top','deep',['foil'],6,'פטי ורדו · גליל עליון',0,{abv:'14.5',vintage:'2022'}],
+['red','burgundy','dark','capsule','burgundy','scallop','window','felt',[],4,'גרנאש · הרי יהודה',0,{abv:'14',pz:1.15,py:.15}],
+['red','bordeaux','antique','capsule','red','octagon','medallion','felt',['emboss'],5,'מרסלאן · גליל מערבי',0,{abv:'14'}],
+['red','bordeaux','dark','wax','black','strip','full','heavy',[],7,'קברנה פרנק · הרי ירושלים',0,{abv:'14'}],
+['white','burgundy','flint','capsule','tin','wave','top','smooth',[],10,'שרדונה · רמת הגולן',0,{abv:'13'}],
+['white','alsace','leaf','screw','gold','strip','full','felt',[],8,'ריסלינג · רמת הגולן',0,{abv:'12'}],
+['white','bordeaux','flint','screw','tin','landscape','top','laid',[],2,'סוביניון בלאן · גליל עליון',0,{abv:'12.5'}],
+['white','burgheavy','antique','capsule','gold','cartouche','window','deep',['emboss'],1,'ויונייה · הרי יהודה',0,{abv:'13.5'}],
+['white','rhone','flint','capsule','tin','rounded','top','smooth',[],3,'רוסאן · הרי יהודה',-.4,{abv:'13'}],
+['white','alsace','blue','screw','tin','oval','full','felt',[],9,'גוורצטרמינר · גליל עליון',0,{abv:'13'}],
+['white','bordeaux','leaf','capsule','green','arch','top','felt',[],4,'שנן בלאן · שומרון',0,{abv:'12.5'}],
+['white','burgundy','flint','wax','white','rounded','window','felt',['foil','emboss'],5,'מראווי · הרי יהודה',0,{abv:'12.5',pz:1.2,py:.3}],
+['white','bordeaux','flint','capsule','gold','hexagon','top','smooth',['foil'],11,'חמדאני · הרי יהודה',0,{abv:'12.5'}],
+['white','bordeaux','flint','screw','tin','slant','minimal','smooth',[],12,'קולומבר · נגב',0,{abv:'12'}],
+['rose','provence','flint','glass','white','rounded','minimal','smooth',[],9,'גרנאש רוזה · הרי יהודה',0,{abv:'12.5'}],
+['rose','provence','flint','capsule','copper','oval','top','felt',['foil'],12,'סירה רוזה · גליל עליון',0,{abv:'13'}],
+['rose','bordeaux','flint','screw','gold','landscape','top','smooth',[],10,'רוזה ים תיכוני · שפלת יהודה',0,{abv:'12'}],
+['rose','alsace','flint','capsule','tin','strip','full','smooth',[],7,'פינו נואר רוזה · רמת הגולן',0,{abv:'12.5'}],
+['rose','burgundy','flint','capsule','gold','arch','window','deep',['emboss'],1,'מורבדר רוזה · הרי יהודה',0,{abv:'13'}],
+['rose','rhone','flint','glass','white','circle','medallion','felt',['foil'],11,'קריניאן רוזה · שומרון',0,{abv:'12.5'}],
+['rose','provence','flint','glass','white','gothic','top','smooth',[],5,'סנסו רוזה · גליל',0,{abv:'12'}],
+['rose','bordeaux','flint','capsule','copper','torn','top','heavy',[],2,'קברנה רוזה · גליל עליון',.2,{abv:'12.5'}],
+['rose','burgundy','flint','screw','copper','cartouche','top','smooth',[],6,'גרנאש־סירה רוזה · ירושלים',0,{abv:'12.5'}],
+['rose','bordeaux','flint','capsule','tin','diamond','top','smooth',[],3,'מלבק רוזה · גליל מערבי',0,{abv:'12.5'}]];
+function nofP(r,pt){const[wine,bottle,glass,closure,capsule,cut,division,paper,enh,pi,line,px,o={}]=r;
   const p=fixp(Object.assign(clone(DEF),{wine,bottle,glass,closure,capsule,cut,division,paper,enh:enh.slice(),name:'NOF',winery:line,vintage:wine==='red'?'2023':'2025',abv:wine==='red'?'14':'12.5',
-    labeler:'auto',margin:4,own:'upload',thread:'none',print:'indigo',moment:'gift',pz:1,px,py:0,painting:pt.data,paintAR:pt.ar,bank:pt.name}));
+    labeler:'auto',margin:4,own:'upload',thread:'none',print:'indigo',moment:'gift',pz:o.pz||1,px,py:o.py||0,painting:pt.data,paintAR:pt.ar,bank:pt.name},o.abv?{abv:o.abv}:{},o.vintage?{vintage:o.vintage}:{}));
   [p.w,p.h]=recDims(p);p.typeH=recType(p);normalize(p);return p;}
+function nofUpgrade(){let v=0;try{v=+localStorage.getItem('wl-nofv')||0;}catch(e){}if(v>=2)return;let ch=0;
+  S.items.forEach(it=>{const m=/^nof(\d+)$/.exec(it.id);if(!m||(it.t&&it.c&&it.t!==it.c))return;const r=NOF[+m[1]-1];if(!r)return;const old=it.p;
+    const p=nofP(r,{data:old.painting,ar:old.paintAR,name:old.bank});Object.assign(p,{id:old.id,c:old.c,title:old.title,code:old.code});
+    if(JSON.stringify(p)!==JSON.stringify(old)){it.p=p;ch=1;delete S.thumbs[it.id];if(S.p.id===it.id){S.p=clone(p);S.photo='';}}});
+  try{localStorage.setItem('wl-nofv','2');}catch(e){}if(ch){saveThumbs();persist();}}
 async function seedNof(){
   try{if(localStorage.getItem('wl-nof'))return;}catch(e){return;}
   if(!S.bank.length||S.nofBusy)return;S.nofBusy=true;
@@ -1182,8 +1214,9 @@ async function seedNof(){
   if(Object.values(pics).some(x=>!x)){S.nofBusy=false;return;}
   const now=Date.now();let n=S.items.reduce((m,x)=>Math.max(m,x.n||0),0);
   NOF.forEach((r,i)=>{const pt=pics[PM[r[9]-1]],p=nofP(r,pt),id='nof'+(i+1);if(S.items.some(x=>x.id===id))return;
-    p.id=id;p.title=NOF_TITLES[i];p.code=['R','W','RS'][Math.floor(i/10)]+String(i%10+1).padStart(2,'0');p.c=now-60000+i*1000;S.items.push({id,n:++n,c:p.c,t:p.c,step:8,p});});
-  try{localStorage.setItem('wl-nof','1');}catch(e){}
+    p.id=id;p.code=['R','W','RS'][Math.floor(i/10)]+String(i%10+1).padStart(2,'0');p.c=now-60000+i*1000;S.items.push({id,n:++n,c:p.c,t:p.c,step:8,p});});
+  try{localStorage.setItem('wl-nof','1');localStorage.setItem('wl-nofv','2');}catch(e){}
+  ensureCodes();ensureNums();
   S.nofBusy=false;persist();render(true);
 }
 /* ── gallery ── */
@@ -1194,18 +1227,20 @@ function vGallery(){
   const cur=cats.find(c=>c[0]===S.gtab)?S.gtab:'red';
   const list=[...S.items].filter(it=>gcat(it.p)===cur).sort((a,b)=>(a.c||0)-(b.c||0));
   const miss=S.items.filter(it=>!S.thumbs[it.id]).length;
-  return`<h2>גלריית העיצובים</h2><p class="lead">כל תווית נשמרת כאן לפי סוג היין. נגיעה בבקבוק פותחת אותו בגדול.</p>${S.gmsg?`<p class="note" role="status">${esc(S.gmsg)}</p>`:''}
-  ${S.items.length?`<button class="btn alt sm" data-action="gpdf" id="gpdf">${ICO.dl}<span>קטלוג PDF של כל הדגמים</span></button>`:''}
+  return`<h2>גלריית העיצובים</h2><p class="lead">כל תווית נשמרת כאן לפי סוג היין. נגיעה בבקבוק פותחת אותו בגדול.</p>${S.gmsg&&!S.pdfBusy?`<p class="note" role="status">${esc(S.gmsg)}</p>`:''}
+  ${S.items.length?`<div class="gpdf"><button class="btn alt sm" data-action="gpdf" id="gpdf" ${S.pdfBusy?'disabled':''}>${ICO.dl}<span>${S.pdfBusy?'מכינים את הקטלוג…':'להפיק קטלוג PDF של כל הדגמים'}</span></button>
+    ${S.pdfBusy?`<p class="gpdf-msg minor">${esc(S.gmsg||'')}</p>`:''}
+    ${S.pdf&&!S.pdfBusy?`<div class="pdfcard"><div><b>הקטלוג מוכן</b><small>${esc(S.pdf.name)} · ${(S.pdf.size/1048576).toFixed(1)}MB · הקובץ ירד למכשיר</small></div><div class="pdfbtns"><button class="btn sm" data-action="pdfopen">לפתוח</button><button class="btn alt sm" data-action="pdfsave">להוריד שוב</button><button class="btn alt sm" data-action="pdfshare">לשתף</button></div></div>`:''}</div>`:''}
   <div class="tabs ctabs" role="tablist" aria-label="סוג היין">${cats.map(c=>`<button role="tab" aria-selected="${c[0]===cur}" data-action="gtab" data-v="${c[0]}">${c[1]} <span class="num gcount">${S.items.filter(it=>gcat(it.p)===c[0]).length}</span></button>`).join('')}</div>
-  ${list.length?`<div class="ggrid">${list.map(it=>`<button class="gcell" data-action="gopen" data-id="${it.id}" aria-label="לפתוח את ${esc(it.p.title||it.p.name)}, ${esc(it.p.winery)}">${S.thumbs[it.id]?`<img src="${S.thumbs[it.id]}" alt="">`:`<span class="gmock">${scene(it.p,8,'g'+it.id)}</span><i class="gtag">הדמיה</i>`}<span class="gcode num">${esc(it.p.code||'')}</span><span class="gcap"><b>${esc(it.p.title||it.p.name)}</b><small>${it.p.title?esc(it.p.name)+' · ':''}${esc(it.p.winery)}</small></span></button>`).join('')}</div>`
+  ${list.length?`<div class="ggrid">${list.map(it=>`<div class="gcell" role="button" tabindex="0" data-action="gopen" data-id="${it.id}" aria-label="לפתוח את ${esc(it.p.title||it.p.name)}, ${esc(it.p.winery)}">${S.thumbs[it.id]?`<img src="${S.thumbs[it.id]}" alt="">`:`<span class="gmock">${scene(it.p,8,'g'+it.id)}</span><i class="gtag">הדמיה</i>`}<span class="gcode num">${esc(it.p.code||'')}</span><span class="gcap"><b>${esc(it.p.title||it.p.name)}</b><small>${it.p.title?esc(it.p.name)+' · ':''}${esc(it.p.winery)}</small></span>${it.p.painting?`<button class="gzoom" data-action="gzoom" data-id="${it.id}" aria-label="להציג את הציור המקורי">${ICO.zoom}</button>`:''}</div>`).join('')}</div>`
     :`<p class="lead">עוד אין כאן עיצובים מהסוג הזה.</p>`}
   ${canShoot()&&miss?`<div class="gbatch"><p>ל־${miss} עיצובים עוד אין צילום אמיתי, ובינתיים מוצגת ההדמיה.</p><button class="btn alt sm" data-action="gshootall">לצלם את כולם, אחד אחרי השני</button>${S.gshootAsk?`<p class="minor">${miss} צילומים ב־${HQ()}. כל צילום נספר בחשבון Google ולוקח עד דקה. <button class="link" data-action="gshootall" data-go="1">כן, להתחיל</button></p>`:''}</div>`:''}`;
 }
 async function gFull(id){const h=await readHist(id);return h[0]?h[0].data:'';}
 async function gOpen(id){const it=S.items.find(x=>x.id===id);if(!it)return;S.lb=id;S.lbDel=false;
   const draw=src=>{$('layer').innerHTML=`<div class="lb" role="dialog" aria-modal="true" aria-label="${esc(it.p.name)}">
-    <div class="lb-img">${src?`<img src="${src}" alt="צילום הבקבוק ${esc(it.p.name)}">`:`<span class="gmock big">${scene(it.p,8,'lb')}</span>`}</div>
-    <div class="lb-cap"><span class="num lb-code">${esc(it.p.code||'')}</span><b>${esc(it.p.title||it.p.name)}</b><span>${it.p.title?esc(it.p.name)+' · ':''}${esc(it.p.winery)} · ${nm('wine',it.p.wine)} · ${nm('bottle',it.p.bottle)}</span></div>
+    <div class="lb-img" data-hold="${id}">${src?`<img src="${src}" alt="צילום הבקבוק ${esc(it.p.name)}">`:`<span class="gmock big">${scene(it.p,8,'lb')}</span>`}</div>
+    ${it.p.painting?`<p class="holdhint"><button class="gzoom inline" data-action="gzoom" data-id="${id}" aria-label="להציג את הציור המקורי">${ICO.zoom}</button> לחיצה על הזכוכית המגדלת, או לחיצה ארוכה על הבקבוק, מציגה את הציור המקורי</p>`:''}<div class="lb-cap"><span class="num lb-code">${esc(it.p.code||'')}</span><b>${esc(it.p.title||it.p.name)}</b><span>${it.p.title?esc(it.p.name)+' · ':''}${esc(it.p.winery)} · ${nm('wine',it.p.wine)} · ${nm('bottle',it.p.bottle)}</span></div>
     <div class="tools lb-tools"><button class="tool" data-action="gedit" data-id="${id}">${ICO.edit}<span>עריכה</span></button><button class="tool" data-action="gshare" data-id="${id}">${ICO.share}<span>לשתף</span></button><button class="tool" data-action="gdel" data-id="${id}">${ICO.trash}<span id="lb-del">${S.lbDel?'למחוק באמת?':'מחיקה'}</span></button><button class="tool" data-action="gclose">${ICO.x}<span>סגירה</span></button></div></div>`;};
   draw(S.thumbs[id]||'');const full=await gFull(id);if(full&&S.lb===id)draw(full);}
 async function gShare(id){const it=S.items.find(x=>x.id===id);if(!it)return;let blob;
@@ -1232,8 +1267,18 @@ async function gShootAll(){
 const CPRE={red:'R',white:'W',rose:'RS'};
 const cpre=w=>CPRE[w]||'X';
 function nextCode(w,skip){const pre=cpre(w),re=new RegExp('^'+pre+'(\\d+)$');let m=0;S.items.forEach(it=>{if(it===skip)return;const x=re.exec(it.p.code||'');if(x)m=Math.max(m,+x[1]);});return pre+String(m+1).padStart(2,'0');}
+const BNAME=n=>'בקבוק '+n;
+function nextNum(){return S.items.reduce((m,it)=>Math.max(m,+it.p.num||0),0)+1;}
+function ensureNums(){let ch=0;
+  try{if(!localStorage.getItem('wl-num')){const ci={red:0,white:1,rose:2};const ord=[...S.items].sort((a,b)=>((ci[a.p.wine]??3)-(ci[b.p.wine]??3))||String(a.p.code).localeCompare(String(b.p.code),'en',{numeric:true})||((a.c||0)-(b.c||0)));
+    ord.forEach((it,i)=>{it.p.num=i+1;it.p.title=BNAME(i+1);});ch=1;localStorage.setItem('wl-num','1');}}catch(e){}
+  S.items.forEach(it=>{if(!it.p.num){it.p.num=nextNum();it.p.title=BNAME(it.p.num);ch=1;}});
+  S.items.forEach(it=>{if(S.p.id===it.id){S.p.num=it.p.num;S.p.title=it.p.title;}});
+  if(ch)persist();}
 function ensureCodes(){let ch=0;
   S.items.filter(it=>/^nof\d+$/.test(it.id)&&!it.p.code).forEach(it=>{const i=+it.id.slice(3)-1;it.p.code=['R','W','RS'][Math.floor(i/10)]+String(i%10+1).padStart(2,'0');ch=1;});
+  const seen=new Set(S.items.filter(it=>/^nof\d+$/.test(it.id)).map(it=>it.p.code));
+  [...S.items].sort((a,b)=>(a.c||0)-(b.c||0)).forEach(it=>{if(/^nof\d+$/.test(it.id))return;if(it.p.code&&seen.has(it.p.code)){it.p.code='';}if(it.p.code)seen.add(it.p.code);});
   [...S.items].sort((a,b)=>(a.c||0)-(b.c||0)).forEach(it=>{if(!it.p.code){it.p.code=nextCode(it.p.wine,it);ch=1;}});
   S.items.forEach(it=>{if(S.p.id===it.id&&S.p.code!==it.p.code)S.p.code=it.p.code;});
   if(ch)persist();}
@@ -1248,28 +1293,92 @@ async function stampBlob(blob,p){try{await (document.fonts&&document.fonts.ready
   x.font=`400 ${Math.round(band*.2)}px "IBM Plex Sans Hebrew",sans-serif`;x.fillStyle='#77756f';x.fillText(p.winery||'',W-pad,mid+band*.24);
   if(p.code){x.direction='ltr';x.textAlign='left';x.fillStyle='#2a2a28';x.font=`500 ${Math.round(band*.3)}px "IBM Plex Mono",monospace`;x.fillText(p.code,pad,mid);}
   return await new Promise(r=>c.toBlob(b=>r(b||blob),'image/jpeg',.93));}
-async function catalogPdf(){
-  S.gmsg='מכינים את הקטלוג…';render(true);
-  const cats=[['red','יין אדום'],['white','יין לבן'],['rose','רוזה'],['other','אחרים']];
-  let body=`<header class="pc-head"><b>${esc((S.items[0]&&S.items[0].p.name)||'קטלוג')}</b><span>קטלוג עיצובי תוויות · ${new Date().toLocaleDateString('he-IL')} · ${S.items.length} דגמים</span></header>`;
-  for(const[c,label]of cats){const list=S.items.filter(it=>gcat(it.p)===c).sort((a,b)=>String(a.p.code).localeCompare(String(b.p.code),'en',{numeric:true}));if(!list.length)continue;
-    body+=`<section class="pc-cat"><h2>${label}</h2><div class="pc-grid">`;
-    for(const it of list){const p=it.p,full=await gFull(it.id);
-      body+=`<article class="pc-cell"><div class="pc-img">${full?`<img src="${full}" alt="">`:scene(p,8,'pc'+it.id)}</div>
-      <div class="pc-meta"><div class="pc-top"><b>${esc(p.title||p.name)}</b><span class="pc-code">${esc(p.code||'')}</span></div>
-      <p>${esc(p.name)} · ${esc(p.winery)} · ${esc(p.vintage||'')}</p>
-      <p>${nm('bottle',p.bottle)}, ${nm('glass',p.glass)} · ${nm('closure',p.closure)}</p>
-      <p>תווית ${nm('cut',p.cut)}, ${p.w}×${p.h} מ״מ · ${nm('division',p.division)} · ${nm('paper',p.paper)}${(p.enh||[]).length?' · '+p.enh.map(e=>nm('enh',e)).join(', '):''}</p>${full?'':'<p class="pc-note">הדמיה, עוד בלי צילום</p>'}</div></article>`;}
-    body+=`</div></section>`;}
-  let el=$('printcat');if(!el){el=document.createElement('div');el.id='printcat';document.body.appendChild(el);}
-  el.innerHTML=body;document.body.classList.add('printing');
-  await Promise.all([...el.querySelectorAll('img')].map(i=>i.complete?0:new Promise(r=>{i.onload=i.onerror=r;})));
-  try{await document.fonts.ready;}catch(e){}
-  S.gmsg='';render(true);
-  const done=()=>{document.body.classList.remove('printing');window.removeEventListener('afterprint',done);};
-  window.addEventListener('afterprint',done);
-  setTimeout(()=>{try{window.print();}catch(e){done();S.gmsg='ההדפסה לא זמינה כאן. כדאי לפתוח את האתר בדפדפן Chrome.';render(true);}},150);
+/* ── real PDF catalogue: pages drawn on canvas, wrapped in a minimal PDF ── */
+function pdfBytes(pages){/* pages: [{jpg:Uint8Array,w,h}] */
+  const enc=new TextEncoder(),parts=[],offs=[];let len=0;
+  const push=x=>{const b=typeof x==='string'?enc.encode(x):x;parts.push(b);len+=b.length;};
+  const obj=(n,body)=>{offs[n]=len;push(`${n} 0 obj\n`);body();push(`\nendobj\n`);};
+  push('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');
+  const N=pages.length,PW=595.28,PH=841.89;
+  obj(1,()=>push('<< /Type /Catalog /Pages 2 0 R >>'));
+  obj(2,()=>push(`<< /Type /Pages /Count ${N} /Kids [${pages.map((_,i)=>`${3+i*3} 0 R`).join(' ')}] >>`));
+  pages.forEach((pg,i)=>{const P=3+i*3,C=P+1,I=P+2,cs=`q ${PW} 0 0 ${PH} 0 0 cm /Im0 Do Q`;
+    obj(P,()=>push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Resources << /XObject << /Im0 ${I} 0 R >> >> /Contents ${C} 0 R >>`));
+    obj(C,()=>{push(`<< /Length ${cs.length} >>\nstream\n`);push(cs);push('\nendstream');});
+    obj(I,()=>{push(`<< /Type /XObject /Subtype /Image /Width ${pg.w} /Height ${pg.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${pg.jpg.length} >>\nstream\n`);push(pg.jpg);push('\nendstream');});});
+  const total=3+N*3,xref=len;
+  let x=`xref\n0 ${total}\n0000000000 65535 f \n`;for(let n=1;n<total;n++)x+=String(offs[n]).padStart(10,'0')+' 00000 n \n';
+  push(x+`trailer\n<< /Size ${total} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);
+  return new Blob(parts,{type:'application/pdf'});
 }
+const loadImg=src=>new Promise((r,j)=>{const i=new Image();i.onload=()=>r(i);i.onerror=j;i.src=src;});
+function wrapLines(x,text,maxW){const words=String(text).split(' '),out=[];let line='';for(const w of words){const t=line?line+' '+w:w;if(x.measureText(t).width>maxW&&line){out.push(line);line=w;}else line=t;}if(line)out.push(line);return out;}
+async function buildCatalog(){
+  const W=1654,H=2339,M=110,GAP=44,COLS=3,CW=(W-2*M-GAP*(COLS-1))/COLS,IH=Math.round(CW*1.1),MH=330;
+  const F1='"Frank Ruhl Libre","Noto Serif Hebrew",serif',F2='"IBM Plex Sans Hebrew","Noto Sans Hebrew",Arial,sans-serif',FM='"IBM Plex Mono",monospace';
+  try{await Promise.all([`500 40px ${F1}`,`900 40px ${F1}`,`400 30px ${F2}`,`600 30px ${F2}`,`500 30px ${FM}`].map(f=>document.fonts.load(f)));}catch(e){}
+  const cats=[['red','יין אדום'],['white','יין לבן'],['rose','רוזה'],['other','אחרים']];
+  const brand=(S.items[0]&&S.items[0].p.name)||'קטלוג',date=new Date().toLocaleDateString('he-IL');
+  const pages=[];let cv,x,y,col,first=true,pageNo=0;
+  const newPage=()=>{cv=document.createElement('canvas');cv.width=W;cv.height=H;x=cv.getContext('2d');x.fillStyle='#ffffff';x.fillRect(0,0,W,H);x.direction='rtl';y=M;col=0;pageNo++;
+    if(first){x.fillStyle='#1d1d1b';x.textAlign='right';x.textBaseline='alphabetic';x.font=`500 64px ${F1}`;
+      const tl=wrapLines(x,'קטלוג התאמה בין ציורים של אמן אל בקבוק היין על כל גווניו',W-2*M);tl.forEach((t,i)=>x.fillText(t,W-M,y+62+i*84));let hy=y+62+(tl.length-1)*84;
+      x.font=`400 34px ${F2}`;x.fillStyle='#77756f';x.fillText('ציורי שמן: ארז אהרון',W-M,hy+64);
+      x.fillStyle="#d6d4cf";x.fillRect(M,hy+100,W-2*M,2);y=hy+140;first=false;}
+    x.direction='rtl';x.textAlign='center';x.fillStyle='#a3a19b';x.font=`400 24px ${F2}`;x.fillText(String(pageNo),W/2,H-50);};
+  const flush=async()=>{const b=await new Promise(r=>cv.toBlob(r,'image/jpeg',.9));pages.push({jpg:new Uint8Array(await b.arrayBuffer()),w:W,h:H});};
+  let done=0;
+  for(const[c,label]of cats){const list=S.items.filter(it=>gcat(it.p)===c).sort((a,b)=>String(a.p.code).localeCompare(String(b.p.code),'en',{numeric:true}));if(!list.length)continue;
+    if(cv)await flush();newPage();
+    x.textAlign='right';x.fillStyle='#1d1d1b';x.font=`500 54px ${F1}`;x.fillText(label,W-M,y+48);y+=96;
+    for(const it of list){const p=it.p;
+      if(col===COLS){col=0;y+=IH+MH+GAP;}
+      if(y+IH+MH>H-M){await flush();newPage();x.textAlign='right';x.fillStyle='#1d1d1b';x.font=`500 40px ${F1}`;x.fillText(label+' · המשך',W-M,y+36);y+=80;}
+      const cx=W-M-col*(CW+GAP)-CW;/* RTL: first cell on the right */
+      const full=await gFull(it.id);let img;try{img=await loadImg(full||('data:image/png;base64,'+await svgToPng(sceneSvg(p),900,1140)));}catch(e){img=null;}
+      x.save();x.beginPath();x.rect(cx,y,CW,IH);x.clip();x.fillStyle='#efeeeb';x.fillRect(cx,y,CW,IH);
+      if(img){const k=Math.max(CW/img.width,IH/img.height),iw=img.width*k,ih=img.height*k;x.drawImage(img,cx+(CW-iw)/2,y+(IH-ih)/2,iw,ih);}
+      x.restore();x.strokeStyle='#dcdad5';x.lineWidth=2;x.strokeRect(cx,y,CW,IH+MH);
+      const R=cx+CW-22,L=cx+22;let ty=y+IH+56;
+      x.direction='rtl';x.textAlign='right';x.fillStyle='#1d1d1b';x.font=`600 40px ${F1}`;x.fillText(p.title||p.name,R,ty);
+      if(p.code){x.font=`500 26px ${FM}`;const tw=x.measureText(p.code).width+26;x.strokeStyle='#b9b7b1';x.lineWidth=2;x.beginPath();x.roundRect?x.roundRect(L,ty-34,tw,44,22):x.rect(L,ty-34,tw,44);x.stroke();x.direction='ltr';x.textAlign='left';x.fillStyle='#333';x.fillText(p.code,L+13,ty-2);x.direction='rtl';x.textAlign='right';}
+      ty+=48;x.font=`400 25px ${F2}`;x.fillStyle='#55534e';
+      const short=v=>String(v).split(',')[0];
+      const lines=[`${p.name} · ${p.winery}`,`${p.vintage||''} · ${p.abv||''}% · בקבוק ${short(nm('bottle',p.bottle))}, ${nm('glass',p.glass)}`,`${nm('closure',p.closure)}`,
+        `תווית ${nm('cut',p.cut)} · ${p.w}×${p.h} מ״מ`,`${nm('paper',p.paper)}${(p.enh||[]).length?' · '+p.enh.map(e=>nm('enh',e)).join(', '):''}`];
+      for(const ln of lines){const ws=wrapLines(x,ln,CW-44);let t=ws[0]||'';if(ws.length>1){while(x.measureText(t+'…').width>CW-44&&t.length>3)t=t.slice(0,-1);t+='…';}if(ty>y+IH+MH-24)break;x.fillText(t,R,ty);ty+=38;}
+      if(!full&&ty<y+IH+MH-10){x.fillStyle='#a3a19b';x.font=`italic 400 23px ${F2}`;x.fillText('הדמיה, עוד בלי צילום',R,ty);}
+      col++;done++;S.gmsg=`מכינים את הקטלוג… ${done} מתוך ${S.items.length}`;const g=document.querySelector('.gpdf-msg');if(g)g.textContent=S.gmsg;}
+  }
+  if(cv)await flush();
+  return pdfBytes(pages);
+}
+async function catalogPdf(){
+  if(S.pdfBusy)return;S.pdfBusy=true;S.pdf=null;S.gmsg='מכינים את הקטלוג…';render(true);
+  try{const blob=await buildCatalog();const name=`${((S.items[0]&&S.items[0].p.name)||'catalog').replace(/\s+/g,'-')}-קטלוג-${new Date().toISOString().slice(0,10)}.pdf`;
+    if(S.pdf&&S.pdf.url)URL.revokeObjectURL(S.pdf.url);
+    S.pdf={blob,name,url:URL.createObjectURL(blob),size:blob.size};S.gmsg='';pdfSave();}
+  catch(e){S.gmsg='לא הצלחנו להכין את הקטלוג. כדאי לנסות שוב.';}
+  S.pdfBusy=false;render(true);}
+function pdfSave(){if(!S.pdf)return;if(S.caps&&S.caps.downloads){dl(S.pdf.name,S.pdf.blob);return;}const a=document.createElement('a');a.href=S.pdf.url;a.download=S.pdf.name;document.body.appendChild(a);a.click();a.remove();}
+function pdfOpen(){if(!S.pdf)return;const w=window.open(S.pdf.url,'_blank');if(!w)location.href=S.pdf.url;}
+async function pdfShare(){if(!S.pdf)return;const f=new File([S.pdf.blob],S.pdf.name,{type:'application/pdf'});
+  if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:S.pdf.name});}catch(e){}}else pdfSave();}
+
+
+/* press-and-hold: show the original painting */
+let HOLD=null;
+function holdSrc(k){const p=k==='cur'?S.p:(S.items.find(x=>x.id===k)||{}).p;if(!p||!p.painting)return null;const b=p.bank&&S.bank.find(x=>x.name===p.bank);return{src:b?b.url:p.painting,low:p.painting,t:p.title||p.name};}
+function holdShow(k){const h=holdSrc(k);if(!h)return;let el=$('holdv');if(!el){el=document.createElement('div');el.id='holdv';el.setAttribute('aria-hidden','true');document.body.appendChild(el);}
+  el.innerHTML=`<img src="${h.low}" alt=""><span>${esc(h.t)} · הציור המקורי</span>`;el.classList.add('on');
+  if(h.src!==h.low){const im=new Image();im.onload=()=>{const x=el.querySelector('img');if(x&&el.classList.contains('on'))x.src=h.src;};im.src=h.src;}
+  try{navigator.vibrate&&navigator.vibrate(12);}catch(e){}}
+function zoomOpen(k){holdShow(k);const el=$('holdv');if(!el)return;el.classList.add('tap');el.setAttribute('aria-hidden','false');el.onclick=()=>{el.classList.remove('on','tap');el.onclick=null;};}
+function holdHide(){const was=HOLD;clearTimeout(HOLD&&HOLD.t);HOLD=null;const el=$('holdv');if(el&&!el.classList.contains('tap')&&was)el.classList.remove('on');}
+document.addEventListener('pointerdown',e=>{const t=e.target.closest('[data-hold]');if(!t)return;const k=t.dataset.hold;HOLD={x:e.clientX,y:e.clientY,t:setTimeout(()=>{if(HOLD){HOLD.on=1;holdShow(k);}},220)};});
+document.addEventListener('pointermove',e=>{if(HOLD&&!HOLD.on&&Math.hypot(e.clientX-HOLD.x,e.clientY-HOLD.y)>12)holdHide();});
+['pointerup','pointercancel','blur'].forEach(ev=>(ev==='blur'?window:document).addEventListener(ev,holdHide));
+document.addEventListener('contextmenu',e=>{if(e.target.closest('[data-hold]'))e.preventDefault();});
 
 async function shootCore(p){
     let e=engine();
@@ -1406,7 +1515,7 @@ function vSummary(all){
     const err=S.photoMsg?`<p class="note err" role="alert">${esc(S.photoMsg)}</p>`:'';
     const A=(act,ic,t,x)=>`<button class="tool" data-action="${act}" ${x||''}>${ICO[ic]}<span>${t}</span></button>`;
     if(S.photo)body=`<div class="seg" role="tablist" aria-label="תצוגה"><button role="tab" aria-selected="${pv}" data-action="pv" data-v="photo">צילום</button><button role="tab" aria-selected="${!pv}" data-action="pv" data-v="mock">הדמיה</button></div>
-      ${pv?`<div class="mock big"><img class="photo" src="${S.photo}" alt="צילום סטודיו של הבקבוק והתווית"></div>`:mockHtml(true)}${err}
+      ${pv?`<div class="mock big" data-hold="cur"><img class="photo" src="${S.photo}" alt="צילום סטודיו של הבקבוק והתווית"></div>`:`<div data-hold="cur">${mockHtml(true)}</div>`}${S.p.painting?`<p class="holdhint">לחיצה ארוכה על הבקבוק מציגה את הציור המקורי</p>`:''}${err}
       <div class="tools">${A('share','share','לשתף')}${A('dlphoto','dl','להוריד')}${A('realshot','cam','צילום חדש',blocking?'disabled':'')}${A('newver','copy','גרסה חדשה')}</div>`;
     else if(can)body=`${mockHtml(true)}${err}${blocking?block:`<button class="btn wide" data-action="realshot">לצלם את הבקבוק</button>`}<div class="tools">${A('share','share','לשתף')}${A('dlsvg','dl','להוריד',S.caps.downloads?'':'hidden')}${A('newver','copy','גרסה חדשה')}</div>`;
     else body=`${mockHtml(S.shot)}${S.shot?`<div class="tools">${A('share','share','לשתף')}${A('shoot','cam','הדמיה מחדש')}${A('newver','copy','גרסה חדשה')}${A('dlsvg','dl','להוריד',S.caps.downloads?'':'hidden')}</div>`:`<button class="btn wide" data-action="shoot" ${blocking?'disabled':''}>להפיק הדמיה ולשמור</button>${block}`}`;
@@ -1501,9 +1610,9 @@ const ACT={
   dlbrief:()=>dl('label-brief.md',briefMd(S.p)),
   dlsvg:()=>dl('label-studio.svg',scene(S.p,8,'x').replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" ').replace(/var\(--display\)/g,'serif').replace(/var\(--body\)/g,'sans-serif').replace(/var\(--mono\)/g,'monospace')),
   copyprompt:()=>copy(photoPrompt(S.p),'התיאור הועתק.'),
-  newver:()=>{syncProject();S.hist=[];S.hsel=0;const now=Date.now(),p=clone(S.p);p.id='w'+now.toString(36);p.c=now;p.code=nextCode(p.wine);S.items.push({id:p.id,n:S.items.reduce((m,x)=>Math.max(m,x.n||0),0)+1,c:now,t:now,step:S.step,p:clone(p)});S.p=p;persist();render();say('נשמרה גרסה חדשה בפרויקטים, והיא הפתוחה עכשיו.');},
+  newver:()=>{syncProject();S.hist=[];S.hsel=0;const now=Date.now(),p=clone(S.p);p.id='w'+now.toString(36);p.c=now;p.code=nextCode(p.wine);p.num=nextNum();p.title=BNAME(p.num);S.items.push({id:p.id,n:S.items.reduce((m,x)=>Math.max(m,x.n||0),0)+1,c:now,t:now,step:S.step,p:clone(p)});S.p=p;persist();render();say('נשמרה גרסה חדשה בפרויקטים, והיא הפתוחה עכשיו.');},
   realshot:()=>realShot(),engine:()=>openEngine(),clearphoto:()=>{S.photo='';render();},pv:e=>{S.pv=e.dataset.v;render(true);},
-  gpdf:()=>catalogPdf(),gtab:e=>{S.gtab=e.dataset.v;S.gmsg='';render(true);},gopen:e=>gOpen(e.dataset.id),gclose:()=>{S.lb='';$('layer').innerHTML='';},
+  gpdf:()=>catalogPdf(),pdfopen:()=>pdfOpen(),pdfsave:()=>pdfSave(),pdfshare:()=>pdfShare(),gtab:e=>{S.gtab=e.dataset.v;S.gmsg='';render(true);},gopen:e=>gOpen(e.dataset.id),gzoom:(e,ev)=>{ev&&ev.stopPropagation();zoomOpen(e.dataset.id);},gclose:()=>{S.lb='';$('layer').innerHTML='';},
   gedit:e=>{const id=e.dataset.id;S.lb='';$('layer').innerHTML='';ACT.edit({dataset:{id}});},gshare:e=>gShare(e.dataset.id),
   gdel:e=>{const id=e.dataset.id;if(S.lbDel){S.lbDel=false;gDelete(id);}else{S.lbDel=true;const x=$('lb-del');if(x)x.textContent='למחוק באמת?';setTimeout(()=>{S.lbDel=false;const y=$('lb-del');if(y)y.textContent='מחיקה';},4000);}},
   gshootall:e=>{if(e.dataset.go){S.gshootAsk=false;gShootAll();}else{S.gshootAsk=!S.gshootAsk;render(true);}},gstop:()=>{S.gstop=true;const b=$('gstop');if(b)b.textContent='עוצרים אחרי הצילום הזה…';},hq:e=>{try{localStorage.setItem('wl-hq',e.dataset.v);}catch(x){}render(true);},cuttab:e=>{S.cutTab=e.dataset.v;render(true);},hpick:e=>{const x=S.hist.find(h=>h.t===+e.dataset.t);if(x){S.photo=x.data;S.hsel=x.t;S.pv='photo';S.shot=true;S.hdelAsk=false;render(true);}},hdel:()=>{if(S.hdelAsk){S.hdelAsk=false;delPhoto(S.hsel);}else{S.hdelAsk=true;render(true);setTimeout(()=>{if(S.hdelAsk){S.hdelAsk=false;render(true);}},4000);}},
@@ -1523,7 +1632,7 @@ const ACT={
     else{S.delId=id;clearTimeout(S.delT);S.delT=setTimeout(()=>{if(S.delId===id){S.delId=null;render(true);}},4000);}render(true);},
   pickstory:e=>{setParam('sPick',+e.dataset.i);render(true);},
   edit:e=>{const it=S.items.find(x=>x.id===e.dataset.id);if(it){if(S.p.id!==it.id)syncProject();S.p=fixp(Object.assign(clone(DEF),clone(it.p)));S.step=it.step||8;S.started=true;S.shot=S.step===8;S.photo='';S.hist=[];S.hsel=0;S.tab='shot';S.note='';nav('build');loadPhoto();}},
-  dup:e=>{const it=S.items.find(x=>x.id===e.dataset.id);if(it){const now=Date.now(),p=clone(it.p);p.id='w'+now.toString(36);p.c=now;p.code=nextCode(p.wine);S.items.push({id:p.id,n:S.items.reduce((m,x)=>Math.max(m,x.n||0),0)+1,c:now,t:now,step:it.step||8,p});persist();render();}},
+  dup:e=>{const it=S.items.find(x=>x.id===e.dataset.id);if(it){const now=Date.now(),p=clone(it.p);p.id='w'+now.toString(36);p.c=now;p.code=nextCode(p.wine);p.num=nextNum();p.title=BNAME(p.num);S.items.push({id:p.id,n:S.items.reduce((m,x)=>Math.max(m,x.n||0),0)+1,c:now,t:now,step:it.step||8,p});persist();render();}},
   del:e=>{if(S.delId===e.dataset.id){const did=S.delId;tx('kv','readwrite',s=>s.delete('phs:'+did));tx('kv','readwrite',s=>s.delete('ph:'+did));delete S.thumbs[did];saveThumbs();S.items=S.items.filter(x=>x.id!==S.delId);if(S.p.id===did)S.hist=[];if(S.p.id===S.delId){S.p=clone(DEF);S.step=1;S.started=false;S.shot=false;S.photo='';}S.delId=null;persist();}else S.delId=e.dataset.id;render(true);}
 };
 /* ── durable store on this device: every uploaded file (original kept) and every finished label ── */
@@ -1639,7 +1748,7 @@ function start(){
   });
   const endDrag=ev=>{if(!drag||ev.pointerId!==drag.id)return;if(drag.pl)drag.pl.classList.remove('dragging');drag=null;S.photo='';persist();refreshMock();};
   document.addEventListener('pointerup',endDrag);document.addEventListener('pointercancel',endDrag);
-  loadStore().then(()=>{let ch=0;S.items.forEach(it=>{const m=/^nof(\d+)$/.exec(it.id);if(m&&!it.p.title&&NOF_TITLES[m[1]-1]){it.p.title=NOF_TITLES[m[1]-1];ch=1;if(S.p.id===it.id)S.p.title=it.p.title;}});if(ch)persist();ensureCodes();render(true);loadPhoto();});probeServer();loadBank();
+  loadStore().then(()=>{let ch=0;S.items.forEach(it=>{const m=/^nof(\d+)$/.exec(it.id);if(false&&m){it.p.title=NOF_TITLES[m[1]-1];ch=1;if(S.p.id===it.id)S.p.title=it.p.title;}});if(ch)persist();ensureCodes();nofUpgrade();ensureNums();render(true);loadPhoto();});probeServer();loadBank();
   if(window.claude&&window.claude.use)window.claude.use('downloads').then(d=>{if(d){S.caps.downloads=d;render(true);}}).catch(()=>{});
 }
 document.addEventListener('DOMContentLoaded',()=>{
