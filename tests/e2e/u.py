@@ -15,7 +15,7 @@ with sync_playwright() as p:
         if st:ctx.add_init_script('window.MOCK_INIT='+json.dumps(st)+';')
         pg=ctx.new_page();pg.on('pageerror',lambda e:errs.append(str(e)));pg.goto(url);pg.wait_for_timeout(800);return pg
     def fill(pg):
-        pg.evaluate(f"S.upload={{src:'{PNG}',cells:{{}},w:2400,h:3000,e:{{}}}};uploadSheet()");pg.wait_for_timeout(300)
+        pg.evaluate(f"S.upload={{src:'{PNG}',cells:{{}},w:2400,h:3000,e:{{}},check:{{ok:true,blocks:[],warns:[],info:{{w:2400,h:3000,dpi:800,printCm:[20,25],kb:500,mb:0.5}}}}}};uploadSheet()");pg.wait_for_timeout(300)
         pg.evaluate("document.querySelectorAll('#ov details').forEach(d=>d.open=true)");pg.fill('#ut','בדיקה');pg.fill('#utc','אקריליק');pg.fill('#uy','2025');pg.fill('#uh','80');pg.fill('#uw','60');pg.select_option('#utn','כחול');pg.fill('#ust','סיפור קצר')
         pg.screenshot(path=D+'/out/up.png',full_page=True)
         pg.click('[data-a=doupload]');pg.wait_for_timeout(800)

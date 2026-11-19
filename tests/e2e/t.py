@@ -71,7 +71,7 @@ with sync_playwright() as p:
     print('after consent:',pg.evaluate("S.deals[0].st"))
     # upload work as admin/artist
     pg.evaluate("go('tab-works')");pg.wait_for_timeout(300)
-    pg.evaluate("S.upload={src:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',cells:{},w:4000,h:3000,e:{}};uploadSheet()");pg.wait_for_timeout(300)
+    pg.evaluate("S.upload={src:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',cells:{},w:4000,h:3000,e:{},check:{ok:true,blocks:[],warns:[],info:{w:4000,h:3000,dpi:1000,printCm:[34,25],kb:500,mb:0.5}}};uploadSheet()");pg.wait_for_timeout(300)
     pg.evaluate("document.querySelectorAll('#ov details').forEach(d=>d.open=true)");pg.fill('#ut','חדשה');pg.fill('#uy','2025');pg.click('[data-a=doupload]');pg.wait_for_timeout(800)
     print('works now:',pg.evaluate("S.works.map(w=>w.t+':'+w.st).join(',')"))
     pg.screenshot(path=D+'/out/artist.png')

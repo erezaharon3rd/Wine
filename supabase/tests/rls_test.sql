@@ -62,8 +62,21 @@ select t_eq((select count(*) from works)::int, 1, 'יקב רואה רק יציר
 select t_as('00000000-0000-0000-0000-0000000000d1');
 select t_fail($$update works set status='live' where id=2$$, 'אמן לא מפרסם לעצמו');
 select t_as('00000000-0000-0000-0000-0000000000c1');
-update works set status='review' where id=2;
-select t_fail($$update works set status='live' where id=2$$, 'גלריה לא מפרסמת, רק מעבירה לבדיקה');
+update works set status='live' where id=2;
+select t_eq((select status::text from works where id=2), 'live', 'אישור הגלריה מפרסם ישר למאגר');
+reset role; update works set status='pending' where id=2; set role authenticated;
+
+-- בדיקת קובץ אוטומטית בהעלאה
+select t_as('00000000-0000-0000-0000-0000000000d1');
+select t_fail($$insert into works (artist_id, title, px_w, px_h) values ('20000000-0000-0000-0000-000000000001','קטן',800,600)$$, 'קובץ ברזולוציה נמוכה נחסם');
+select t_fail($$insert into works (artist_id, title) values ('20000000-0000-0000-0000-000000000001','בלי נתונים')$$, 'קובץ בלי מידות נחסם');
+insert into works (artist_id, title, px_w, px_h, phash) values ('20000000-0000-0000-0000-000000000001','גדול',2400,3000,'a5a5a5a5a5a5a5a5');
+select t_eq((select status::text from works where title='גדול'), 'pending', 'יצירה של אמן מחכה לאישור הגלריה');
+select t_fail($$insert into works (artist_id, title, px_w, px_h, phash) values ('20000000-0000-0000-0000-000000000001','שוב',2400,3000,'a5a5a5a5a5a5a5a4')$$, 'אותה תמונה פעמיים נחסמת');
+select t_as('00000000-0000-0000-0000-0000000000c1');
+insert into works (artist_id, title, px_w, px_h, phash) values ('20000000-0000-0000-0000-000000000001','של הגלריה',3000,4000,'0f0f0f0f0f0f0f0f');
+select t_eq((select status::text from works where title='של הגלריה'), 'live', 'העלאה של הגלריה עולה ישר למאגר');
+reset role; delete from works where title in ('גדול','של הגלריה'); set role authenticated;
 
 -- ---------- עסקה: הסבב המלא ----------
 select t_as('00000000-0000-0000-0000-0000000000b1');

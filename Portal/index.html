@@ -245,7 +245,7 @@ const ROLES={
   winery:{n:'יקב',who:'יקב הגבעה',p:'נוי',d:'לבחור יצירה, לבנות תווית, לבקש רישיון',u:'נ',hi:'שלום, נוי'},
   artist:{n:'אמן',who:'ארז אהרון',p:'ארז אהרון',d:'יצירות, בקשות והכנסות',u:'אא',hi:'שלום, ארז'},
   gallery:{n:'גלריה',who:'גלריה לדוגמה',p:'מנהלת הגלריה',d:'סגל, תמחור ועסקאות',u:'גל',hi:'גלריה לדוגמה'},
-  curator:{n:'אוצר',who:'צוות האוצרות',p:'צוות האוצרות',d:'קבלה, בדיקה וקידום',u:'או',hi:'צוות האוצרות'},
+  curator:{n:'אוצר',who:'צוות האוצרות',p:'צוות האוצרות',d:'קבלה, קידום והדמיות',u:'או',hi:'צוות האוצרות'},
   printer:{n:'שותף דפוס',who:'דפוס לדוגמה',p:'דפוס לדוגמה',d:'הזמנות, קבצים ודיווח כמויות',u:'דפ',hi:'דפוס לדוגמה'},
   admin:{n:'מנהל מערכת',who:'תפעול',p:'מנהל המערכת',d:'משתמשים, עמלות, כספים ויומן',u:'מנ',hi:'תפעול'},
   customer:{n:'לקוח',who:'דרך יקב הגבעה',p:'דנה',d:'בוחר אמן ומעצב בקבוק אישי',u:'ד',hi:'שלום, דנה'}
@@ -254,7 +254,7 @@ const INTRO={
   winery:['בוחרים ציור מהמאגר: רק יצירות מקוריות שהגלריה אישרה.','רואים את הבקבוק שלך עם הציור, בצילום ריאליסטי, לפני שמשלמים.','שולחים בקשה. הגלריה מתמחרת, האמן מסכים, והחתימה והתשלום נעשים במקום אחד.'],
   artist:['מעלים יצירות ומסמנים אזורים שאסור לחתוך.','בקשה מגיעה אליך אחרי שהגלריה תמחרה אותה, עם הצילום של הבקבוק.','ההסכמה הסופית שלך. אפשר גם לתת הסכמה מראש לבקשות קטנות.'],
   gallery:['קובעים מחירון לכל אמן. המערכת מחשבת ממנו הצעה לכל בקשה.','מאשרים או מתאימים את ההצעה, והיא עוברת לאמן ולחתימה.','מוציאים חשבונית ליקב ומסמנים כשהתשלום התקבל. הקבצים נפתחים ליקב.'],
-  curator:['מקבלים גלריות חדשות למאגר.','בודקים את איכות הקבצים של יצירות שהגלריה אישרה.','בפיילוט, בודקים כל צילום הדמיה לפני שהוא נשלח ליקב.'],
+  curator:['מקבלים גלריות חדשות למאגר.','בדיקת הקבצים נעשית אוטומטית בהעלאה. אצלכם נשארות רק יצירות ישנות שלא נבדקו.','בוחרים יצירות מומלצות, ובודקים צילומי הדמיה.'],
   printer:['הזמנות מגיעות רק אחרי חתימה ותשלום.','קבצי הדפוס יורדים מקישור למחשב שליד המכונה.','מעדכנים סטטוס ומדווחים כמה הודפס בפועל.'],
   admin:['מנהלים משתמשים, ארגונים ותפקידים.','קובעים עמלה, מכסות ותבניות חוזה.','עוקבים אחר כספים, עלות המנוע ויומן הפעולות.'],
   customer:['בוחרים אמן, ומגיעים לדף שלו עם כל היצירות.','בוחרים יצירה ומקבלים הצעה מוכנה לבקבוק. אפשר לשנות בה הכל.','המחיר מתעדכן בכל בחירה. בסוף שולחים ליקב, והוא מאשר לפני הדפסה.']
@@ -724,13 +724,15 @@ function readUpload(){const u=S.upload,v=s=>($(s)?.value||'').trim();
   if($('#ua')){u.a=v('#ua');u.an=$('#ua').selectedOptions[0]?.textContent||''}
   u.s=u.hh&&u.ww?`${u.hh}×${u.ww}`:'';
   u.e={t:!u.t,y:!!u.y&&(!/^\d{4}$/.test(u.y)||+u.y>new Date().getFullYear()),s:(u.hh||u.ww)&&!(+u.hh>0&&+u.ww>0)};
-  if(u.e.t||u.e.y||u.e.s){uploadSheet();toast('צריך להשלים את השדות המסומנים');return null}return u}
+  if(u.e.t||u.e.y||u.e.s){uploadSheet();toast('צריך להשלים את השדות המסומנים');return null}
+  if(window.checkPass&&!checkPass(u.check)){uploadSheet();toast(u.check&&!u.check.ok?'הקובץ לא מתאים להדפסה. הפרטים בטופס':'צריך לאשר שקראת את ההערות על הקובץ');return null}return u}
 const TECHS=['שמן על בד','שמן על עץ','אקריליק','צבעי מים','גואש','פסטל','רישום','הדפס','צילום','מדיה מעורבת','דיגיטלי'];
+function keepTyped0(){const u=S.upload;if(!u||!document.getElementById('ut'))return;const v=x=>(document.querySelector(x)?.value||'').trim();const m={t:'#ut',y:'#uy',hh:'#uh',ww:'#uw',tc:'#utc',g:'#ug',tn:'#utn',o:'#uo',st:'#ust'};Object.entries(m).forEach(([k,x])=>{const z=v(x);if(z)u[k]=z})}
 function uploadSheet(){
   const u=S.upload||(S.upload={src:null,cells:{},w:0,h:0,e:{}});
-  const okRes=Math.max(u.w,u.h)>=2000;
+  const okRes=window.checkPass?checkPass(u.check):Math.max(u.w,u.h)>=2000;
   sheet(`<span class="eyebrow">יצירה חדשה</span><h2>להעלות יצירה</h2>
-  ${u.src?`<p class="note" style="margin-top:4px">${okRes?`<span class="ok">✓ רזולוציה מתאימה לדפוס</span> · <span class="num">${u.w}×${u.h}</span>`:`<span class="bad">✗ רזולוציה נמוכה מדי לדפוס</span> · <span class="num">${u.w}×${u.h}</span>. צריך 2,000 פיקסלים לפחות בצד הארוך.`}</p>
+  ${!u.src&&u.check&&window.checkHtml?checkHtml(u.check):''}${u.src?`${window.checkHtml?checkHtml(u.check):''}
   <div class="mark" id="mk"><img src="${u.src}" alt=""><div class="cells">${[...Array(36)].map((_,i)=>`<i data-cell="${i}" class="${u.cells[i]?'on':''}"></i>`).join('')}</div></div><p class="note">אפשר לגעת או לגרור על אזורים שאסור לחתוך. הם יסומנו בכהה.</p>`:`<label class="up"><input type="file" accept="image/*" data-in="file">להעלות קובץ ברזולוציית דפוס<small>JPG או TIFF, צד ארוך 2,000 פיקסלים לפחות</small></label>`}
   ${(()=>{const L=window.uploadArtists?uploadArtists():[];return L.length>1||(L.length===1&&S.role!=='artist')?`<div class="fld ${u.e.a?'bad':''}"><label for="ua">אמן *</label><select id="ua" class="lv-sel">${L.map(a=>`<option value="${esc(a.id)}" ${u.a===a.id?'selected':''}>${esc(a.n)}</option>`).join('')}</select></div>`:''})()}
   ${u.src?`<p class="note" id="aist">${u.ai==='working'?'✦ ממלאים את הפרטים אוטומטית מהתמונה…':u.ai==='done'?'✦ הפרטים מולאו אוטומטית מהתמונה. אפשר לשנות כל דבר.':u.ai==='fail'?'לא הצלחנו למלא אוטומטית. אפשר למלא ידנית, או להשאיר את ברירות המחדל.':''}</p>`:''}
@@ -843,7 +845,7 @@ const A={
   ost(v){const d=deal(+v);const prev=d.order.st;d.order.st++;log(`הזמנה ${d.id}: ${OST[d.order.st]}`);render();toast(`עודכן ל: ${OST[d.order.st]}`,()=>{d.order.st=prev;log(`הזמנה ${d.id}: עדכון בוטל`)})},
   qty(v){const d=deal(+v);const q=$('#qq').value.trim();if(!q){$('#qq').focus();return}d.order.qty=q;log(`דווחה כמות להזמנה ${d.id}`);toast('הכמות דווחה');render()},
   chat(v){const i=$('#chatin');if(!i.value.trim())return;deal(+v).chat.push({w:S.role,t:i.value.trim(),at:now()});render();$('#chatin')?.focus()},
-  gapprove(v){const w=work(+v);w.st='review';log(`הגלריה אישרה את "${w.t}"`,'work');toast('עברה לבדיקת קובץ אצל האוצר',()=>{w.st='pending'});render()},
+  gapprove(v){const w=work(+v);w.st='live';log(`הגלריה אישרה את "${w.t}"`,'work');toast('פורסמה במאגר',()=>{w.st='pending'});render()},
   greturn(v){const w=work(+v);sheet(`<span class="eyebrow">${esc(w.t)}</span><h2>להחזיר לאמן</h2><div class="fld"><label for="gn">מה כדאי לתקן?</label><textarea id="gn" placeholder="למשל: הקובץ חתוך בצד ימין"></textarea></div><div class="row"><button class="btn alt" data-a="close">ביטול</button><button class="btn" data-a="greturn2" data-v="${v}">להחזיר</button></div>`)},
   greturn2(v){const t=$('#gn').value.trim();if(!t){$('#gn').focus();return}log(`יצירה הוחזרה לאמן: ${t}`,'work');closeSheet();toast('הוחזרה לאמן עם ההערה')},
   creturn(v){const w=work(+v);w.st='pending';log(`"${w.t}" הוחזרה לגלריה מבדיקת הקובץ`,'work');toast('הוחזרה לגלריה',()=>{w.st='review'});render()},
@@ -922,15 +924,17 @@ document.addEventListener('input',e=>{
   if(k==='bio'){S.bio=e.target.value}
 });
 document.addEventListener('change',e=>{
-  if(e.target.dataset.in==='file'){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{S.upload={src:r.result,cells:{},w:im.naturalWidth,h:im.naturalHeight,e:{},a:S.upload?.a};uploadSheet();window.autoFill&&autoFill()};im.src=r.result};r.readAsDataURL(f)}
+  if(e.target.dataset.in==='ackw'){if(S.upload){keepTyped0();S.upload._ack=e.target.checked;uploadSheet()}return}
+  if(e.target.dataset.in==='file'){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{S.upload={src:r.result,cells:{},w:im.naturalWidth,h:im.naturalHeight,e:{},a:S.upload?.a,check:null};const mine=S.upload;uploadSheet();if(window.fileCheck)fileCheck(f,r.result).then(c=>{if(S.upload!==mine)return;keepTyped0();mine.check=c;mine.phash=c.info.phash;uploadSheet();if(c.ok&&window.autoFill)autoFill()});else window.autoFill&&autoFill()};im.onerror=()=>{if(window.fileCheck)fileCheck(f,r.result).then(c=>{S.upload={src:null,cells:{},w:0,h:0,e:{},check:c};uploadSheet()})};im.src=r.result};r.readAsDataURL(f)}
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.sheetOpen)closeSheet();if(e.key==='Enter'&&e.target.id==='chatin'){document.querySelector('[data-a="chat"]')?.click()}if(e.key==='Enter'&&e.target.id==='ph')A.login1()});
 if(window.LIVE){}else if(location.hash)history.replaceState(null,'',location.pathname+location.search);
 if(window.LIVE){}else if(S.role){S.view=null;S.tab=S.tab||TABS[S.role][0][0];location.hash='tab-'+S.tab}else render();
 </script>
-<script src="customer.js?v=9"></script>
+<script src="quality.js?v=1"></script>
+<script src="customer.js?v=10"></script>
 <script src="docs.js?v=6"></script>
 <script src="motion.js?v=2"></script>
-<script>if(window.LIVE)document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script><script src="live.js?v=12"><\/script><script src="ops.js?v=4"><\/script>')</script>
+<script>if(window.LIVE)document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script><script src="live.js?v=13"><\/script><script src="ops.js?v=5"><\/script>')</script>
 </body>
 </html>

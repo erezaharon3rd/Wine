@@ -1638,4 +1638,60 @@ language sql stable security definer set search_path = public as $$
 $$;
 grant execute on function health() to anon, authenticated;
 
+-- =====================================================================
+--  שלב 6 · בדיקת קובץ אוטומטית במקום בדיקה ידנית של האוצרת
+--  השרת אוכף את אותם כללים: מספיק פיקסלים לתווית, בלי כפילויות.
+--  אישור הגלריה מפרסם ישר למאגר; העלאה של הגלריה עצמה מתפרסמת מיד.
+-- =====================================================================
+alter table works add column if not exists phash text;
+alter table works add column if not exists file_check jsonb;
+create index if not exists works_phash_idx on works (phash) where phash is not null;
+
+-- DPI על אזור הציור בתווית רגילה (72×93 מ״מ)
+create or replace function label_dpi(w int, h int) returns int
+language sql immutable as $$ select floor(least(w / (72 / 25.4), h / (93 / 25.4)))::int $$;
+
+create or replace function hamming64(a text, b text) returns int
+language sql immutable as $$
+  select bit_count(('x' || lpad(a, 16, '0'))::bit(64) # ('x' || lpad(b, 16, '0'))::bit(64))::int
+$$;
+
+create or replace function guard_work() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare r text := coalesce(my_role()::text, ''); d works;
+begin
+  if tg_op = 'INSERT' and auth.uid() is not null then
+    -- בדיקת הקובץ: אותם כללים כמו בדפדפן
+    if new.px_w is null or new.px_h is null then raise exception 'חסרים נתוני הקובץ. כדאי להעלות שוב'; end if;
+    if label_dpi(new.px_w, new.px_h) < 240 then
+      raise exception 'הרזולוציה נמוכה מדי להדפסה: % DPI על התווית, וצריך לפחות 240', label_dpi(new.px_w, new.px_h); end if;
+    if new.phash is not null and new.phash !~ '^[0-9a-f]{16}$' then raise exception 'טביעת האצבע של התמונה לא תקינה'; end if;
+    select * into d from works where phash is not null and new.phash is not null and hamming64(phash, new.phash) <= 5 limit 1;
+    if found then raise exception 'היצירה כבר נמצאת במאגר: "%"', d.title; end if;
+  end if;
+  if r not in ('curator','admin') and auth.uid() is not null then
+    if tg_op = 'INSERT' then
+      new.pick_rank := null;
+      -- גלריה שמעלה בעצמה כבר אישרה: הקובץ נבדק, אז היצירה עולה ישר למאגר
+      new.status := case when r = 'gallery' then 'live' else 'pending' end;
+    elsif new.status is distinct from old.status and r = 'gallery'
+          and old.status in ('pending','review') and new.status in ('live','rejected') then
+      null;   -- אישור הגלריה מפרסם; הבדיקה הטכנית כבר נעשתה בהעלאה
+    elsif new.status is distinct from old.status and new.status in ('live','review','rejected') then
+      raise exception 'רק הגלריה מאשרת יצירות';
+    elsif new.pick_rank is distinct from old.pick_rank then
+      new.pick_rank := old.pick_rank;
+    end if;
+    if tg_op = 'UPDATE' and (new.phash is distinct from old.phash or new.px_w is distinct from old.px_w or new.px_h is distinct from old.px_h)
+       and r <> 'gallery' and old.status = 'live' then
+      raise exception 'אי אפשר להחליף את הקובץ של יצירה שכבר פורסמה';
+    end if;
+  end if;
+  return new;
+end $$;
+
+-- יצירות שחיכו לבדיקה ידנית: אם הקובץ מתאים, הן עוברות למאגר
+update works set status = 'live'
+where status = 'review' and px_w is not null and px_h is not null and label_dpi(px_w, px_h) >= 240;
+
 select 'ההקמה הסתיימה בהצלחה' as result;
