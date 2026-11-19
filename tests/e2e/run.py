@@ -18,7 +18,7 @@ time.sleep(1.2)
 
 fails = []
 try:
-    for name in ['t', 't2', 'c', 'c2', 'd', 'u', 'm', 'o', 'j']:
+    for name in ['t', 't2', 'c', 'c2', 'd', 'u', 'm', 'o', 'j', 'p', 'k']:
         r = subprocess.run([sys.executable, os.path.join(D, name + '.py')], capture_output=True, text=True, timeout=400)
         out = r.stdout + r.stderr
         errs = re.findall(r"^(?:ERR|ERRORS):? (.*)$", out, re.M)

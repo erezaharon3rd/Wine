@@ -28,6 +28,7 @@ window.supabase={createClient(){
     from:builder,
     async rpc(fn,a){if(fn==='request_license'){const id=(st.dseq=(st.dseq||999)+1);st.db.deals.push({id,winery_id:st.me_org,gallery_id:'g1',artist_id:'a1',work_id:a.p_work,wine_id:a.p_wine,design_code:a.p_design,license_type:a.p_type,qty_tier:a.p_qty,exclusive:a.p_exclusive,adj_pct:0,status:'sent',created_at:new Date().toISOString()});persist();return {data:id,error:null}}
       if(fn==='render_quota_left')return {data:5,error:null};
+      if(fn==='log_error'){(st.db.client_errors=st.db.client_errors||[]).push({id:(st.db.client_errors.length+1),message:a.p_message,place:a.p_place,n:1,role:st.me_role,last_at:new Date().toISOString(),resolved:false});persist();return {data:null,error:null}}
       if(fn==='track'){st.track=(st.track||0)+1;persist();return {data:null,error:null}}
       if(fn==='engine_status')return {data:{spend:42.5,budget:300,breaker:false,images:61,texts:120,failed:2,by_org:{'יקב הבדיקה':12}},error:null};
       if(fn==='application_decide'){const ap=st.db.applications.find(x=>x.id===a.p_id);ap.status=a.p_ok?'approved':'rejected';ap.gallery=a.p_gallery;persist();return {data:ap.status,error:null}}
@@ -38,6 +39,6 @@ window.supabase={createClient(){
       if(fn==='advance_deal'){const d=st.db.deals.find(x=>x.id===a.p_deal);if(a.p_action==='order'){st.db.print_orders.push({deal_id:d.id,stage:1,due:'2026-12-10'});persist();return {data:d.status,error:null}}const f=FLOW[a.p_action];if(!f||(f[0]&&d.status!==f[0]))return {data:null,error:{message:'הפעולה '+a.p_action+' אינה אפשרית בשלב הזה'}};d.status=f[1];if(a.p_action==='price')d.adj_pct=a.p_adj;if(a.p_action==='paid'){d.paid_at='2026-11-19';d.ends_at='2027-11-19'}persist();return {data:d.status,error:null}}},
     storage:{from(){return {async createSignedUrls(p){return {data:p.map(x=>({path:x,signedUrl:'img/p3.jpg'})),error:null}},async createSignedUrl(p){return {data:{signedUrl:'img/p3.jpg'},error:null}},getPublicUrl(p){return {data:{publicUrl:'img/p3.jpg'}}},async upload(p){(window._ups=window._ups||[]).push(p);return {data:{path:p},error:null}}}}},
     auth:{async getSession(){return {data:{session:sess()}}},async setSession(){st.session={user:st.user};persist();return {error:null}},
-      async signInWithPassword(c){st.session={user:st.user};persist();return {data:{user:st.user,session:st.session},error:null}},async signUp(c){st.session={user:st.user};persist();return {data:{user:st.user,session:st.session},error:null}},async signInWithOtp(){window.__otp=(window.__otp||0)+1;return {error:null}},async signOut(){st.session=null;persist();return {error:null}},onAuthStateChange(){}}
+      async signInWithPassword(c){st.lastCap=c.options&&c.options.captchaToken||null;st.session={user:st.user};persist();return {data:{user:st.user,session:st.session},error:null}},async signUp(c){st.session={user:st.user};persist();return {data:{user:st.user,session:st.session},error:null}},async signInWithOtp(){window.__otp=(window.__otp||0)+1;return {error:null}},async signOut(){st.session=null;persist();return {error:null}},onAuthStateChange(){}}
   };
 }};

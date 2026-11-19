@@ -46,12 +46,51 @@ async function printFile(spec,name){
     [[x0,y0],[x1,y0],[x0,y1],[x1,y1]].forEach(([x,y])=>{g.beginPath();g.moveTo(x,y<c.height/2?y-b-L:y+b+L);g.lineTo(x,y<c.height/2?y-b:y+b);g.moveTo(x<c.width/2?x-b-L:x+b+L,y);g.lineTo(x<c.width/2?x-b:x+b,y);g.stroke()});
     g.fillStyle='#000';g.font=`${px(2.4)}px Arial`;g.textAlign='left';g.direction='ltr';
     g.fillText(`${name} · ${PRINT.w}x${PRINT.h} mm + ${PRINT.bleed} mm bleed · ${PRINT.dpi} dpi`,m,c.height-px(4));
-    download(c.toDataURL('image/png'),`${name}-print-${PRINT.dpi}dpi.png`);
-    toast('קובץ הדפוס ירד');
+    /* PDF לדפוס: עמוד עיצוב עם קווי חיתוך ותיבות חיתוך וגלישה, ועמוד נפרד לכל שכבת זהב והבלטה */
+    let pdf=null;try{pdf=await printPdf(spec,name,label,W,H)}catch(e){console.warn('pdf',e)}
+    if(pdf)download(pdf,`${name}-print.pdf`);else download(c.toDataURL('image/png'),`${name}-print-${PRINT.dpi}dpi.png`);
+    toast(pdf?'קובץ הדפוס ירד (PDF)':'קובץ הדפוס ירד');
   }catch(e){console.error(e);toast('לא הצלחנו להכין את הקובץ. כדאי לנסות שוב')}
   finally{Object.assign(PRINT,keep);if(wk)wk.src=src}
 }
 window.printFile=printFile;
+
+/* שכבה לדפוס מיוחד: רק הטקסט שבזהב או בהבלטה, בשחור מלא על לבן */
+function plateSvg(svg,kind){
+  const vb=(svg.match(/viewBox="([^"]+)"/)||[])[1]||'20 144 60 114';
+  const re=kind==='foil'?/<text[^>]*fill="#9A7B2F"[^>]*>[\s\S]*?<\/text>/g:/<text[^>]*fill="rgba\(0,0,0,\.18\)"[^>]*>[\s\S]*?<\/text>/g;
+  const t=(svg.match(re)||[]).map(x=>x.replace(/fill="[^"]+"/,'fill="#000"').replace(/x="50\.5" y="230\.6"/,'x="50" y="230"'));
+  if(!t.length)return null;
+  const [x,y,w,h]=vb.split(/\s+/);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" width="600" height="1140"><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#fff"/>${t.join('')}</svg>`;
+}
+let _pdfLib=null;
+function loadPdfLib(){return _pdfLib||(_pdfLib=window.PDFLib?Promise.resolve(window.PDFLib):new Promise((ok,bad)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js';s.onload=()=>ok(window.PDFLib);s.onerror=()=>{_pdfLib=null;bad(new Error('pdf-lib'))};document.head.appendChild(s)}))}
+async function printPdf(spec,name,label,W,H){
+  const {PDFDocument,rgb,StandardFonts}=await loadPdfLib();
+  const mm=v=>v*72/25.4,M=10,T={w:PRINT.w,h:PRINT.h},B=PRINT.bleed;
+  const doc=await PDFDocument.create();doc.setTitle(name);doc.setCreator('סדנת התווית');doc.setProducer('Sadnat Hatavit');
+  const font=await doc.embedFont(StandardFonts.Helvetica);
+  const svg=await labelSvg(spec.type,spec.work,spec.o);
+  const layers=[['ARTWORK',label]];
+  for(const [k,n] of [['foil','FOIL plate'],['emboss','EMBOSS plate']]){
+    if(!spec.o?.[k])continue;const ps=plateSvg(svg,k);if(ps)layers.push([n,await svgToCanvas(ps,W,H)])}
+  const pw=mm(T.w+2*B+2*M),ph=mm(T.h+2*B+2*M)+mm(8);
+  for(const [i,[title,cv]] of layers.entries()){
+    const png=await doc.embedPng(await (await fetch(cv.toDataURL('image/png'))).arrayBuffer());
+    const pg=doc.addPage([pw,ph]),x0=mm(M),y0=mm(M)+mm(8);
+    pg.drawImage(png,{x:x0,y:y0,width:mm(T.w+2*B),height:mm(T.h+2*B)});
+    pg.setBleedBox(x0,y0,mm(T.w+2*B),mm(T.h+2*B));pg.setTrimBox(x0+mm(B),y0+mm(B),mm(T.w),mm(T.h));
+    const L=mm(6),g=mm(B),k=rgb(0,0,0),tx=[x0+mm(B),x0+mm(B+T.w)],ty=[y0+mm(B),y0+mm(B+T.h)];
+    for(const X of tx)for(const Y of ty){const dx=X<pw/2?-1:1,dy=Y<ph/2?-1:1;
+      pg.drawLine({start:{x:X,y:Y+dy*g},end:{x:X,y:Y+dy*(g+L)},thickness:.3,color:k});
+      pg.drawLine({start:{x:X+dx*g,y:Y},end:{x:X+dx*(g+L),y:Y},thickness:.3,color:k})}
+    pg.drawText(`${name} | ${T.w}x${T.h}mm +${B}mm bleed | ${PRINT.dpi}dpi`,{x:x0,y:mm(5.5),size:5.5,font,color:k});pg.drawText(`${i+1}/${layers.length} ${title}${i?' - 100% black':''}`,{x:x0,y:mm(2.5),size:5.5,font,color:k});
+  }
+  const bytes=await doc.save();let bin='';const u=new Uint8Array(bytes);for(let i=0;i<u.length;i+=32768)bin+=String.fromCharCode.apply(null,u.subarray(i,i+32768));
+  return 'data:application/pdf;base64,'+btoa(bin);
+}
+window.printPdf=printPdf;
 
 /* a printable document in a new tab: the phone's print dialog saves it as PDF */
 function openDoc(title,body){

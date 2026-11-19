@@ -74,10 +74,11 @@ Object.assign(A,{
   async lin(){const c=creds();if(!c)return;
     /* אחרי חמישה ניסיונות שגויים מחכים דקה. ההגנה העיקרית היא בהגדרות Supabase */
     const L=JSON.parse(localStorage.getItem('wl-lk')||'{"n":0,"t":0}');if(L.n>=5&&Date.now()-L.t<60000){toast('היו כמה ניסיונות שגויים. אפשר לנסות שוב בעוד דקה');return}
-    const {data,error}=await sb.auth.signInWithPassword(c);
+    if(window.TURNSTILE_SITEKEY&&!window.__cap){toast('רגע, בודקים שאת או אתה לא רובוט');return}
+    const {data,error}=await sb.auth.signInWithPassword({...c,options:window.__cap?{captchaToken:window.__cap}:undefined});window.capReset&&capReset();
     try{localStorage.setItem('wl-lk',JSON.stringify(error?{n:(L.n>=5?0:L.n)+1,t:Date.now()}:{n:0,t:0}))}catch(e){}
     if(error){toast(/invalid login/i.test(error.message)?'המייל או הסיסמה לא נכונים':heb(error));return}LV.state='boot';render();await loadMe(data.user)},
-  async lup(){const c=creds();if(!c)return;const {data,error}=await sb.auth.signUp({...c,options:{emailRedirectTo:location.origin+location.pathname+location.search}});
+  async lup(){const c=creds();if(!c)return;if(window.TURNSTILE_SITEKEY&&!window.__cap){toast('רגע, בודקים שאת או אתה לא רובוט');return}const {data,error}=await sb.auth.signUp({...c,options:{emailRedirectTo:location.origin+location.pathname+location.search,...(window.__cap?{captchaToken:window.__cap}:{})}});window.capReset&&capReset();
     if(error){toast(/already registered/i.test(error.message)?'כבר יש חשבון עם המייל הזה. אפשר להיכנס':heb(error));return}
     if(!data.session){LV.email=c.email;LV.state='sent';render();return}
     LV.state='boot';render();await loadMe(data.user)},

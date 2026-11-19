@@ -147,7 +147,7 @@ function joinBox(){const k=S._jk||'gallery',K=KINDS[k];
     <div class="two"><div class="fld"><label for="js">אתר או אינסטגרם</label><input id="js" maxlength="200" dir="ltr"></div><div class="fld"><label for="jc">טלפון</label><input id="jc" maxlength="40" inputmode="tel" dir="ltr" autocomplete="tel"></div></div>
     <button class="btn wide" style="margin-top:12px" data-a="jsend">לשלוח בקשה</button></div>`}
 const _rnd=window.render;
-window.render=render=function(){_rnd();if(!pending())return;const box=document.querySelector('#app .login');if(!box||box.querySelector('[data-join]'))return;
+window.render=render=function(){_rnd();capMount();if(!pending())return;const box=document.querySelector('#app .login');if(!box||box.querySelector('[data-join]'))return;
   const d=document.createElement('div');d.dataset.join='1';d.innerHTML=myApp===undefined?'':joinBox();box.appendChild(d);
   if(myApp===undefined)loadMyApp().then(()=>{d.innerHTML=joinBox()})};
 setTimeout(()=>{if(pending())render()},0);setTimeout(()=>{if(pending()&&!document.querySelector('[data-join]'))render()},800);
@@ -204,9 +204,34 @@ let opened=false;
 const _so=window.submitOrder;if(_so)window.submitOrder=o=>{track('order_sent');return _so(o)};
 const _sr=A.sendreq;if(_sr)A.sendreq=function(){track('license_request');return _sr.apply(this,arguments)};
 
-const _lh2=window.liveHydrate;window.liveHydrate=async()=>{await _lh2();try{await Promise.all([loadApps(),loadEngine()])}catch(e){console.warn(e)}
+const _lh2=window.liveHydrate;window.liveHydrate=async()=>{await _lh2();try{await Promise.all([loadApps(),loadEngine(),loadErrs()])}catch(e){console.warn(e)}
   if(!opened&&window.ME?.role){opened=true;track('open_app')}};
-setTimeout(()=>{if(window.ME?.role){Promise.all([loadApps(),loadEngine()]).then(()=>render()).catch(()=>{});if(!opened){opened=true;track('open_app')}}},1600);
+setTimeout(()=>{if(window.ME?.role){Promise.all([loadApps(),loadEngine(),loadErrs()]).then(()=>render()).catch(()=>{});if(!opened){opened=true;track('open_app')}}},1600);
+
+
+/* ── הגנה מרובוטים בכניסה ובהרשמה (Cloudflare Turnstile). פועל רק כשיש מפתח ב-config.js ── */
+let capId=null,capLoading=null;
+window.capReset=()=>{window.__cap=null;try{if(capId!==null&&window.turnstile)turnstile.reset(capId)}catch(e){}};
+function capMount(){const k=window.TURNSTILE_SITEKEY;if(!k)return;const pw=document.getElementById('lpw');if(!pw||document.getElementById('cap'))return;
+  const box=document.createElement('div');box.id='cap';box.style.cssText='margin:14px 0 0;min-height:65px;display:flex;justify-content:center';
+  (pw.closest('.fld')||pw).after(box);
+  const go=()=>{try{capId=turnstile.render(box,{sitekey:k,language:'he',theme:'light',callback:t=>{window.__cap=t},'expired-callback':()=>{window.__cap=null},'error-callback':()=>{window.__cap=null}})}catch(e){console.warn(e)}};
+  if(window.turnstile)return go();
+  capLoading=capLoading||new Promise((ok,bad)=>{const s=document.createElement('script');s.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';s.async=true;s.onload=ok;s.onerror=bad;document.head.appendChild(s)});
+  capLoading.then(go,()=>{capLoading=null;box.textContent='לא הצלחנו לטעון את בדיקת האבטחה. כדאי לרענן את הדף'})}
+
+try{new MutationObserver(()=>{if(document.getElementById('lpw')&&!document.getElementById('cap'))capMount()}).observe(document.getElementById('app')||document.body,{childList:true,subtree:true})}catch(e){}
+capMount();
+
+/* ── שגיאות באתר: נשלחות לשרת כספירה, בלי פרטי משתמש ── */
+let errSent=0;
+function reportErr(m,where){if(errSent>=20)return;errSent++;try{sb.rpc('log_error',{p_message:String(m||'').slice(0,300),p_place:String(where||location.pathname+location.hash).slice(0,120)}).then(()=>{},()=>{})}catch(e){}}
+window.addEventListener('error',e=>reportErr(`${e.message} @ ${(e.filename||'').split('/').pop()}:${e.lineno}`));
+window.addEventListener('unhandledrejection',e=>{const r=e.reason;if(r&&r.code&&/^(PGRST|23|P0)/.test(r.code))return;reportErr('promise: '+(r?.message||r))});
+async function loadErrs(){if(ME?.role!=='admin')return;try{S._errs=await q(sb.from('client_errors').select('*').eq('resolved',false).order('last_at',{ascending:false}).limit(30))}catch(e){}}
+const _alog=V.admin_log;V.admin_log=()=>{const h=_alog(),e=S._errs||[];
+  return h+`<h3>שגיאות באתר</h3>${e.length?`<p class="note" style="margin-top:0">שגיאות שקרו אצל משתמשים, מקובצות לפי סוג. בלי שמות ובלי פרטים אישיים.</p><div class="list">${e.map(x=>`<div class="li"><span class="mt"><b dir="ltr" style="text-align:left;font-family:var(--mono);font-size:13px">${esc(x.message)}</b><small>${x.n} פעמים · ${esc(x.role||'')} · אחרונה ${new Date(x.last_at).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})}</small></span><span class="end"><button class="btn sm alt" data-a="errok" data-v="${x.id}">טופל</button></span></div>`).join('')}</div>`:'<div class="panel"><p class="note" style="margin:0">אין שגיאות פתוחות.</p></div>'}`};
+A.errok=v=>run(async()=>{await q(sb.from('client_errors').update({resolved:true}).eq('id',+v));await loadErrs()},'סומן כטופל');
 
 /* ── התקנה לטלפון ── */
 if(!document.querySelector('link[rel=manifest]'))document.head.insertAdjacentHTML('beforeend','<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#E9E7E3">');

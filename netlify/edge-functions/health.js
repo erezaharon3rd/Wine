@@ -6,7 +6,7 @@ const env = (k) => (globalThis.Netlify && Netlify.env.get(k)) || '';
 
 export default async () => {
   const SB_URL = env('SUPABASE_URL') || SB_URL_DEFAULT, SB_KEY = env('SUPABASE_PUBLISHABLE_KEY') || SB_KEY_DEFAULT;
-  const out = { site: true, db: false, engine_key: !!env('GEMINI_API_KEY'), engine_breaker: null, engine_budget_used_pct: null, jobs_dead_24h: null };
+  const out = { site: true, db: false, engine_key: !!env('GEMINI_API_KEY'), engine_breaker: null, engine_budget_used_pct: null, jobs_dead_24h: null, client_errors_1h: null };
   const t0 = Date.now();
   try {
     const r = await fetch(SB_URL + '/rest/v1/rpc/health', { method: 'POST', headers: { apikey: SB_KEY, 'content-type': 'application/json' }, body: '{}', signal: AbortSignal.timeout(8000) });
@@ -19,6 +19,7 @@ export default async () => {
   if (out.engine_breaker) problems.push('המנוע מושבת בגלל כשלים');
   if (out.engine_budget_used_pct >= 90) problems.push('תקציב המנוע כמעט נוצל');
   if (out.jobs_dead_24h > 0) problems.push('יש עבודות שנכשלו');
+  if (out.client_errors_1h > 20) problems.push('הרבה שגיאות אצל משתמשים בשעה האחרונה');
   out.problems = problems;
   return new Response(JSON.stringify(out), { status: problems.length ? 503 : 200, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
 };

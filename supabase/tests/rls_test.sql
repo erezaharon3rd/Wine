@@ -232,4 +232,15 @@ select t_eq((select count(*) from organizations)::int + (select count(*) from wo
             + (select count(*) from deals)::int + (select count(*) from customer_orders)::int, 0, 'אורח בלי כניסה לא רואה כלום');
 reset role;
 
+-- ---------- ניטור שגיאות ----------
+set role authenticated;
+select t_as('00000000-0000-0000-0000-0000000000b1');
+select log_error('TypeError at x for dana@mail.com id 00000000-0000-0000-0000-0000000000b1 phone 0501234567', '/Portal/?y=abc#deal-5');
+select log_error('TypeError at x for other@mail.com id 00000000-0000-0000-0000-0000000000b2 phone 0529999999', '/Portal/?y=zzz#deal-5');
+select t_eq((select count(*) from client_errors)::int, 0, 'יקב לא קורא את רשימת השגיאות');
+reset role;
+select t_eq((select n from client_errors), 2, 'אותה שגיאה נספרת פעם אחת, בלי פרטים אישיים');
+select t_eq((select message from client_errors), 'TypeError at x for <email> id <id> phone <n>', 'מייל, מזהה ומספר הוסרו');
+select t_eq((health()->>'client_errors_1h')::int, 2, 'בדיקת התקינות רואה את השגיאות');
+
 select 'כל הבדיקות עברו' as result;
