@@ -2377,4 +2377,34 @@ language sql stable security definer set search_path = public as $$
 $$;
 grant execute on function monthly_statement(date) to authenticated;
 
+-- =====================================================================
+--  שלב 11 · הצהרת זכויות בהעלאת יצירה
+--  מי שמעלה מצהיר: הזכויות לשכפול אצל האמן ולא הועברו בכתב,
+--  והיצירה לא הוזמנה כדיוקן או כתיעוד של אירוע פרטי (שם הזכויות למזמין).
+-- =====================================================================
+alter table works add column if not exists rights_ok boolean;
+alter table works add column if not exists rights_commission_ok boolean;
+alter table works add column if not exists rights_by uuid references profiles(id);
+alter table works add column if not exists rights_at timestamptz;
+
+create or replace function works_rights_required() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if coalesce(my_role()::text, '') in ('admin', 'curator') or auth.uid() is null then return new; end if;
+  if tg_op = 'INSERT' then
+    if not (coalesce(new.rights_ok, false) and coalesce(new.rights_commission_ok, false)) then
+      raise exception 'צריך לאשר את הצהרת הזכויות לפני העלאת יצירה';
+    end if;
+    new.rights_by := auth.uid(); new.rights_at := now();
+  elsif (new.rights_ok, new.rights_commission_ok) is distinct from (old.rights_ok, old.rights_commission_ok) then
+    if not (coalesce(new.rights_ok, false) and coalesce(new.rights_commission_ok, false)) then
+      raise exception 'אי אפשר לבטל הצהרת זכויות. אם משהו השתנה, פונים למנהל המערכת';
+    end if;
+    new.rights_by := auth.uid(); new.rights_at := now();
+  end if;
+  return new;
+end $$;
+drop trigger if exists works_rights_t on works;
+create trigger works_rights_t before insert or update on works for each row execute function works_rights_required();
+
 select 'ההקמה הסתיימה בהצלחה' as result;

@@ -36,7 +36,7 @@ A.doupload=function(){const u=readUpload();if(!u)return;
   run(async()=>{const blob=await (await fetch(u.src)).blob();const ext=(blob.type.split('/')[1]||'jpg').replace('jpeg','jpg');const path=`${ME.id}/${Date.now()}.${ext}`;
     await q(sb.storage.from('works').upload(path,blob,{contentType:blob.type,upsert:false}));
     let pv={};try{pv=await putVariants(u.src,(S._artists||{})[aid]?.name,'w')}catch(e){console.warn('preview',e)}
-    await q(sb.from('works').insert({artist_id:aid,title:u.t,year:u.y?+u.y:null,size:u.s||null,tag:u.g,tone:u.tn,technique:u.tc,orig_status:u.o,story:u.st||null,no_crop:u.cells||{},image_path:path,px_w:u.w||null,px_h:u.h||null,phash:u.phash||null,file_check:u.check?{ok:u.check.ok,dpi:u.check.info.dpi,mb:u.check.info.mb,sharp:u.check.info.sharp,warns:u.check.warns.map(x=>x.k)}:null,...pv}));
+    await q(sb.from('works').insert({artist_id:aid,title:u.t,year:u.y?+u.y:null,size:u.s||null,tag:u.g,tone:u.tn,technique:u.tc,orig_status:u.o,story:u.st||null,no_crop:u.cells||{},image_path:path,px_w:u.w||null,px_h:u.h||null,phash:u.phash||null,rights_ok:!!u.r1,rights_commission_ok:!!u.r2,file_check:u.check?{ok:u.check.ok,dpi:u.check.info.dpi,mb:u.check.info.mb,sharp:u.check.info.sharp,warns:u.check.warns.map(x=>x.k)}:null,...pv}));
     log(`הועלתה יצירה: "${u.t}"`,'work');S.upload=null},ME.role==='gallery'?'הקובץ עבר את הבדיקה. היצירה פורסמה במאגר':'הקובץ עבר את הבדיקה. היצירה נשלחה לאישור הגלריה')};
 
 /* אישור הגלריה מפרסם ישר למאגר: בדיקת הקובץ כבר נעשתה אוטומטית בהעלאה */

@@ -563,7 +563,7 @@ V.gallery_artists=()=>`<h1>אמנים</h1>
   <button class="btn alt wide" style="margin-top:14px" data-a="invite">להזמין אמן</button>`;
 V.gallery_works=()=>{
   const p=S.works.filter(w=>w.st==='pending'&&!w.rej);
-  return `<h1>יצירות</h1><button class="btn alt wide" data-a="upload">להעלות יצירה של אמן</button><h3>לאישור לפני פרסום (${p.length})</h3>${p.length?`<div class="list">${p.map(w=>`<div class="li"><span class="th" style="background-image:url(${img(w.id)})" data-a="zoomimg" data-v="${w.id}" role="button" aria-label="להגדיל"></span><span class="mt"><b>${esc(w.t)}</b><small>${esc(w.artistN||'ארז אהרון')} · ${esc(w.tech||'')} · ${w.y||''}${w.sz?' · '+esc(w.sz)+' ס״מ':''}</small><span class="row" style="margin-top:6px"><button class="btn sm" data-a="gapprove" data-v="${w.id}">לאשר</button><button class="btn sm alt" data-a="greturn" data-v="${w.id}">להחזיר עם הערה</button></span></span></div>`).join('')}</div>`:empty('אין יצירות שממתינות','')}
+  return `<h1>יצירות</h1><button class="btn alt wide" data-a="upload">להעלות יצירה של אמן</button><h3>לאישור לפני פרסום (${p.length})</h3>${p.length?`<div class="list">${p.map(w=>`<div class="li"><span class="th" style="background-image:url(${img(w.id)})" data-a="zoomimg" data-v="${w.id}" role="button" aria-label="להגדיל"></span><span class="mt"><b>${esc(w.t)}</b><small>${esc(w.artistN||'ארז אהרון')} · ${esc(w.tech||'')} · ${w.y||''}${w.sz?' · '+esc(w.sz)+' ס״מ':''}</small><small style="color:${w.rights?'#2E5A3A':'#9B2C2C'};font-weight:600">${w.rights?'✓ האמן הצהיר שהזכויות לשכפול אצלו':'אין הצהרת זכויות. כדאי לברר עם האמן לפני אישור'}</small><span class="row" style="margin-top:6px"><button class="btn sm" data-a="gapprove" data-v="${w.id}">לאשר</button><button class="btn sm alt" data-a="greturn" data-v="${w.id}">להחזיר עם הערה</button></span></span></div>`).join('')}</div>`:empty('אין יצירות שממתינות','')}
   <h3>בסגל</h3><div class="grid">${S.works.filter(w=>w.st!=='pending').map(w=>`<button class="tile" data-a="go" data-v="work-${w.id}"><span class="ph" style="background-image:url(${img(w.id)})"></span>${w.st!=='live'?`<span class="tag dk">${wst(w)}</span>`:''}<span class="cp">${esc(w.t)}<small>${w.tag}${activeLic(w.id).length?' · '+lic(activeLic(w.id).length):''}</small></span></button>`).join('')}</div>`;
 };
 V.gallery_more=()=>{
@@ -725,12 +725,13 @@ function reqSheet(wid,step=1){
 function readUpload(){const u=S.upload,v=s=>($(s)?.value||'').trim();
   Object.assign(u,{t:v('#ut'),y:v('#uy'),hh:v('#uh').replace(',','.'),ww:v('#uw').replace(',','.'),tc:v('#utc')||'שמן על בד',g:v('#ug'),tn:v('#utn'),o:v('#uo'),st:v('#ust')});
   if($('#ua')){u.a=v('#ua');u.an=$('#ua').selectedOptions[0]?.textContent||''}
+  u.r1=!!$('#ur1')?.checked;u.r2=!!$('#ur2')?.checked;
   u.s=u.hh&&u.ww?`${u.hh}×${u.ww}`:'';
-  u.e={t:!u.t,y:!!u.y&&(!/^\d{4}$/.test(u.y)||+u.y>new Date().getFullYear()),s:(u.hh||u.ww)&&!(+u.hh>0&&+u.ww>0)};
-  if(u.e.t||u.e.y||u.e.s){uploadSheet();toast('צריך להשלים את השדות המסומנים');return null}
+  u.e={r:!(u.r1&&u.r2),t:!u.t,y:!!u.y&&(!/^\d{4}$/.test(u.y)||+u.y>new Date().getFullYear()),s:(u.hh||u.ww)&&!(+u.hh>0&&+u.ww>0)};
+  if(u.e.t||u.e.y||u.e.s||u.e.r){uploadSheet();toast('צריך להשלים את השדות המסומנים');return null}
   if(window.checkPass&&!checkPass(u.check)){uploadSheet();toast(u.check&&!u.check.ok?'הקובץ לא מתאים להדפסה. הפרטים בטופס':'צריך לאשר שקראת את ההערות על הקובץ');return null}return u}
 const TECHS=['שמן על בד','שמן על עץ','אקריליק','צבעי מים','גואש','פסטל','רישום','הדפס','צילום','מדיה מעורבת','דיגיטלי'];
-function keepTyped0(){const u=S.upload;if(!u||!document.getElementById('ut'))return;const v=x=>(document.querySelector(x)?.value||'').trim();const m={t:'#ut',y:'#uy',hh:'#uh',ww:'#uw',tc:'#utc',g:'#ug',tn:'#utn',o:'#uo',st:'#ust'};Object.entries(m).forEach(([k,x])=>{const z=v(x);if(z)u[k]=z})}
+function keepTyped0(){const u=S.upload;if(!u||!document.getElementById('ut'))return;const v=x=>(document.querySelector(x)?.value||'').trim();const m={t:'#ut',y:'#uy',hh:'#uh',ww:'#uw',tc:'#utc',g:'#ug',tn:'#utn',o:'#uo',st:'#ust'};Object.entries(m).forEach(([k,x])=>{const z=v(x);if(z)u[k]=z});['r1','r2'].forEach(k=>{const el=document.getElementById('u'+k);if(el)u[k]=el.checked})}
 function uploadSheet(){
   const u=S.upload||(S.upload={src:null,cells:{},w:0,h:0,e:{}});
   const okRes=window.checkPass?checkPass(u.check):Math.max(u.w,u.h)>=2000;
@@ -746,6 +747,10 @@ function uploadSheet(){
   <div class="two"><div class="fld"><label for="ug">נושא</label><select id="ug">${['נוף','טבע דומם','בוטני','סמלי','דיוקן','עירוני','מופשט','אחר'].map(t=>`<option ${u.g===t?'selected':''}>${t}</option>`).join('')}</select></div><div class="fld"><label for="utn">גוון עיקרי</label><select id="utn">${['ירוק','חום','בז׳','כחול','אפור','אדום','סגול','צהוב','שחור','לבן','צבעוני'].map(t=>`<option ${u.tn===t?'selected':''}>${t}</option>`).join('')}</select></div></div>
   <div class="fld"><label for="uo">היכן המקור</label><select id="uo">${['באוסף האמן','בגלריה','באוסף פרטי','נמכר','לא ידוע'].map(t=>`<option ${u.o===t?'selected':''}>${t}</option>`).join('')}</select></div>
   <div class="fld"><label for="ust">תיאור היצירה</label><textarea id="ust" placeholder="כמה משפטים על היצירה. לקוחות ויקבים רואים אותם">${esc(u.st||'')}</textarea></div></details>
+  <div class="panel ${u.e.r?'bad':''}" style="margin-top:14px" id="urights"><b style="font-weight:600">הצהרת זכויות *</b>
+  <label style="display:flex;gap:10px;align-items:flex-start;margin-top:8px;font-size:14.5px"><input type="checkbox" id="ur1" data-in="rights" ${u.r1?'checked':''} style="margin-top:4px"> ${S.role==='artist'?'הזכויות לשכפול היצירה אצלי, ולא העברתי אותן בכתב לאחר. גם אם המקור נמכר.':'הזכויות לשכפול היצירה אצל האמן, ולא הועברו בכתב לאחר. גם אם המקור נמכר.'}</label>
+  <label style="display:flex;gap:10px;align-items:flex-start;margin-top:8px;font-size:14.5px"><input type="checkbox" id="ur2" data-in="rights" ${u.r2?'checked':''} style="margin-top:4px"> זו לא יצירה שהוזמנה כדיוקן, או כציור או צילום של אירוע משפחתי או פרטי. ביצירה כזו הזכויות שייכות למזמין.</label>
+  ${u.e.r?'<span class="err">צריך לאשר את שתי ההצהרות</span>':''}</div>
   <p class="note">היצירה עוברת לאישור הגלריה ולבדיקת קובץ לפני שהיא מופיעה במאגר.</p>
   <button class="btn wide" style="margin-top:16px" data-a="doupload" ${u.src&&okRes?'':'disabled'}>לשלוח לאישור הגלריה</button>`);
   bindMark();
@@ -933,8 +938,9 @@ document.addEventListener('input',e=>{
   if(k==='bio'){S.bio=e.target.value}
 });
 document.addEventListener('change',e=>{
+  if(e.target.dataset.in==='rights'){if(S.upload){S.upload[e.target.id==='ur1'?'r1':'r2']=e.target.checked;if(S.upload.r1&&S.upload.r2&&S.upload.e)S.upload.e.r=false}return}
   if(e.target.dataset.in==='ackw'){if(S.upload){keepTyped0();S.upload._ack=e.target.checked;uploadSheet()}return}
-  if(e.target.dataset.in==='file'){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{S.upload={src:r.result,cells:{},w:im.naturalWidth,h:im.naturalHeight,e:{},a:S.upload?.a,check:null};const mine=S.upload;uploadSheet();if(window.fileCheck)fileCheck(f,r.result).then(c=>{if(S.upload!==mine)return;keepTyped0();mine.check=c;mine.phash=c.info.phash;uploadSheet();if(c.ok&&window.autoFill)autoFill()});else window.autoFill&&autoFill()};im.onerror=()=>{if(window.fileCheck)fileCheck(f,r.result).then(c=>{S.upload={src:null,cells:{},w:0,h:0,e:{},check:c};uploadSheet()})};im.src=r.result};r.readAsDataURL(f)}
+  if(e.target.dataset.in==='file'){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{S.upload={src:r.result,cells:{},w:im.naturalWidth,h:im.naturalHeight,e:{},a:S.upload?.a,r1:S.upload?.r1,r2:S.upload?.r2,check:null};const mine=S.upload;uploadSheet();if(window.fileCheck)fileCheck(f,r.result).then(c=>{if(S.upload!==mine)return;keepTyped0();mine.check=c;mine.phash=c.info.phash;uploadSheet();if(c.ok&&window.autoFill)autoFill()});else window.autoFill&&autoFill()};im.onerror=()=>{if(window.fileCheck)fileCheck(f,r.result).then(c=>{S.upload={src:null,cells:{},w:0,h:0,e:{},check:c};uploadSheet()})};im.src=r.result};r.readAsDataURL(f)}
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.sheetOpen)closeSheet();if(e.key==='Enter'&&e.target.id==='chatin'){document.querySelector('[data-a="chat"]')?.click()}if(e.key==='Enter'&&e.target.id==='ph')A.login1()});
 if(window.LIVE){}else if(location.hash)history.replaceState(null,'',location.pathname+location.search);

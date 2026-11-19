@@ -18,7 +18,7 @@ with sync_playwright() as p:
         pg.evaluate(f"S.upload={{src:'{PNG}',cells:{{}},w:2400,h:3000,e:{{}},check:{{ok:true,blocks:[],warns:[],info:{{w:2400,h:3000,dpi:800,printCm:[20,25],kb:500,mb:0.5}}}}}};uploadSheet()");pg.wait_for_timeout(300)
         pg.evaluate("document.querySelectorAll('#ov details').forEach(d=>d.open=true)");pg.fill('#ut','בדיקה');pg.fill('#utc','אקריליק');pg.fill('#uy','2025');pg.fill('#uh','80');pg.fill('#uw','60');pg.select_option('#utn','כחול');pg.fill('#ust','סיפור קצר')
         pg.screenshot(path=D+'/out/up.png',full_page=True)
-        pg.click('[data-a=doupload]');pg.wait_for_timeout(800)
+        pg.check('#ur1');pg.check('#ur2');pg.click('[data-a=doupload]');pg.wait_for_timeout(800)
     # demo: gallery uploads
     pg=page(None,'http://localhost:8778/?demo');pg.evaluate("localStorage.clear()");pg.reload();pg.wait_for_timeout(400)
     pg.evaluate("S.login=2;render()");pg.click('[data-a=role][data-v=gallery]');pg.wait_for_timeout(600);pg.evaluate("closeSheet()");pg.wait_for_timeout(300)

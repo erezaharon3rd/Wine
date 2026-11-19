@@ -70,11 +70,11 @@ reset role; update works set status='pending' where id=2; set role authenticated
 select t_as('00000000-0000-0000-0000-0000000000d1');
 select t_fail($$insert into works (artist_id, title, px_w, px_h) values ('20000000-0000-0000-0000-000000000001','קטן',800,600)$$, 'קובץ ברזולוציה נמוכה נחסם');
 select t_fail($$insert into works (artist_id, title) values ('20000000-0000-0000-0000-000000000001','בלי נתונים')$$, 'קובץ בלי מידות נחסם');
-insert into works (artist_id, title, px_w, px_h, phash) values ('20000000-0000-0000-0000-000000000001','גדול',2400,3000,'a5a5a5a5a5a5a5a5');
+insert into works (artist_id, title, px_w, px_h, phash, rights_ok, rights_commission_ok) values ('20000000-0000-0000-0000-000000000001','גדול',2400,3000,'a5a5a5a5a5a5a5a5', true, true);
 select t_eq((select status::text from works where title='גדול'), 'pending', 'יצירה של אמן מחכה לאישור הגלריה');
 select t_fail($$insert into works (artist_id, title, px_w, px_h, phash) values ('20000000-0000-0000-0000-000000000001','שוב',2400,3000,'a5a5a5a5a5a5a5a4')$$, 'אותה תמונה פעמיים נחסמת');
 select t_as('00000000-0000-0000-0000-0000000000c1');
-insert into works (artist_id, title, px_w, px_h, phash) values ('20000000-0000-0000-0000-000000000001','של הגלריה',3000,4000,'0f0f0f0f0f0f0f0f');
+insert into works (artist_id, title, px_w, px_h, phash, rights_ok, rights_commission_ok) values ('20000000-0000-0000-0000-000000000001','של הגלריה',3000,4000,'0f0f0f0f0f0f0f0f', true, true);
 select t_eq((select status::text from works where title='של הגלריה'), 'live', 'העלאה של הגלריה עולה ישר למאגר');
 reset role; delete from works where title in ('גדול','של הגלריה'); set role authenticated;
 
@@ -431,5 +431,14 @@ select t_eq(tier_decide('20000000-0000-0000-0000-000000000001', false, 'עוד �
 reset role;
 select t_eq((select tier || '|' || coalesce(tier_proposed,'-') from artists where id='20000000-0000-0000-0000-000000000001'), 'senior|-', 'אחרי דחייה הדרגה לא השתנתה');
 select t_eq((select count(*) from notifications n join profiles p on p.id=n.user_id where p.email='gal@t' and n.body like '%לא אושרה: עוד מוקדם')::int, 1, 'הגלריה מקבלת את סיבת הדחייה');
+
+-- ---------- שלב 11: הצהרת זכויות ----------
+set role authenticated; select t_as('00000000-0000-0000-0000-0000000000d1');
+select t_fail($$insert into works (artist_id, title, image_path, px_w, px_h, phash) values ('20000000-0000-0000-0000-000000000001','בלי הצהרה','x/9.jpg',2400,3000,'1234123412341234')$$, 'העלאה בלי הצהרת זכויות נחסמת');
+select t_fail($$insert into works (artist_id, title, image_path, px_w, px_h, phash, rights_ok) values ('20000000-0000-0000-0000-000000000001','חצי הצהרה','x/9.jpg',2400,3000,'1234123412341234', true)$$, 'צריך את שתי ההצהרות');
+insert into works (artist_id, title, image_path, px_w, px_h, phash, rights_ok, rights_commission_ok) values ('20000000-0000-0000-0000-000000000001','עם הצהרה','x/91.jpg',2400,3000,'1234123412341234', true, true);
+select t_fail($$update works set rights_ok = false where title = 'עם הצהרה'$$, 'אי אפשר לבטל הצהרה');
+reset role;
+select t_eq((select rights_by::text from works where title = 'עם הצהרה'), '00000000-0000-0000-0000-0000000000d1', 'נשמר מי הצהיר ומתי');
 
 select 'כל הבדיקות עברו' as result;

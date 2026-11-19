@@ -26,9 +26,9 @@ with sync_playwright() as p:
     pg.check('#ackw');pg.wait_for_timeout(300);print('after ack enabled:',not pg.is_disabled('[data-a=doupload]'));assert not pg.is_disabled('[data-a=doupload]')
     pg.screenshot(path=D+'/out/q_blur.png',full_page=True)
     # העלאה טובה נשמרת עם טביעת אצבע, וכפילות נחסמת
-    up('good.jpg');pg.fill('#ut','פרח');pg.click('[data-a=doupload]');pg.wait_for_timeout(1500)
+    up('good.jpg');pg.fill('#ut','פרח');pg.click('[data-a=doupload]');pg.wait_for_timeout(400);print('rights required:',pg.is_visible('#urights.bad'));assert pg.is_visible('#urights.bad');pg.check('#ur1');pg.check('#ur2');pg.click('[data-a=doupload]');pg.wait_for_timeout(1500)
     w=json.loads(pg.evaluate("localStorage.mockdb"))['db']['works'][-1];print('saved:',w.get('phash'),w.get('file_check'))
-    assert w.get('phash') and w['file_check']['ok']
+    assert w.get('phash') and w['file_check']['ok'] and w.get('rights_ok') and w.get('rights_commission_ok')
     pg.evaluate("S.works.push({id:999,t:'פרח',phash:%s,st:'live'})"%json.dumps(w['phash']))
     t,dis=up('good.jpg');print('duplicate:',dis,t[:120]);assert dis and 'כבר נמצאת' in t
     print('ERR',errs);b.close()
