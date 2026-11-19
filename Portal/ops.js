@@ -68,7 +68,7 @@ V.admin_settings=()=>{let h=_as();h=h.replace(/<h3>תבניות חוזה<\/h3>[\
   const on=id=>(S.orgs||[]).find(o=>o.id===id)?.name||'';
   const live=(S._inv||[]).filter(i=>!i.revoked&&new Date(i.expires_at)>new Date());
   return h+`
-  <h3>קובצי יצירות</h3><div class="panel"><p class="note" style="margin-top:0">${mv?`${mv} יצירות עדיין בלי הגנה. ההעברה שומרת את קובץ המקור באחסון פרטי ויוצרת תצוגה מקדימה עם סימן מים. יקבים ולקוחות רואים רק את התצוגה, ובית הדפוס מקבל את המקור אחרי אישור.`:'כל היצירות שמורות באחסון פרטי, עם תצוגה מקדימה מוגנת.'}</p>
+  <h3>קובצי יצירות</h3><div class="panel"><p class="note" style="margin-top:0">${!(S.works||[]).filter(w=>w.st!=='hidden').length?'אין עדיין יצירות במערכת. אחרי שיצירות יועלו, אפשר יהיה להעביר אותן מכאן.':mv?`${mv} יצירות עדיין בלי הגנה. ההעברה שומרת את קובץ המקור באחסון פרטי ויוצרת תצוגה מקדימה עם סימן מים. יקבים ולקוחות רואים רק את התצוגה, ובית הדפוס מקבל את המקור אחרי אישור.`:`כל ${(S.works||[]).filter(w=>w.st!=='hidden').length} היצירות שמורות באחסון פרטי, עם תצוגה מקדימה מוגנת.`}</p>
     ${mv?`<button class="btn sm wide" data-a="migrate">להעביר ${mv} יצירות</button>`:''}</div>
   <h3>קישורי הצטרפות</h3><div class="panel"><p class="note" style="margin-top:0">שולחים קישור לאדם חדש. אחרי ההרשמה הוא משויך לארגון ולתפקיד, בלי לחכות לאישור. הקישור בתוקף 14 יום.</p>
     <div class="two"><div class="fld"><label for="ivo">ארגון</label><select id="ivo">${orgs.filter(o=>KIND_ROLE[o.kind]).map(o=>`<option value="${o.id}" data-k="${o.kind}">${esc(o.name)}</option>`).join('')}</select></div>
