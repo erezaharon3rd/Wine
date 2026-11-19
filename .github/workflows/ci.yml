@@ -1,0 +1,30 @@
+name: בדיקות
+on:
+  push: { branches: [main] }
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_PASSWORD: postgres }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGURL: postgresql://postgres:postgres@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install --no-audit --no-fund
+      - name: בדיקת טיפוסים
+        run: npm run typecheck
+      - name: הרשאות ומעברים במסד
+        run: npm run test:db
+      - name: תמחור ומצבים, מול הדפדפן ומול המסד
+        run: npm test
+      - name: תחביר קובצי האתר
+        run: for f in Portal/*.js netlify/edge-functions/*.js; do node --check "$f" || exit 1; done
