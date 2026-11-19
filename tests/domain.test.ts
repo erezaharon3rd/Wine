@@ -19,7 +19,7 @@ function clientFns() {
   const line = (src: string, start: string) => src.slice(src.indexOf(start), src.indexOf('\n', src.indexOf(start)));
   const ctx: any = { S: { floor: 2500, comm: 15, artistShare: 50, wset: {} }, VAT: 18 };
   vm.createContext(ctx);
-  vm.runInContext([line(html, 'const TYPES='), line(html, 'const QTY='), grab(html, 'function price(d)'), 'const W=()=>S.wset;', grab(cj, 'function cprice(d)'), 'this.price=price;this.cprice=cprice;'].join('\n'), ctx);
+  vm.runInContext([line(html, 'const TYPES='), line(html, 'const QTY='), grab(html, 'function price(d)'), 'const W=()=>S.wset;', line(cj, 'const addonFor='), grab(cj, 'function cprice(d)'), 'this.price=price;this.cprice=cprice;'].join('\n'), ctx);
   return ctx;
 }
 

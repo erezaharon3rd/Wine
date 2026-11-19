@@ -7,7 +7,7 @@ window.supabase={createClient(){
     let rows=()=>st.db[t]||[];let filt=[];let op='select',payload=null,single=false,maybe=false,ret=false;
     const b={select(){if(op!=='select')ret=true;return b},eq(k,v){filt.push([k,v]);return b},neq(k,v){filt.push([k,v,'neq']);return b},is(){return b},gte(){return b},order(){return b},limit(){return b},in(){return b},
       single(){single=true;return b},maybeSingle(){maybe=true;return b},
-      insert(p){op='insert';payload=p;return b},update(p){op='update';payload=p;return b},delete(){op='delete';return b},
+      insert(p){op='insert';payload=p;return b},upsert(p){op='upsert';payload=p;return b},update(p){op='update';payload=p;return b},delete(){op='delete';return b},
       then(res,rej){try{res(exec())}catch(e){rej(e)}}};
     function exec(){
       st.db[t]=st.db[t]||[];const match=r=>filt.every(([k,v,n])=>n?r[k]!=v:r[k]==v);
@@ -15,6 +15,7 @@ window.supabase={createClient(){
         if(t==='designs'&&arr.some(a=>st.db.designs.some(d=>d.code===a.code)))return {data:null,error:{code:'23505',message:'dup'}};
         if(t==='deal_messages')arr.forEach(a=>a.sender_role=st.me_role);if(t==='customer_orders')arr.forEach(a=>{a.id=(st.coseq=(st.coseq||5000)+1);a.status='sent';a.log=[{t:'הלקוח שלח את ההזמנה',at:new Date().toISOString()}]});
         st.db[t].push(...arr);persist();return {data:single?arr[0]:arr,error:null}}
+      if(op==='upsert'){[].concat(payload).forEach(p=>{const k=p.code!=null?'code':'id';const r=st.db[t].find(x=>x[k]===p[k]);r?Object.assign(r,p):st.db[t].push(p)});persist();return {data:null,error:null}}
       if(op==='update'){st.db[t].filter(match).forEach(r=>Object.assign(r,payload));persist();return {data:null,error:null}}
       if(op==='delete'){st.db[t]=st.db[t].filter(r=>!match(r));persist();return {data:null,error:null}}
       let d=st.db[t].filter(match).map(r=>({...r}));
@@ -31,6 +32,8 @@ window.supabase={createClient(){
       if(fn==='render_quota_left')return {data:5,error:null};
       if(fn==='log_error'){(st.db.client_errors=st.db.client_errors||[]).push({id:(st.db.client_errors.length+1),message:a.p_message,place:a.p_place,n:1,role:st.me_role,last_at:new Date().toISOString(),resolved:false});persist();return {data:null,error:null}}
       if(fn==='monthly_statement')return {data:[{deal_id:1003,paid_at:'2026-11-05',winery:'יקב 1',work:'חורשה',artist:'ארז',net:6300,platform:945,artist_share:2678,gallery_share:2677}],error:null};
+      if(fn==='tier_propose'){const ar=st.db.artists.find(x=>x.id===a.p_artist);if(st.me_role==='admin'){ar.tier=a.p_tier;ar.tier_proposed=null}else{ar.tier_proposed=a.p_tier;ar.tier_note=a.p_note}persist();return {data:st.me_role==='admin'?'set':'proposed',error:null}}
+      if(fn==='tier_decide'){if(st.me_role!=='admin')return {data:null,error:{message:'רק מנהל המערכת מאשר דרגה'}};const ar=st.db.artists.find(x=>x.id===a.p_artist);if(a.p_ok){ar.tier=ar.tier_proposed;const T=(st.db.artist_tiers||[]).find(t=>t.code===ar.tier);if(T)ar.floor_price=Math.min(Math.max(ar.floor_price,T.min_price),T.max_price)}ar.tier_proposed=null;persist();return {data:a.p_ok?'approved':'rejected',error:null}}
       if(fn==='print_issue'){if(!String(a.p_note||'').trim())return {data:null,error:{message:'צריך לכתוב מה לתקן'}};st.db.deal_messages.push({id:Date.now(),deal_id:a.p_deal,sender_role:'printer',body:'בית הדפוס מבקש תיקון קבצים: '+a.p_note,created_at:new Date().toISOString()});persist();return {data:null,error:null}}
       if(fn==='label_action'){const T=a.p_entity==='deal'?st.db.deals:st.db.customer_orders;const o=T.find(x=>x.id===a.p_id);if(!o)return {data:null,error:{message:'אין גישה לתווית הזו'}};
         const side=['gallery','artist'].includes(st.me_role)?'art':st.me_role==='winery'?'winery':'customer';o.label_round=o.label_round||1;const L=(st.db.label_notes=st.db.label_notes||[]);

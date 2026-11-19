@@ -52,8 +52,10 @@ const faceEl=(a,sm)=>`<span class="face ${sm?'sm':''}" ${a.face?`style="backgrou
 
 /* ── price ── */
 const W=()=>S.wset;
+const addonFor=aid=>{const v=(W().artist||{})[aid];return (v===undefined||v===null||v==='')?(window.tierAddon?tierAddon(aid):0):+v};
+window.addonFor=addonFor;
 function cprice(d){
-  const w=W(),base=w.prices[d.wine]||100,art=w.artist[d.artist]||0,shp=w.shape[d.shape]||0,foil=d.foil?w.foil:0,emb=d.emboss?w.emboss:0;
+  const w=W(),base=w.prices[d.wine]||100,art=addonFor(d.artist),shp=w.shape[d.shape]||0,foil=d.foil?w.foil:0,emb=d.emboss?w.emboss:0;
   const unit=base+art+shp+foil+emb, q=Math.max(1,d.qty|0);
   const disc=q>=w.t2?w.d2:q>=w.t1?w.d1:q>=6?w.caseDisc:0;
   const unitNet=Math.round(unit*(1-disc/100));
@@ -88,11 +90,11 @@ V.customer_artists=()=>{const q=(S.f.cq||'').trim();const cc=S.f.cc||'הכל';co
   return `<span class="eyebrow">${esc(ROLES.customer.who)}</span><h1>לבחור אמן</h1><p class="lead">כל אמן מביא סגנון אחר לבקבוק. בוחרים אמן, ובדף שלו רואים את כל היצירות שאפשר לשים על התווית.</p>
   <label class="search">${ICON.search}<input id="cq" placeholder="לחפש לפי שם, סגנון או מדינה" data-in="cq" value="${esc(S.f.cq||'')}" aria-label="חיפוש אמן"></label>
   ${cs.length>1?`<div class="hscroll">${cs.map(c=>`<button class="chip" data-a="ccf" data-v="${esc(c)}" aria-pressed="${cc===c}">${esc(c)}</button>`).join('')}</div>`:''}
-  ${L.map(a=>`<button class="acard" ${a.soon?'disabled':`data-a="go" data-v="cart-${a.id}"`}>${faceEl(a,true)}<span class="mt"><b>${esc(a.n)}</b><small>${esc(a.style)}${a.country?' · '+esc(a.country):''}</small><small>${a.soon?'מצטרף בקרוב':`${a.works.length} יצירות · תוספת אמן <span class="num">${nis(W().artist[a.id]||0)}</span> לבקבוק`}</small></span>${a.soon?'':'<span class="end">←</span>'}</button>`).join('')||empty('לא נמצא אמן','אפשר לחפש בשם אחר.')}`};
+  ${L.map(a=>`<button class="acard" ${a.soon?'disabled':`data-a="go" data-v="cart-${a.id}"`}>${faceEl(a,true)}<span class="mt"><b>${esc(a.n)}</b><small>${esc(a.style)}${a.country?' · '+esc(a.country):''}</small><small>${a.soon?'מצטרף בקרוב':`${a.works.length} יצירות · תוספת אמן <span class="num">${nis(addonFor(a.id))}</span> לבקבוק`}</small></span>${a.soon?'':'<span class="end">←</span>'}</button>`).join('')||empty('לא נמצא אמן','אפשר לחפש בשם אחר.')}`};
 
 VX.cart=id=>{const a=artistOf(id);if(!a||a.soon)return empty('האמן לא נמצא');
   return `${backBtn}${faceEl(a)}<h1 style="text-align:center;margin-bottom:2px">${esc(a.n)}</h1><p class="lead" style="text-align:center;margin-top:0">${esc(a.style)} · ${esc(a.country||'')}${a.country?' · ':''}${esc(a.gal)}</p>
-  <div class="kpis"><div class="kpi"><b>${a.works.length}</b><span>יצירות זמינות</span></div><div class="kpi"><b class="num">${nis(W().artist[a.id]||0)}</b><span>תוספת אמן לבקבוק</span></div><div class="kpi"><b>${S.deals.filter(d=>d.st==='active').length}</b><span>יינות עם הציורים</span></div></div>
+  <div class="kpis"><div class="kpi"><b>${a.works.length}</b><span>יצירות זמינות</span></div><div class="kpi"><b class="num">${nis(addonFor(a.id))}</b><span>תוספת אמן לבקבוק</span></div><div class="kpi"><b>${S.deals.filter(d=>d.st==='active').length}</b><span>יינות עם הציורים</span></div></div>
   <h3>על האמן</h3><div class="panel"><p style="margin:0">${esc(a.bio)}</p></div>
   <h3>היצירות</h3><p class="note" style="margin-top:0">נגיעה ביצירה מציגה אותה על בקבוק, מוכנה להזמנה.</p>
   <div class="grid">${a.works.map(w=>`<button class="tile" data-a="cpick" data-v="${w.id}"><span class="ph" style="background-image:url(${img(w.id)})" role="img" aria-label="${esc(w.t)}"></span>${w.pick?'<span class="tag">בחירת האוצר</span>':''}<span class="cp">${esc(w.t)}<small>${esc(w.tech||w.tag)}${w.y?' · '+w.y:''}</small>${w.sz?`<small>${esc(w.sz)} ס״מ</small>`:''}</span></button>`).join('')}</div>`};
@@ -186,7 +188,7 @@ function termsSheet(){sheet(`<h2>תנאי ההזמנה</h2><div class="panel" st
 /* ── winery price list ── */
 function pricesSheet(){const w=W();sheet(`<h2>מחירון ללקוחות</h2><p class="note">מחירים לצרכן, כולל מע״מ. הלקוח רואה אותם בכל בחירה.</p>
   <h3>מחיר בקבוק לפי יין</h3>${S.wines.map(x=>`<div class="fld"><label for="wp${x.id}">${esc(x.n)} ${x.y}</label><input id="wp${x.id}" inputmode="numeric" value="${w.prices[x.id]||''}"></div>`).join('')}
-  <h3>תוספת אמן לבקבוק</h3>${ARTISTS().filter(a=>!a.soon).map((a,i)=>`<div class="fld"><label for="wpa${i}">${esc(a.n)}</label><input id="wpa${i}" inputmode="numeric" value="${w.artist[a.id]||0}"></div>`).join('')}
+  <h3>תוספת אמן לבקבוק</h3>${ARTISTS().filter(a=>!a.soon).map((a,i)=>`<div class="fld"><label for="wpa${i}">${esc(a.n)}</label><input id="wpa${i}" inputmode="numeric" value="${w.artist[a.id]??''}" placeholder="לפי הדרגה: ${nis(window.tierAddon?tierAddon(a.id):0)}"><small>ריק = לפי הדרגה של האמן</small></div>`).join('')}
   <h3>תוספות</h3><div class="two"><div class="fld"><label for="wpf">זהב</label><input id="wpf" inputmode="numeric" value="${w.foil}"></div><div class="fld"><label for="wpe">הבלטה</label><input id="wpe" inputmode="numeric" value="${w.emboss}"></div></div>
   <div class="two"><div class="fld"><label for="wpo">תווית אובל</label><input id="wpo" inputmode="numeric" value="${w.shape.oval}"></div><div class="fld"><label for="wpr">תווית קשת</label><input id="wpr" inputmode="numeric" value="${w.shape.arch}"></div></div>
   <h3>מידת התווית במ״מ</h3><div class="two"><div class="fld"><label for="wlw">רוחב</label><input id="wlw" inputmode="numeric" value="${w.label?.w||80}"></div><div class="fld"><label for="wlh">גובה</label><input id="wlh" inputmode="numeric" value="${w.label?.h||152}"></div></div>
@@ -234,7 +236,7 @@ Object.assign(A,{
   cshoot(){toast('צילום ריאליסטי פועל במערכת המחוברת. בהדגמה מוצג ציור של הבקבוק')},
   ccf(v){S.f.cc=v;render()},
   ccountry(){const c=$('#cctry').value.trim();if(!c){$('#cctry').focus();return}S.country=c;toast('המדינה נשמרה');render()},
-  cpsave(){const w=W(),n=s=>+($(s).value.replace(/\D/g,''))||0;S.wines.forEach(x=>w.prices[x.id]=n('#wp'+x.id)||w.prices[x.id]);ARTISTS().filter(a=>!a.soon).forEach((a,i)=>w.artist[a.id]=n('#wpa'+i));w.foil=n('#wpf');w.emboss=n('#wpe');w.shape.oval=n('#wpo');w.shape.arch=n('#wpr');w.caseDisc=n('#wcd');w.t1=n('#wt1')||24;w.d1=n('#wd1');w.t2=Math.max(n('#wt2'),w.t1+1);w.d2=n('#wd2');w.label={w:Math.min(200,Math.max(30,n('#wlw')||80)),h:Math.min(300,Math.max(30,n('#wlh')||152))};log('מחירון ללקוחות עודכן','admin');closeSheet();toast('המחירון נשמר');render()},
+  cpsave(){const w=W(),n=s=>+($(s).value.replace(/\D/g,''))||0;S.wines.forEach(x=>w.prices[x.id]=n('#wp'+x.id)||w.prices[x.id]);ARTISTS().filter(a=>!a.soon).forEach((a,i)=>{const raw=$('#wpa'+i).value.replace(/\D/g,'');if(raw==='')delete w.artist[a.id];else w.artist[a.id]=+raw});w.foil=n('#wpf');w.emboss=n('#wpe');w.shape.oval=n('#wpo');w.shape.arch=n('#wpr');w.caseDisc=n('#wcd');w.t1=n('#wt1')||24;w.d1=n('#wd1');w.t2=Math.max(n('#wt2'),w.t1+1);w.d2=n('#wd2');w.label={w:Math.min(200,Math.max(30,n('#wlw')||80)),h:Math.min(300,Math.max(30,n('#wlh')||152))};log('מחירון ללקוחות עודכן','admin');closeSheet();toast('המחירון נשמר');render()},
   cface(){const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=()=>{const f=i.files[0];if(!f)return;if(window.saveFace){saveFace(f);return}const r=new FileReader();r.onload=()=>{S.face=r.result;save();toast('הצילום נשמר');render()};r.readAsDataURL(f)};i.click()},
   cstory(v){if(window.saveStory){saveStory(+v,$('#cst').value.trim());return}S.stories[+v]=$('#cst').value.trim();toast('הסיפור נשמר. לקוחות יראו אותו');render()}
 });

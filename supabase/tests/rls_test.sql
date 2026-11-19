@@ -399,4 +399,37 @@ insert into renders (image_path, created_by) values ('x/r9.jpg', '00000000-0000-
 update renders set approved = false where image_path = 'x/r9.jpg';
 select t_eq((select count(*) from notifications n join profiles p on p.id = n.user_id where p.email = 'win1@t' and n.body like 'צילום ההדמיה לא תאם%')::int, 1, 'היקב יודע שהצילום לא תאם');
 
+-- ---------- שלב 10: דרגות אמנים ----------
+select set_config('request.jwt.claim.sub','',false);
+select t_eq((select tier from artists where id='20000000-0000-0000-0000-000000000001'), 'established', 'אמן קיים קיבל דרגה לפי מחיר הרצפה');
+set role authenticated; select t_as('00000000-0000-0000-0000-0000000000c1');
+select t_fail($$update artists set tier='museum' where id='20000000-0000-0000-0000-000000000001'$$, 'הגלריה לא משנה דרגה ישירות');
+select t_fail($$update artists set floor_price=6000 where id='20000000-0000-0000-0000-000000000001'$$, 'מחיר רצפה מחוץ לטווח הדרגה נחסם');
+select t_eq(tier_propose('20000000-0000-0000-0000-000000000001','senior','תערוכת יחיד במוזיאון'), 'proposed', 'הגלריה ממליצה על דרגה');
+select t_as('00000000-0000-0000-0000-0000000000d1');
+select t_fail($$select tier_propose('20000000-0000-0000-0000-000000000001','museum')$$, 'האמן לא ממליץ על עצמו');
+select t_fail($$select tier_decide('20000000-0000-0000-0000-000000000001', true)$$, 'רק המנהל מאשר');
+select t_as('00000000-0000-0000-0000-0000000000a1');
+select t_eq(tier_decide('20000000-0000-0000-0000-000000000001', true), 'approved', 'המנהל אישר');
+reset role;
+select t_eq((select tier || '|' || floor_price::int from artists where id='20000000-0000-0000-0000-000000000001'), 'senior|4000', 'דרגה חדשה, והמחיר עלה לתחילת הטווח');
+select t_eq((select count(*) from notifications n join profiles p on p.id=n.user_id where p.email='gal@t' and n.body like 'הדרגה של%אושרה: בכיר')::int, 1, 'הגלריה יודעת שהדרגה אושרה');
+-- עסקה חדשה שומרת את חלק האמן של הדרגה
+set role authenticated; select t_as('00000000-0000-0000-0000-0000000000b1');
+select request_license(1,1,null,'אדום','series','b',false) as rq11 \gset
+reset role;
+select t_eq((select artist_pct::int from deals where id = :rq11), 55, 'חלק האמן בעסקה לפי הדרגה בכיר');
+select t_eq((select deal_price(d)::int from deals d where id = :rq11), 13200, 'מחיר הרישיון מחושב ממחיר הרצפה של הדרגה');
+-- תוספת לבקבוק: ברירת מחדל לפי הדרגה, אלא אם היקב קבע אחרת
+select t_eq(corder_price('10000000-0000-0000-0000-0000000000b2', '{"wine":"2","artist":"20000000-0000-0000-0000-000000000001","shape":"rect","qty":1}'), 125::numeric, 'בלי מחירון ליקב: תוספת לפי הדרגה');
+select t_eq(corder_price('10000000-0000-0000-0000-0000000000b1', '{"wine":"1","artist":"20000000-0000-0000-0000-000000000001","shape":"rect","qty":1}'), 134::numeric, 'היקב קבע תוספת משלו: היא קובעת');
+-- המלצה שנדחתה
+set role authenticated; select t_as('00000000-0000-0000-0000-0000000000c1');
+select tier_propose('20000000-0000-0000-0000-000000000001','museum');
+select t_as('00000000-0000-0000-0000-0000000000a1');
+select t_eq(tier_decide('20000000-0000-0000-0000-000000000001', false, 'עוד מוקדם'), 'rejected', 'המנהל דחה');
+reset role;
+select t_eq((select tier || '|' || coalesce(tier_proposed,'-') from artists where id='20000000-0000-0000-0000-000000000001'), 'senior|-', 'אחרי דחייה הדרגה לא השתנתה');
+select t_eq((select count(*) from notifications n join profiles p on p.id=n.user_id where p.email='gal@t' and n.body like '%לא אושרה: עוד מוקדם')::int, 1, 'הגלריה מקבלת את סיבת הדחייה');
+
 select 'כל הבדיקות עברו' as result;

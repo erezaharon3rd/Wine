@@ -2226,4 +2226,155 @@ end $$;
 drop trigger if exists renders_mismatch_t on renders;
 create trigger renders_mismatch_t after update of approved on renders for each row execute function renders_mismatch();
 
+-- =====================================================================
+--  שלב 10 · דרגות אמנים לפי עלות: מתפתח, מבוסס, בכיר, מוזיאלי
+--  הדרגה קובעת טווח מחיר לרישיון, חלק האמן, ותוספת לבקבוק ללקוחות.
+--  הגלריה ממליצה, מנהל המערכת מאשר.
+-- =====================================================================
+create table if not exists artist_tiers (
+  code         text primary key check (code in ('emerging','established','senior','museum')),
+  name         text not null,
+  rank         int not null,
+  min_price    numeric not null,
+  max_price    numeric not null,
+  artist_pct   numeric not null check (artist_pct between 0 and 100),
+  bottle_addon numeric not null default 0 check (bottle_addon >= 0),
+  check (min_price > 0 and min_price <= max_price)
+);
+alter table artist_tiers enable row level security;
+drop policy if exists tiers_read on artist_tiers;
+create policy tiers_read on artist_tiers for select to authenticated using (true);
+drop policy if exists tiers_admin on artist_tiers;
+create policy tiers_admin on artist_tiers for all to authenticated using (is_admin()) with check (is_admin());
+insert into artist_tiers (code, name, rank, min_price, max_price, artist_pct, bottle_addon) values
+  ('emerging',    'מתפתח',  1,  800,  1999, 45,  8),
+  ('established', 'מבוסס',  2, 2000,  3999, 50, 14),
+  ('senior',      'בכיר',   3, 4000,  8999, 55, 25),
+  ('museum',      'מוזיאלי', 4, 9000, 30000, 60, 45)
+on conflict (code) do nothing;
+
+alter table artists add column if not exists tier text not null default 'established' references artist_tiers(code);
+alter table artists add column if not exists tier_proposed text references artist_tiers(code);
+alter table artists add column if not exists tier_note text;
+alter table artists add column if not exists tier_by uuid references profiles(id);
+alter table artists add column if not exists tier_at timestamptz;
+alter table deals   add column if not exists artist_pct numeric;
+
+-- אמנים קיימים: דרגה לפי מחיר הרצפה שכבר נקבע (פעם אחת בלבד)
+update artists a set tier = t.code, tier_at = now()
+from artist_tiers t
+where a.tier_at is null and a.floor_price between t.min_price and t.max_price;
+update artists set tier_at = now() where tier_at is null;
+
+-- רק המנהל משנה דרגה. מחיר הרצפה תמיד בטווח של הדרגה
+create or replace function artists_tier_rules() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare t artist_tiers;
+begin
+  if tg_op = 'UPDATE' and (new.tier is distinct from old.tier or new.tier_proposed is distinct from old.tier_proposed)
+     and not is_admin() and coalesce(current_setting('app.bypass', true), '') <> '1' then
+    raise exception 'את הדרגה משנים דרך המלצת הגלריה ואישור המנהל';
+  end if;
+  select * into t from artist_tiers where code = new.tier;
+  if new.floor_price < t.min_price or new.floor_price > t.max_price then
+    if tg_op = 'UPDATE' and new.tier is distinct from old.tier then
+      new.floor_price := least(greatest(new.floor_price, t.min_price), t.max_price);   -- דרגה חדשה: המחיר נכנס לטווח
+    elsif tg_op = 'INSERT' and new.floor_price = 3500 and new.tier <> 'established' then
+      new.floor_price := t.min_price;
+    else
+      raise exception 'מחיר הרצפה לדרגה "%" הוא בין ₪% ל־₪%', t.name, round(t.min_price), round(t.max_price);
+    end if;
+  end if;
+  return new;
+end $$;
+drop trigger if exists artists_tier_rules_t on artists;
+create trigger artists_tier_rules_t before insert or update on artists for each row execute function artists_tier_rules();
+
+-- כל עסקה שומרת את חלק האמן לפי הדרגה ביום הבקשה
+create or replace function deals_artist_pct() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if new.artist_pct is null then
+    select t.artist_pct into new.artist_pct from artists a join artist_tiers t on t.code = a.tier where a.id = new.artist_id;
+  end if;
+  return new;
+end $$;
+drop trigger if exists deals_artist_pct_t on deals;
+create trigger deals_artist_pct_t before insert on deals for each row execute function deals_artist_pct();
+
+-- הגלריה ממליצה על דרגה (מנהל: נקבע מיד)
+create or replace function tier_propose(p_artist uuid, p_tier text, p_note text default null) returns text
+language plpgsql security definer set search_path = public as $$
+declare a artists; t artist_tiers;
+begin
+  select * into a from artists where id = p_artist for update;
+  if not found then raise exception 'האמן לא נמצא'; end if;
+  select * into t from artist_tiers where code = p_tier;
+  if not found then raise exception 'דרגה לא קיימת'; end if;
+  if not (is_admin() or (my_role()::text = 'gallery' and a.gallery_id = my_org())) then raise exception 'אין הרשאה'; end if;
+  perform set_config('app.bypass', '1', true);
+  if is_admin() then
+    update artists set tier = p_tier, tier_proposed = null, tier_note = nullif(left(coalesce(p_note, ''), 500), ''), tier_by = auth.uid(), tier_at = now() where id = p_artist;
+    perform notify_users(a.gallery_id, 'gallery', a.user_id, 'הדרגה של ' || a.name || ' נקבעה: ' || t.name);
+    return 'set';
+  end if;
+  if p_tier = a.tier then raise exception 'זו כבר הדרגה של האמן'; end if;
+  update artists set tier_proposed = p_tier, tier_note = nullif(left(coalesce(p_note, ''), 500), ''), tier_by = auth.uid() where id = p_artist;
+  insert into notifications (user_id, body)
+  select id, 'הגלריה ממליצה על דרגה "' || t.name || '" ל' || a.name from profiles where role = 'admin' and status = 'active';
+  return 'proposed';
+end $$;
+grant execute on function tier_propose(uuid, text, text) to authenticated;
+
+-- המנהל מאשר או דוחה את ההמלצה
+create or replace function tier_decide(p_artist uuid, p_ok boolean, p_note text default null) returns text
+language plpgsql security definer set search_path = public as $$
+declare a artists; t artist_tiers;
+begin
+  if not is_admin() then raise exception 'רק מנהל המערכת מאשר דרגה'; end if;
+  select * into a from artists where id = p_artist for update;
+  if a.tier_proposed is null then raise exception 'אין המלצה פתוחה'; end if;
+  select * into t from artist_tiers where code = a.tier_proposed;
+  perform set_config('app.bypass', '1', true);
+  if p_ok then
+    update artists set tier = a.tier_proposed, tier_proposed = null, tier_at = now() where id = p_artist;
+    perform notify_users(a.gallery_id, 'gallery', a.user_id, 'הדרגה של ' || a.name || ' אושרה: ' || t.name);
+    return 'approved';
+  end if;
+  update artists set tier_proposed = null where id = p_artist;
+  perform notify_users(a.gallery_id, 'gallery', null, 'ההמלצה על דרגה "' || t.name || '" ל' || a.name || ' לא אושרה' || coalesce(': ' || nullif(p_note, ''), ''));
+  return 'rejected';
+end $$;
+grant execute on function tier_decide(uuid, boolean, text) to authenticated;
+
+-- תוספת לבקבוק ללקוחות: אם היקב לא קבע תוספת לאמן, לפי הדרגה
+create or replace function corder_price(p_winery uuid, d jsonb) returns numeric
+language plpgsql stable security definer set search_path = public as $$
+declare pr jsonb; a text := d ->> 'artist'; addon numeric;
+begin
+  pr := coalesce((select pricing from organizations where id = p_winery), '{}');
+  if a is not null and (pr -> 'artist' ->> a) is null then
+    select t.bottle_addon into addon from artists x join artist_tiers t on t.code = x.tier where x.id::text = a;
+    if addon is not null then pr := jsonb_set(pr, '{artist}', coalesce(pr -> 'artist', '{}') || jsonb_build_object(a, addon)); end if;
+  end if;
+  return corder_price_of(pr, d);
+end $$;
+
+-- הדוח החודשי: חלק האמן לפי מה שנשמר בעסקה
+create or replace function monthly_statement(p_month date) returns table (
+  deal_id bigint, paid_at date, winery text, work text, artist text, net numeric, platform numeric, artist_share numeric, gallery_share numeric)
+language sql stable security definer set search_path = public as $$
+  select d.id, d.paid_at, wo.name, w.title, a.name, d.price_net,
+         round(d.price_net * coalesce(d.comm_pct, s.comm_pct) / 100),
+         round((d.price_net - round(d.price_net * coalesce(d.comm_pct, s.comm_pct) / 100)) * coalesce(d.artist_pct, s.artist_share) / 100),
+         d.price_net - round(d.price_net * coalesce(d.comm_pct, s.comm_pct) / 100)
+           - round((d.price_net - round(d.price_net * coalesce(d.comm_pct, s.comm_pct) / 100)) * coalesce(d.artist_pct, s.artist_share) / 100)
+  from deals d join works w on w.id = d.work_id join artists a on a.id = d.artist_id
+       join organizations wo on wo.id = d.winery_id cross join settings s
+  where d.paid_at >= date_trunc('month', p_month) and d.paid_at < date_trunc('month', p_month) + interval '1 month'
+    and (is_admin() or (my_role()::text = 'gallery' and d.gallery_id = my_org()) or d.artist_id = my_artist())
+  order by d.paid_at, d.id
+$$;
+grant execute on function monthly_statement(date) to authenticated;
+
 select 'ההקמה הסתיימה בהצלחה' as result;

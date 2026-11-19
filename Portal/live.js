@@ -147,7 +147,7 @@ async function hydrate(){
   if(!S.wines.some(w=>w.id===S.activeWine))S.activeWine=S.wines[0]?.id;
   S.designs=(designs||[]).map(d=>({code:d.code,wine:d.wine_id,work:d.work_id,pos:d.pos,zoom:d.zoom,shape:d.layout?.shape}));
   S.deals=(deals||[]).map(d=>{const inv=one(d.invoices),o=one(d.print_orders),wi=d.wine;return {
-    id:d.id,ver:d.version,wid:d.winery_id,lr:d.label_round,okw:d.label_ok_w,oka:d.label_ok_a,ended:d.status==='active'&&!!d.ends_at&&d.ends_at<new Date().toISOString().slice(0,10),winery:d.winery?.name||'',galleryN:d.gallery?.name||'',artistN:AR[d.artist_id]?.name||'',fl:+(AR[d.artist_id]?.floor_price||S.floor),
+    id:d.id,ver:d.version,wid:d.winery_id,lr:d.label_round,okw:d.label_ok_w,oka:d.label_ok_a,ended:d.status==='active'&&!!d.ends_at&&d.ends_at<new Date().toISOString().slice(0,10),winery:d.winery?.name||'',galleryN:d.gallery?.name||'',artistN:AR[d.artist_id]?.name||'',fl:+(AR[d.artist_id]?.floor_price||S.floor),aid:d.artist_id,share:d.artist_pct!=null?+d.artist_pct:null,
     wineN:d.wine_label||(wi?`${wi.name} ${wi.vintage||''}`.trim():''),type:WINE[wi?.type]?wi.type:'red',work:d.work_id,lt:d.license_type,q:d.qty_tier,ex:d.exclusive,
     st:d.status==='cancelled'?'rejected':d.status,adj:d.adj_pct,code:d.design_code||'—',note:d.status==='rejected'||d.status==='cancelled'?'':d.note,reason:d.status==='rejected'||d.status==='cancelled'?(d.note||(d.status==='cancelled'?'בוטלה':'')):'',
     paid:dt(d.paid_at),ends:dt(d.ends_at),inv:inv?.number||'',order:o?{st:o.stage,qty:o.qty,due:dt(o.due)}:null,
