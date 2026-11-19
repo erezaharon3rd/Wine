@@ -2167,4 +2167,63 @@ end $$;
 drop trigger if exists designs_new_round_t on designs;
 create trigger designs_new_round_t after update on designs for each row execute function designs_new_round();
 
+-- =====================================================================
+--  שלב 9 · לכל החלטה של אדם יש המשך: דחייה, ביטול ובקשת תיקון מהדפוס
+-- =====================================================================
+
+-- עסקה שנדחתה או בוטלה: כל הצדדים מקבלים הודעה עם הסיבה
+create or replace function deals_closed_notify() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if new.status = old.status then return new; end if;
+  if new.status = 'cancelled' then
+    perform notify_deal(new.id, 'העסקה נסגרה: ' || coalesce(new.note, 'היקב ביטל את הבקשה'), array['gallery','artist']::app_role[]);
+  elsif new.status = 'rejected' then
+    perform notify_deal(new.id, 'הבקשה נדחתה' || coalesce(': ' || new.note, ''), array['gallery','artist']::app_role[]);
+  end if;
+  return new;
+end $$;
+drop trigger if exists deals_closed_notify_t on deals;
+create trigger deals_closed_notify_t after update of status on deals for each row execute function deals_closed_notify();
+
+-- בית הדפוס מבקש תיקון קבצים: הודעה בשיחה של העסקה, והתראה לגלריה וליקב
+create or replace function print_issue(p_deal bigint, p_note text) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if coalesce(my_role()::text, '') <> 'printer' or not can_see_deal(p_deal) then raise exception 'אין הרשאה'; end if;
+  p_note := nullif(left(btrim(coalesce(p_note, '')), 500), '');
+  if p_note is null then raise exception 'צריך לכתוב מה לתקן'; end if;
+  insert into deal_messages (deal_id, sender, sender_role, body)
+  values (p_deal, auth.uid(), 'printer', 'בית הדפוס מבקש תיקון קבצים: ' || p_note);
+  perform notify_deal(p_deal, 'בית הדפוס מבקש תיקון קבצים', array['gallery','winery']::app_role[]);
+end $$;
+revoke execute on function print_issue(bigint, text) from public, anon;
+grant execute on function print_issue(bigint, text) to authenticated;
+
+-- אמן ששולח שוב יצירה שהוחזרה: ההערה הקודמת נמחקת והגלריה מקבלת הודעה
+create or replace function works_resent() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if old.status = 'rejected' and new.status = 'pending' then
+    new.review_note := null;
+    perform notify_users((select gallery_id from artists where id = new.artist_id), 'gallery', null,
+                         'יצירה שהוחזרה נשלחה שוב לאישור: ' || new.title);
+  end if;
+  return new;
+end $$;
+drop trigger if exists works_resent_t on works;
+create trigger works_resent_t before update of status on works for each row execute function works_resent();
+
+-- האוצר סימן שצילום לא תואם לתווית: היקב שצילם מקבל הודעה ויכול לצלם שוב
+create or replace function renders_mismatch() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if new.approved is false and old.approved is distinct from false and new.created_by is not null then
+    perform notify_users(null, null, new.created_by, 'צילום ההדמיה לא תאם את התווית. כדאי לצלם שוב');
+  end if;
+  return new;
+end $$;
+drop trigger if exists renders_mismatch_t on renders;
+create trigger renders_mismatch_t after update of approved on renders for each row execute function renders_mismatch();
+
 select 'ההקמה הסתיימה בהצלחה' as result;

@@ -517,9 +517,10 @@ V.artist_home=()=>{const act=S.deals.filter(d=>d.st==='active');return `<span cl
   <h3>במבט מהיר</h3><div class="kpis"><button class="kpi" data-a="go" data-v="tab-works"><b>${S.works.filter(w=>w.st==='live'&&w.av).length}</b><span>יצירות זמינות במאגר</span></button><button class="kpi" data-a="go" data-v="tab-requests"><b>${act.length}</b><span>רישיונות פעילים</span></button><button class="kpi" data-a="go" data-v="tab-income"><b>${nis(act.reduce((a,d)=>a+price(d).artist,0))}</b><span>שולם לך השנה</span></button></div>
   <h3>הסכמות</h3><div class="panel"><div class="sw"><span>חוזה האמן<small>כולל הסכמה לעיבוד בהדמיה בלבד</small></span><span class="pill on">חתום</span></div></div>`};
 const WST={live:'במאגר',review:'בבדיקת איכות',pending:'ממתינה לגלריה'};
+const wst=w=>w.rej?'הוחזרה לתיקון':WST[w.st];
 V.artist_works=()=>`<h1>היצירות שלי</h1><p class="lead">יצירה חדשה עוברת לאישור הגלריה, ואחר כך לבדיקת קובץ. נגיעה ביצירה פותחת את הפרטים שלה.</p>
   <button class="btn wide" data-a="upload">להעלות יצירה</button>
-  <div class="grid" style="margin-top:16px">${S.works.map(w=>`<button class="tile ${w.av?'':'off'}" data-a="go" data-v="aw-${w.id}"><span class="ph" style="background-image:url(${img(w.id)})" role="img" aria-label="${esc(w.t)}"></span>${w.st!=='live'?`<span class="tag dk">${WST[w.st]}</span>`:!w.av?'<span class="tag">מוסתרת</span>':''}<span class="cp">${esc(w.t)}<small>${w.tag} · ${w.y||''}${activeLic(w.id).length?' · '+lic(activeLic(w.id).length):''}</small></span></button>`).join('')}</div>`;
+  <div class="grid" style="margin-top:16px">${S.works.map(w=>`<button class="tile ${w.av?'':'off'}" data-a="go" data-v="aw-${w.id}"><span class="ph" style="background-image:url(${img(w.id)})" role="img" aria-label="${esc(w.t)}"></span>${w.st!=='live'?`<span class="tag dk">${wst(w)}</span>`:!w.av?'<span class="tag">מוסתרת</span>':''}<span class="cp">${esc(w.t)}<small>${w.tag} · ${w.y||''}${activeLic(w.id).length?' · '+lic(activeLic(w.id).length):''}</small></span></button>`).join('')}</div>`;
 V.artist_requests=()=>{
   const mine=S.deals.filter(d=>d.st==='priced');
   const r=S.f.req==='mine'?mine:S.deals.filter(d=>['priced','sign','pay','active','rejected'].includes(d.st));
@@ -561,9 +562,9 @@ V.gallery_artists=()=>`<h1>אמנים</h1>
   <div class="li"><span class="th sq"></span><span class="mt"><b>אמנית לדוגמה</b><small>הוזמנה לפני 3 ימים · טרם הצטרפה</small></span><button class="link" data-a="toast" data-v="ההזמנה נשלחה שוב">לשלוח שוב</button></div></div>
   <button class="btn alt wide" style="margin-top:14px" data-a="invite">להזמין אמן</button>`;
 V.gallery_works=()=>{
-  const p=S.works.filter(w=>w.st==='pending');
+  const p=S.works.filter(w=>w.st==='pending'&&!w.rej);
   return `<h1>יצירות</h1><button class="btn alt wide" data-a="upload">להעלות יצירה של אמן</button><h3>לאישור לפני פרסום (${p.length})</h3>${p.length?`<div class="list">${p.map(w=>`<div class="li"><span class="th" style="background-image:url(${img(w.id)})" data-a="zoomimg" data-v="${w.id}" role="button" aria-label="להגדיל"></span><span class="mt"><b>${esc(w.t)}</b><small>${esc(w.artistN||'ארז אהרון')} · ${esc(w.tech||'')} · ${w.y||''}${w.sz?' · '+esc(w.sz)+' ס״מ':''}</small><span class="row" style="margin-top:6px"><button class="btn sm" data-a="gapprove" data-v="${w.id}">לאשר</button><button class="btn sm alt" data-a="greturn" data-v="${w.id}">להחזיר עם הערה</button></span></span></div>`).join('')}</div>`:empty('אין יצירות שממתינות','')}
-  <h3>בסגל</h3><div class="grid">${S.works.filter(w=>w.st!=='pending').map(w=>`<button class="tile" data-a="go" data-v="work-${w.id}"><span class="ph" style="background-image:url(${img(w.id)})"></span>${w.st!=='live'?`<span class="tag dk">${WST[w.st]}</span>`:''}<span class="cp">${esc(w.t)}<small>${w.tag}${activeLic(w.id).length?' · '+lic(activeLic(w.id).length):''}</small></span></button>`).join('')}</div>`;
+  <h3>בסגל</h3><div class="grid">${S.works.filter(w=>w.st!=='pending').map(w=>`<button class="tile" data-a="go" data-v="work-${w.id}"><span class="ph" style="background-image:url(${img(w.id)})"></span>${w.st!=='live'?`<span class="tag dk">${wst(w)}</span>`:''}<span class="cp">${esc(w.t)}<small>${w.tag}${activeLic(w.id).length?' · '+lic(activeLic(w.id).length):''}</small></span></button>`).join('')}</div>`;
 };
 V.gallery_more=()=>{
   const months=[['יול',4],['אוג',5.5],['ספט',2.5],['אוק',9.4],['נוב',5.5]];const mx=Math.max(...months.map(m=>m[1]));
@@ -633,7 +634,8 @@ function vDeal(d){
   ${(d.st==='pay'||paid)&&['winery','gallery','admin'].includes(r)?`<h3>חשבונית</h3><div class="panel"><dl><dt>מספר</dt><dd class="num">${d.inv||'1043'}</dd><dt>מאת</dt><dd>${esc(d.galleryN||'גלריה לדוגמה')}</dd><dt>סכום</dt><dd class="m">${nis(p.gross)}</dd><dt>סטטוס</dt><dd>${paid?'שולם '+fmtD(d.paid):'פתוחה'}</dd></dl><p class="note">פרטי ההעברה מופיעים בחשבונית עצמה.</p><button class="link" data-a="toast" data-v="החשבונית ירדה כ־PDF">להוריד את החשבונית</button></div>`:''}
   <h3>קבצים</h3><div class="list"><div class="li"><span class="mt"><b>הדמיה 2K</b><small>${paid?'בלי סימן מים':'עם סימן מים'}</small></span></div><div class="li"><span class="mt"><b>קובץ דפוס וקטורי ובריף</b><small>${paid?'זמין להורדה':'ייפתח אחרי התשלום'}</small></span>${paid&&r==='winery'?`<button class="btn sm alt" data-a="files" data-v="${d.id}">להוריד</button>`:''}</div>${['sign','pay','active'].includes(d.st)?`<div class="li"><span class="mt"><b>חוזה רישוי</b><small>${d.st==='sign'?'ממתין לחתימת היקב':'חתום'}</small></span></div>`:''}</div>
   <h3>שיחה</h3><div class="chat">${d.chat.length?d.chat.map(m=>m.w==='sys'?`<div class="msg sys">${esc(m.t)} · ${m.at||''}</div>`:`<div class="msg ${m.w===r?'me':''}"><small>${who[m.w]} · ${m.at||''}</small>${esc(m.t)}</div>`).join(''):'<p class="empty" style="padding:6px 0">עדיין אין הודעות. אפשר לשאול כאן כל שאלה, וכל הצדדים יראו.</p>'}</div>
-  ${r==='printer'?'':`<div class="send"><input id="chatin" placeholder="לכתוב הודעה לכל הצדדים" aria-label="הודעה"><button class="btn sm" data-a="chat" data-v="${d.id}">לשלוח</button></div>`}`;
+  ${r==='printer'?'':`<div class="send"><input id="chatin" placeholder="לכתוב הודעה לכל הצדדים" aria-label="הודעה"><button class="btn sm" data-a="chat" data-v="${d.id}">לשלוח</button></div>`}
+  ${r==='winery'&&['sent','priced','sign'].includes(d.st)?`<button class="link" style="margin-top:18px;display:block" data-a="dcancel" data-v="${d.id}">לבטל את הבקשה</button>`:''}`;
   return {html,bar};
 }
 function vWork(w){
@@ -651,7 +653,8 @@ function vArtistWork(w){
   const steps=['הועלתה','אושרה בגלריה','נבדקה ופורסמה'];const si=w.st==='pending'?0:w.st==='review'?1:2;
   return `${backBtn}<div class="mark" style="margin-top:6px"><img src="${img(w.id)}" alt="${esc(w.t)}"><div class="cells" aria-hidden="true">${[...Array(36)].map((_,i)=>`<i class="${w.cells&&w.cells[i]?'on':''}" style="${w.cells&&w.cells[i]?'':'border-color:transparent'}"></i>`).join('')}</div></div>
   <span class="eyebrow" style="display:block;margin-top:12px">${w.tag} · ${w.y||''} · ${w.sz||''} ס״מ</span><h2>${esc(w.t)}</h2>
-  <div class="stages">${steps.map((s,i)=>`<i class="${i<=si?'done':''}"></i>`).join('')}</div><p class="stnow"><b>${WST[w.st]}</b> · ${steps[si]}</p>
+  <div class="stages">${steps.map((s,i)=>`<i class="${i<=si?'done':''}"></i>`).join('')}</div><p class="stnow"><b>${wst(w)}</b> · ${steps[si]}</p>
+  ${w.rej?`<div class="next" style="margin-top:10px"><b>הגלריה החזירה את היצירה</b><p>${esc(w.note||'בלי הערה')}</p><p class="note">אפשר לתקן את הפרטים למטה ולשלוח שוב. אם צריך קובץ אחר, מעלים יצירה חדשה.</p><button class="btn wide" style="margin-top:8px" data-a="wresend" data-v="${w.id}">לשלוח שוב לגלריה</button></div>`:''}
   <div class="panel" style="margin-top:12px"><div class="sw"><span>זמינה לרישוי<small>${w.av?'היקבים רואים אותה במאגר':'מוסתרת. רישיונות קיימים נשארים בתוקף'}</small></span><button class="tg" role="switch" aria-checked="${w.av}" data-a="avail" data-v="${w.id}" aria-label="זמינה לרישוי"></button></div>
   <div class="sw"><span>אזורים שאסור לחתוך<small>${Object.values(w.cells||{}).filter(Boolean).length?'מסומנים בכהה בתמונה':'לא סומנו'}</small></span><button class="btn sm alt" data-a="editcells" data-v="${w.id}">לסמן</button></div></div>
   <h3>רישיונות (${act.length})</h3>${act.length?`<div class="list">${act.map(d=>dealLi(d,'artist')).join('')}</div>`:empty('עדיין אין רישיונות על היצירה הזו')}`;
@@ -674,7 +677,7 @@ function vOrder(d){
   <h3>משלוח וקשר</h3><div class="panel"><dl><dt>כתובת</dt><dd>יקב הגבעה, הרי יהודה</dd><dt>איש קשר</dt><dd>נוי · <span class="num">050-1234567</span></dd><dt>תאריך יעד</dt><dd>${fmtD(o.due)}</dd></dl></div>
   <h3>קבצים</h3><div class="list"><button class="li" data-a="toast" data-v="נשלח קישור הורדה לדוא״ל של בית הדפוס"><span class="mt"><b>קובץ דפוס וקטורי</b><small>שכבות: חיתוך, הבלטה, זהב</small></span><span class="end">קישור ←</span></button></div>
   <h3>כמות שהודפסה</h3><div class="panel"><div class="fld" style="margin-top:0"><label for="qq">הודפסו בפועל</label><input id="qq" inputmode="numeric" value="${o.qty||''}" placeholder="למשל 2,400"><small>מדרגה ברישיון: ${QTY[d.q].n} בקבוקים</small></div><button class="btn sm wide" style="margin-top:10px" data-a="qty" data-v="${d.id}">לדווח</button>${o.qty?`<p class="note">דווחו <span class="num">${o.qty}</span> · ${+String(o.qty).replace(/\D/g,'')>QTY[d.q].max?'<span class="bad">חורג מהמדרגה. נשלחה הודעה לגלריה</span>':'<span class="ok">בתוך המדרגה ✓</span>'}</p>`:''}</div>
-  <div class="row"><button class="btn alt" data-a="toast" data-v="נשלחה לגלריה בקשת תיקון קבצים">לבקש תיקון קבצים</button></div>`;
+  <div class="row"><button class="btn alt" data-a="pfix" data-v="${d.id}">לבקש תיקון קבצים</button></div>`;
 }
 
 /* ── sheets ── */
@@ -831,9 +834,14 @@ const A={
   consentS(v){const d=deal(+v),p=price(d);sheet(`<span class="eyebrow">בקשה ${d.id} · ${esc(d.winery)}</span><h2>מה ההחלטה שלך?</h2><button class="hero" style="cursor:default">${dealBottle(d)}</button><div class="panel"><dl><dt>יין</dt><dd>${esc(d.wineN)}</dd><dt>סוג</dt><dd>${TYPES[d.lt].n} · ${QTY[d.q].n}</dd><dt>החלק שלך</dt><dd class="m tot">${nis(p.artist)}</dd></dl></div>
     <button class="btn wide" style="margin-top:14px" data-a="consent" data-v="${d.id}">להסכים</button><div class="row"><button class="btn alt" data-a="changeS" data-v="${d.id}">לבקש שינוי</button><button class="btn danger" data-a="rejectS" data-v="${d.id}">לדחות</button></div>`)},
   consent(v){const d=deal(+v);d.st='sign';sys(d,'האמן הסכים לרישיון');closeSheet();toast('ההסכמה נשמרה. החוזה נשלח ליקב');render()},
-  rejectS(v){sheet(`<span class="eyebrow">בקשה ${v}</span><h2>למה לדחות?</h2><p class="note" style="margin-top:4px">היקב והגלריה יראו את הסיבה. זה עוזר להם לבחור נכון בפעם הבאה.</p><div class="chips" style="margin-top:10px">${['היין לא מתאים ליצירה','החיתוך פוגע ביצירה','המחיר נמוך מדי','סיבה אחרת'].map(r=>`<button class="chip" data-a="rsn" data-v="${r}" aria-pressed="${S._rsn===r}">${r}</button>`).join('')}</div><div class="fld"><label for="rtx">פירוט (לא חובה)</label><textarea id="rtx"></textarea></div><div class="row"><button class="btn alt" data-a="close">ביטול</button><button class="btn danger" data-a="reject" data-v="${v}" ${S._rsn?'':'disabled'}>לדחות את הבקשה</button></div>`)},
+  rejectS(v){sheet(`<span class="eyebrow">בקשה ${v}</span><h2>למה לדחות?</h2><p class="note" style="margin-top:4px">${S.role==='gallery'?'היקב והאמן יראו':'היקב והגלריה יראו'} את הסיבה. זה עוזר להם לבחור נכון בפעם הבאה.</p><div class="chips" style="margin-top:10px">${['היין לא מתאים ליצירה','החיתוך פוגע ביצירה','המחיר נמוך מדי','סיבה אחרת'].map(r=>`<button class="chip" data-a="rsn" data-v="${r}" aria-pressed="${S._rsn===r}">${r}</button>`).join('')}</div><div class="fld"><label for="rtx">פירוט (לא חובה)</label><textarea id="rtx"></textarea></div><div class="row"><button class="btn alt" data-a="close">ביטול</button><button class="btn danger" data-a="reject" data-v="${v}" ${S._rsn?'':'disabled'}>לדחות את הבקשה</button></div>`)},
   rsn(v){S._rsn=v;const tx=$('#rtx')?.value;const id=$('[data-a="reject"]').dataset.v;A.rejectS(id);if(tx)$('#rtx').value=tx},
-  reject(v){const d=deal(+v);d.st='rejected';d.reason=S._rsn+(($('#rtx')?.value.trim())?': '+$('#rtx').value.trim():'');S._rsn=null;sys(d,'האמן דחה את הבקשה');closeSheet();render()},
+  reject(v){const d=deal(+v);d.st='rejected';d.reason=S._rsn+(($('#rtx')?.value.trim())?': '+$('#rtx').value.trim():'');S._rsn=null;sys(d,S.role==='gallery'?'הגלריה דחתה את הבקשה':'האמן דחה את הבקשה');closeSheet();render()},
+  dcancel(v){sheet(`<span class="eyebrow">בקשה ${v}</span><h2>לבטל את הבקשה?</h2><p class="note" style="margin-top:4px">הגלריה והאמן יקבלו הודעה. אפשר תמיד לשלוח בקשה חדשה.</p><div class="fld"><label for="dcx">סיבה (לא חובה)</label><textarea id="dcx"></textarea></div><div class="row"><button class="btn alt" data-a="close">לא לבטל</button><button class="btn danger" data-a="dcancel2" data-v="${v}">לבטל את הבקשה</button></div>`)},
+  dcancel2(v){const d=deal(+v),t=$('#dcx').value.trim();d.st='rejected';d.reason='היקב ביטל את הבקשה'+(t?': '+t:'');sys(d,'היקב ביטל את הבקשה');closeSheet();toast('הבקשה בוטלה');render()},
+  wresend(v){const w=work(+v);w.rej=false;w.note='';w.st='pending';toast('היצירה נשלחה שוב לגלריה');render()},
+  pfix(v){sheet(`<span class="eyebrow">הזמנה ${v}</span><h2>מה צריך לתקן בקבצים?</h2><div class="fld"><label for="pfx">ההודעה תגיע לגלריה וליקב, ותופיע בשיחה של העסקה</label><textarea id="pfx" placeholder="למשל: חסר מרווח גלישה של 3 מ״מ"></textarea></div><div class="row"><button class="btn alt" data-a="close">ביטול</button><button class="btn" data-a="pfix2" data-v="${v}">לשלוח</button></div>`)},
+  pfix2(v){const t=$('#pfx').value.trim();if(!t){$('#pfx').focus();return}const d=deal(+v);d.chat.push({w:'sys',t:'בית הדפוס מבקש תיקון קבצים: '+t,at:now()});closeSheet();toast('הבקשה נשלחה לגלריה וליקב')},
   changeS(v){sheet(`<span class="eyebrow">בקשה ${v}</span><h2>איזה שינוי לבקש?</h2><div class="fld"><label for="chx">ההודעה תופיע בשיחה, והבקשה תחזור לגלריה</label><textarea id="chx" placeholder="למשל: אשמח שהציור לא ייחתך בחלק העליון"></textarea></div><div class="row"><button class="btn alt" data-a="close">ביטול</button><button class="btn" data-a="change" data-v="${v}">לשלוח</button></div>`)},
   change(v){const t=$('#chx').value.trim();if(!t){$('#chx').focus();return}const d=deal(+v);d.chat.push({w:'artist',t,at:now()});d.st='sent';sys(d,'האמן ביקש שינוי. הבקשה חזרה לגלריה');closeSheet();toast('הבקשה נשלחה');render()},
   signS(v){const d=deal(+v),p=price(d);confirmSheet({k:'חתימה על חוזה',t:'לחתום על חוזה הרישוי?',body:`<div class="panel" style="margin-top:10px"><dl><dt>יצירה</dt><dd>${esc(work(d.work).t)}</dd><dt>יין</dt><dd>${esc(d.wineN)}</dd><dt>סוג</dt><dd>${TYPES[d.lt].n} · ${QTY[d.q].n}</dd><dt>לתשלום</dt><dd class="m tot">${nis(p.gross)}</dd></dl><button class="link" data-a="contract" data-v="${d.id}">לקרוא את החוזה המלא</button></div><p class="note">אחרי החתימה הגלריה תשלח חשבונית. הקבצים ייפתחו אחרי התשלום.</p>`,check:'קראתי את החוזה, והתנאים מקובלים עליי',l:'לחתום',ok(){d.st='pay';d.inv='1043';sys(d,'היקב חתם על החוזה. הגלריה שלחה חשבונית');toast('החוזה נחתם. החשבונית בדרך')}})},
@@ -893,7 +901,8 @@ function pricingSheet(d){
   <div class="fld"><label for="adj" id="adjl">${adjLabel(p)}</label><input id="adj" type="range" min="-15" max="15" step="5" value="${S._adj}" data-in="adj" data-v="${d.id}"></div>
   <div class="panel" style="margin-top:10px" id="adjp">${adjSplit(p)}</div>
   <div class="fld"><label for="pnote">הערה ליקב, חובה אם שיניתם את המחיר</label><textarea id="pnote" placeholder="למשל: מחיר מיוחד לבציר הראשון">${esc(S._pnote||'')}</textarea></div>
-  <div class="row"><button class="btn alt" data-a="close">ביטול</button><button class="btn" data-a="price" data-v="${d.id}">לאשר ולהעביר לאמן</button></div>`);
+  <div class="row"><button class="btn alt" data-a="close">ביטול</button><button class="btn" data-a="price" data-v="${d.id}">לאשר ולהעביר לאמן</button></div>
+  <button class="link" style="margin-top:14px;display:block" data-a="rejectS" data-v="${d.id}">לא מתאים? לדחות את הבקשה</button>`);
 }
 A.price=function(v){const d=deal(+v);const note=$('#pnote').value.trim();if(S._adj&&!note){$('#pnote').closest('.fld').classList.add('bad');$('#pnote').focus();return}d.adj=S._adj;d.note=note;S._pnote='';
   if(note)d.chat.push({w:'gallery',t:note,at:now()});
@@ -935,6 +944,6 @@ if(window.LIVE){}else if(S.role){S.view=null;S.tab=S.tab||TABS[S.role][0][0];loc
 <script src="customer.js?v=11"></script>
 <script src="docs.js?v=6"></script>
 <script src="motion.js?v=2"></script>
-<script>if(window.LIVE)document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script><script src="live.js?v=15"><\/script><script src="ops.js?v=7"><\/script><script src="label.js?v=1"><\/script>')</script>
+<script>if(window.LIVE)document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script><script src="live.js?v=15"><\/script><script src="ops.js?v=8"><\/script><script src="label.js?v=1"><\/script>')</script>
 </body>
 </html>

@@ -282,6 +282,13 @@ async function autoShoot(){if(ME?.role!=='winery'||!LX.shootReal)return;
   const g=(S.designs||[]).find(x=>x.code===d.code)||{};
   try{await LX.shootReal({type:d.type,work:d.work,code:g.code||null,deal:d.id,o:{pos:g.pos??50,zoom:g.zoom??100,shape:g.shape||'rect',name:d.wineN,artist:d.artistN}});toast(`הצילום של הבקבוק לעסקה ${d.id} מוכן לשיווק`)}catch(e){console.warn('auto shoot',e)}}
 
+
+/* ── סגירת מעגלים: לכל החלטה של אדם יש המשך ── */
+const DV=v=>(S.deals||[]).find(d=>d.id===+v);
+A.dcancel2=v=>{const t=document.getElementById('dcx').value.trim();closeSheet();run(()=>q(sb.rpc('advance_deal',{p_deal:+v,p_action:'cancel',p_adj:0,p_note:'היקב ביטל את הבקשה'+(t?': '+t:''),p_version:DV(v)?.ver??null})),'הבקשה בוטלה')};
+A.wresend=v=>run(()=>q(sb.from('works').update({status:'pending',review_note:null}).eq('id',+v)),'היצירה נשלחה שוב לגלריה');
+A.pfix2=v=>{const t=document.getElementById('pfx').value.trim();if(!t){document.getElementById('pfx').focus();return}closeSheet();run(()=>q(sb.rpc('print_issue',{p_deal:+v,p_note:t})),'הבקשה נשלחה לגלריה וליקב')};
+
 /* ── התקנה לטלפון ── */
 if(!document.querySelector('link[rel=manifest]'))document.head.insertAdjacentHTML('beforeend','<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#E9E7E3">');
 if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});

@@ -350,4 +350,53 @@ select t_as('00000000-0000-0000-0000-0000000000b2');
 select t_eq((select count(*) from monthly_statement(current_date))::int, 0, 'יקב לא רואה דוח של גלריה');
 reset role;
 
+-- ---------- שלב 9: לכל החלטה יש המשך ----------
+select set_config('request.jwt.claim.sub','',false);
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000009a9','prn9@t');
+insert into organizations (id, kind, name) values ('10000000-0000-0000-0000-0000000009a9','printer','דפוס');
+update profiles set role='printer', status='active', org_id='10000000-0000-0000-0000-0000000009a9' where email='prn9@t';
+update deals set label_ok_w = label_round, label_ok_a = label_round where status = 'sign';
+set role authenticated;
+-- הגלריה דוחה בקשה: העסקה נסגרת והאמן מקבל הודעה
+select t_as('00000000-0000-0000-0000-0000000000b1');
+select request_license(1,1,null,'אדום','one','c',false) as rq9 \gset
+select t_as('00000000-0000-0000-0000-0000000000c1');
+select advance_deal(:rq9, 'reject', 0, 'היין לא מתאים');
+reset role;
+select t_eq((select status::text from deals where id = :rq9), 'rejected', 'הגלריה יכולה לדחות בקשה');
+select t_eq((select count(*) from notifications n join profiles p on p.id = n.user_id where p.email = 'art@t' and n.body like 'הבקשה נדחתה%')::int >= 1, true, 'האמן יודע שהבקשה נדחתה');
+-- היקב מבטל בקשה פתוחה: הגלריה מקבלת הודעה עם הסיבה
+set role authenticated; select t_as('00000000-0000-0000-0000-0000000000b1');
+select request_license(1,1,null,'אדום','series','a',false) as rq10 \gset
+select advance_deal(:rq10, 'cancel', 0, 'היקב ביטל את הבקשה: שינינו תוכנית');
+select t_as('00000000-0000-0000-0000-0000000000b2');
+select t_fail(format('select advance_deal(%s, %L, 0, null)', :rq10, 'cancel'), 'יקב אחר לא מבטל');
+reset role;
+select t_eq((select status::text from deals where id = :rq10), 'cancelled', 'היקב יכול לבטל בקשה פתוחה');
+select t_eq((select count(*) from notifications n join profiles p on p.id = n.user_id where p.email = 'gal@t' and n.body like 'העסקה נסגרה: %שינינו תוכנית')::int, 1, 'הגלריה מקבלת את סיבת הביטול');
+-- יצירה שהוחזרה: האמן מתקן ושולח שוב, והגלריה מקבלת הודעה
+update works set status = 'pending' where id = 2;
+set role authenticated; select t_as('00000000-0000-0000-0000-0000000000c1');
+update works set status = 'rejected', review_note = 'צריך קובץ חד יותר' where id = 2;
+select t_as('00000000-0000-0000-0000-0000000000d1');
+update works set status = 'pending' where id = 2;
+reset role;
+select t_eq((select status::text || '|' || coalesce(review_note,'') from works where id = 2), 'pending|', 'האמן שלח שוב, וההערה הישנה נמחקה');
+select t_eq((select count(*) from notifications n join profiles p on p.id = n.user_id where p.email = 'gal@t' and n.body like 'יצירה שהוחזרה נשלחה שוב%')::int, 1, 'הגלריה יודעת שהיצירה חזרה אליה');
+-- בית הדפוס מבקש תיקון קבצים
+insert into print_orders (deal_id, printer_id, due) values (1000, '10000000-0000-0000-0000-0000000009a9', current_date + 7)
+  on conflict (deal_id) do update set printer_id = excluded.printer_id;
+set role authenticated; select t_as('00000000-0000-0000-0000-0000000009a9');
+select t_fail($$select print_issue(1000, '  ')$$, 'בקשת תיקון בלי הסבר נחסמת');
+select print_issue(1000, 'חסר מרווח גלישה');
+select t_as('00000000-0000-0000-0000-0000000000b1');
+select t_fail($$select print_issue(1000, 'x')$$, 'רק בית הדפוס מבקש תיקון קבצים');
+select t_eq((select count(*) from deal_messages where deal_id = 1000 and body like 'בית הדפוס מבקש תיקון קבצים: חסר%')::int, 1, 'היקב רואה את בקשת התיקון בשיחה');
+reset role;
+
+-- הדמיה שלא תאמה: היקב יודע
+insert into renders (image_path, created_by) values ('x/r9.jpg', '00000000-0000-0000-0000-0000000000b1');
+update renders set approved = false where image_path = 'x/r9.jpg';
+select t_eq((select count(*) from notifications n join profiles p on p.id = n.user_id where p.email = 'win1@t' and n.body like 'צילום ההדמיה לא תאם%')::int, 1, 'היקב יודע שהצילום לא תאם');
+
 select 'כל הבדיקות עברו' as result;

@@ -24,13 +24,14 @@ window.supabase={createClient(){
     }
     return b;
   }
-  const FLOW={price:['sent','priced'],approve:['priced','sign'],sign:['sign','pay'],paid:['pay','active'],reject:[null,'rejected'],change:['priced','sent']};
+  const FLOW={price:['sent','priced'],approve:['priced','sign'],sign:['sign','pay'],paid:['pay','active'],reject:[null,'rejected'],change:['priced','sent'],cancel:[null,'cancelled']};
   return {
     from:builder,
     async rpc(fn,a){if(fn==='request_license'){const id=(st.dseq=(st.dseq||999)+1);st.db.deals.push({id,winery_id:st.me_org,gallery_id:'g1',artist_id:'a1',work_id:a.p_work,wine_id:a.p_wine,design_code:a.p_design,license_type:a.p_type,qty_tier:a.p_qty,exclusive:a.p_exclusive,adj_pct:0,status:'sent',created_at:new Date().toISOString()});persist();return {data:id,error:null}}
       if(fn==='render_quota_left')return {data:5,error:null};
       if(fn==='log_error'){(st.db.client_errors=st.db.client_errors||[]).push({id:(st.db.client_errors.length+1),message:a.p_message,place:a.p_place,n:1,role:st.me_role,last_at:new Date().toISOString(),resolved:false});persist();return {data:null,error:null}}
       if(fn==='monthly_statement')return {data:[{deal_id:1003,paid_at:'2026-11-05',winery:'יקב 1',work:'חורשה',artist:'ארז',net:6300,platform:945,artist_share:2678,gallery_share:2677}],error:null};
+      if(fn==='print_issue'){if(!String(a.p_note||'').trim())return {data:null,error:{message:'צריך לכתוב מה לתקן'}};st.db.deal_messages.push({id:Date.now(),deal_id:a.p_deal,sender_role:'printer',body:'בית הדפוס מבקש תיקון קבצים: '+a.p_note,created_at:new Date().toISOString()});persist();return {data:null,error:null}}
       if(fn==='label_action'){const T=a.p_entity==='deal'?st.db.deals:st.db.customer_orders;const o=T.find(x=>x.id===a.p_id);if(!o)return {data:null,error:{message:'אין גישה לתווית הזו'}};
         const side=['gallery','artist'].includes(st.me_role)?'art':st.me_role==='winery'?'winery':'customer';o.label_round=o.label_round||1;const L=(st.db.label_notes=st.db.label_notes||[]);
         L.push({id:L.length+1,entity:a.p_entity,entity_id:a.p_id,round:o.label_round,side,kind:a.p_action,body:a.p_body,created_at:new Date().toISOString()});
