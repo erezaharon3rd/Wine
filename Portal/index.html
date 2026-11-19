@@ -247,7 +247,8 @@ const ROLES={
   gallery:{n:'גלריה',who:'גלריה לדוגמה',p:'מנהלת הגלריה',d:'סגל, תמחור ועסקאות',u:'גל',hi:'גלריה לדוגמה'},
   curator:{n:'אוצר',who:'צוות האוצרות',p:'צוות האוצרות',d:'קבלה, בדיקה וקידום',u:'או',hi:'צוות האוצרות'},
   printer:{n:'שותף דפוס',who:'דפוס לדוגמה',p:'דפוס לדוגמה',d:'הזמנות, קבצים ודיווח כמויות',u:'דפ',hi:'דפוס לדוגמה'},
-  admin:{n:'מנהל מערכת',who:'תפעול',p:'מנהל המערכת',d:'משתמשים, עמלות, כספים ויומן',u:'מנ',hi:'תפעול'}
+  admin:{n:'מנהל מערכת',who:'תפעול',p:'מנהל המערכת',d:'משתמשים, עמלות, כספים ויומן',u:'מנ',hi:'תפעול'},
+  customer:{n:'לקוח',who:'דרך יקב הגבעה',p:'דנה',d:'בוחר אמן ומעצב בקבוק אישי',u:'ד',hi:'שלום, דנה'}
 };
 const INTRO={
   winery:['בוחרים ציור מהמאגר: רק יצירות מקוריות שהגלריה אישרה.','רואים את הבקבוק שלך עם הציור, בצילום ריאליסטי, לפני שמשלמים.','שולחים בקשה. הגלריה מתמחרת, האמן מסכים, והחתימה והתשלום נעשים במקום אחד.'],
@@ -255,15 +256,17 @@ const INTRO={
   gallery:['קובעים מחירון לכל אמן. המערכת מחשבת ממנו הצעה לכל בקשה.','מאשרים או מתאימים את ההצעה, והיא עוברת לאמן ולחתימה.','מוציאים חשבונית ליקב ומסמנים כשהתשלום התקבל. הקבצים נפתחים ליקב.'],
   curator:['מקבלים גלריות חדשות למאגר.','בודקים את איכות הקבצים של יצירות שהגלריה אישרה.','בפיילוט, בודקים כל צילום הדמיה לפני שהוא נשלח ליקב.'],
   printer:['הזמנות מגיעות רק אחרי חתימה ותשלום.','קבצי הדפוס יורדים מקישור למחשב שליד המכונה.','מעדכנים סטטוס ומדווחים כמה הודפס בפועל.'],
-  admin:['מנהלים משתמשים, ארגונים ותפקידים.','קובעים עמלה, מכסות ותבניות חוזה.','עוקבים אחר כספים, עלות המנוע ויומן הפעולות.']
+  admin:['מנהלים משתמשים, ארגונים ותפקידים.','קובעים עמלה, מכסות ותבניות חוזה.','עוקבים אחר כספים, עלות המנוע ויומן הפעולות.'],
+  customer:['בוחרים אמן, ומגיעים לדף שלו עם כל היצירות.','בוחרים יצירה ומקבלים הצעה מוכנה לבקבוק. אפשר לשנות בה הכל.','המחיר מתעדכן בכל בחירה. בסוף שולחים ליקב, והוא מאשר לפני הדפסה.']
 };
 const TABS={
-  winery:[['home','בית','home'],['bank','מאגר','grid'],['designs','עיצובים','bottle'],['deals','עסקאות','deal'],['more','היקב','more']],
+  winery:[['home','בית','home'],['bank','מאגר','grid'],['designs','עיצובים','bottle'],['clients','לקוחות','inbox'],['deals','עסקאות','deal'],['more','היקב','more']],
   artist:[['home','בית','home'],['works','יצירות','grid'],['requests','בקשות','deal'],['income','הכנסות','coin'],['profile','פרופיל','user']],
   gallery:[['home','בית','home'],['deals','עסקאות','deal'],['artists','אמנים','user'],['works','יצירות','grid'],['more','עוד','more']],
   curator:[['intake','קבלה','inbox'],['review','בדיקה','check'],['promote','קידום','star'],['quality','הדמיות','bottle']],
   printer:[['orders','הזמנות','box'],['account','חשבון','user']],
-  admin:[['users','משתמשים','user'],['settings','הגדרות','sliders'],['finance','כספים','coin'],['engine','מנוע','bolt'],['log','יומן','list']]
+  admin:[['users','משתמשים','user'],['settings','הגדרות','sliders'],['finance','כספים','coin'],['engine','מנוע','bolt'],['log','יומן','list']],
+  customer:[['artists','אמנים','user'],['orders','ההזמנות שלי','box']]
 };
 const ST={sent:'ממתינה לתמחור',priced:'ממתינה להסכמת האמן',sign:'ממתינה לחתימת היקב',pay:'ממתינה לתשלום',active:'רישיון פעיל',rejected:'נדחתה'};
 const STAGES=['בקשה','תמחור','הסכמת האמן','חתימה','תשלום','קבצים'];
@@ -357,10 +360,12 @@ function bottle(type,workId,o={}){
   <rect x="20" y="144" width="60" height="114" fill="${WINE[type].lab}"/>
   <g clip-path="url(#${id})"><image href="${img(workId)}" x="${ix}" y="${iy}" width="${iw}" height="${ih}" preserveAspectRatio="xMidYMid slice"/></g>
   ${wm}
-  <text x="50" y="230" text-anchor="middle" font-family="Frank Ruhl Libre,serif" font-size="8.5" fill="#171717">${esc(name)}</text>
-  <text x="50" y="241" text-anchor="middle" font-family="Arial" font-size="5.5" fill="#444" letter-spacing=".5">${esc(year)}</text>
-  <text x="50" y="251" text-anchor="middle" font-family="Arial" font-size="3.6" fill="#666">ציור: ארז אהרון</text>
-  <path d="M42 6h16v16c0 0 0 40 2 52c3 16 22 26 22 52v176c0 6-4 10-10 10H28c-6 0-10-4-10-10V126c0-26 19-36 22-52c2-12 2-52 2-52z" fill="url(#${id}g)"/>
+  ${o.emboss?`<text x="50.5" y="230.6" text-anchor="middle" font-family="Frank Ruhl Libre,serif" font-size="8.5" fill="rgba(0,0,0,.18)">${esc(name)}</text>`:''}
+  <text x="50" y="230" text-anchor="middle" font-family="Frank Ruhl Libre,serif" font-size="8.5" fill="${o.foil?'#9A7B2F':'#171717'}">${esc(name)}</text>
+  <text x="50" y="${o.ded?239:241}" text-anchor="middle" font-family="Arial" font-size="5.5" fill="${o.foil?'#9A7B2F':'#444'}" letter-spacing=".5">${esc(year)}</text>
+  ${o.ded?`<text x="50" y="246.5" text-anchor="middle" font-family="Frank Ruhl Libre,serif" font-style="italic" font-size="4.4" fill="#333">${esc(o.ded)}</text>`:''}
+  <text x="50" y="${o.ded?253.5:251}" text-anchor="middle" font-family="Arial" font-size="3.6" fill="#666">ציור: ${esc(o.artist||'ארז אהרון')}</text>
+  ${o.flat?'':`<path d="M42 6h16v16c0 0 0 40 2 52c3 16 22 26 22 52v176c0 6-4 10-10 10H28c-6 0-10-4-10-10V126c0-26 19-36 22-52c2-12 2-52 2-52z" fill="url(#${id}g)"/>`}
   </svg>`;
 }
 function dealBottle(d,o={}){const nm=d.wineN.replace(/\s\d{4}$/,'');const yr=(d.wineN.match(/\d{4}$/)||[''])[0];return bottle(d.type,d.work,{wm:d.st!=='active',name:nm,year:yr,...o})}
@@ -386,7 +391,7 @@ function todos(role){
     if(mine&&WHO_ACTS[d.st]===role) out.push({k:'d'+d.id+d.st,at:lastAt(d),t:`${work(d.work).t} · ${d.wineN.split(' ').slice(0,-1).join(' ')||d.wineN}`,s:`${d.winery} · ${TYPES[d.lt].n} · ${nis(price(d).total)}`,go:'deal-'+d.id,cta:V[d.st]});
   });
   if(role==='winery') S.deals.filter(d=>d.winery===MYW()&&d.st==='pay').forEach(d=>out.push({k:'p'+d.id,t:`חשבונית לתשלום · ${work(d.work).t}`,s:`${nis(price(d).gross)} כולל מע״מ`,go:'deal-'+d.id,cta:'לצפות בחשבונית',at:lastAt(d)}));
-  if(role==='gallery') S.works.filter(w=>w.st==='pending').forEach(w=>out.push({k:'w'+w.id,t:`יצירה חדשה לאישור · ${w.t}`,s:'ארז אהרון',go:'tab-works',cta:'לבדוק'}));
+  if(role==='gallery') S.works.filter(w=>w.st==='pending').forEach(w=>out.push({k:'w'+w.id,t:`יצירה חדשה לאישור · ${w.t}`,s:w.artistN||'ארז אהרון',go:'tab-works',cta:'לבדוק'}));
   if(role==='curator'){S.works.filter(w=>w.st==='review').forEach(w=>out.push({k:'r'+w.id,t:`בדיקת קובץ · ${w.t}`,s:'הגלריה אישרה',go:'tab-review',cta:'לבדוק'}));S.apps.filter(a=>a.st==='new').forEach(a=>out.push({k:'a'+a.n,t:`בקשת הצטרפות · ${a.n}`,s:a.d,go:'tab-intake',cta:'לעיין'}));S.renderQ.filter(r=>r.ok===null).forEach(r=>out.push({k:'q'+r.deal,t:'הדמיה לבדיקה ידנית',s:`עסקה ${r.deal}`,go:'tab-quality',cta:'לבדוק'}))}
   if(role==='printer') S.deals.filter(d=>d.order&&d.order.st<4).forEach(d=>out.push({k:'o'+d.id+d.order.st,t:`הזמנה ${d.id} · ${OST[d.order.st]}`,s:d.winery,go:'order-'+d.id,cta:'לפתוח'}));
   return out;
@@ -410,7 +415,7 @@ function applyHash(force){
   const [k,...r]=h.split('-');const v=r.join('-');
   const prev=JSON.stringify([S.tab,S.view]);
   if(k==='tab'&&TABS[S.role].some(t=>t[0]===v)){S.tab=v;S.view=null}
-  else if(['deal','work','design','aw','order','list'].includes(k)&&v){S.view=[k,isNaN(+v)?v:+v]}
+  else if((['deal','work','design','aw','order','list'].includes(k)||window.VX&&VX[k])&&v){S.view=[k,isNaN(+v)?v:+v]}
   else {S.tab=TABS[S.role][0][0];S.view=null}
   render();
   if(force||prev!==JSON.stringify([S.tab,S.view]))scrollTo(0,0);
@@ -438,13 +443,14 @@ function screen(){
     if(k==='design')return {html:vDesign(id)};
     if(k==='order'&&deal(id))return {html:vOrder(deal(id))};
     if(k==='list')return {html:vList(id)};
+    if(window.VX&&VX[k]){const r=VX[k](id);return typeof r==='string'?{html:r}:r}
   }
   const f=V[S.role+'_'+S.tab]; return {html:f?f():''};
 }
 const backBtn=`<button class="back" data-a="back">→ חזרה</button>`;
 function dealLi(d,role=S.role){
   const w=work(d.work), needs=isMine(d,role)||(role==='winery'&&d.st==='pay'&&d.winery===MYW());
-  return `<button class="li ${needs?'unread':''}" data-a="go" data-v="deal-${d.id}"><span class="th" style="background-image:url(${img(d.work)})" role="img" aria-label="${esc(w.t)}"></span><span class="mt"><b>${esc(w.t)} · ${esc(d.wineN)}</b><small>${role==='winery'?'ארז אהרון':esc(d.winery)} · ${TYPES[d.lt].n}</small><small><span class="pill ${needs?'solid':d.st==='active'?'on':''}">${stFor(d,role)}</span></small></span><span class="end num">${nis(price(d).total)}</span></button>`;
+  return `<button class="li ${needs?'unread':''}" data-a="go" data-v="deal-${d.id}"><span class="th" style="background-image:url(${img(d.work)})" role="img" aria-label="${esc(w.t)}"></span><span class="mt"><b>${esc(w.t)} · ${esc(d.wineN)}</b><small>${role==='winery'?esc(d.artistN||'ארז אהרון'):esc(d.winery)} · ${TYPES[d.lt].n}</small><small><span class="pill ${needs?'solid':d.st==='active'?'on':''}">${stFor(d,role)}</span></small></span><span class="end num">${nis(price(d).total)}</span></button>`;
 }
 function todoCards(role){
   const t=todos(role);
@@ -477,7 +483,7 @@ V.winery_home=()=>{
   <div style="display:grid;gap:8px;margin-top:10px">${d?`<button class="btn sm alt" data-a="go" data-v="design-${d.code}">לעיצוב: ${esc(work(d.work).t)}</button>`:''}<button class="btn sm" data-a="go" data-v="tab-bank">ציור חדש</button></div></div></div></div>
   <h3>בחירות האוצר</h3><div class="grid">${S.works.filter(x=>x.pick&&x.st==='live').sort((a,b)=>a.pick-b.pick).slice(0,4).map(tileWork).join('')}</div>`;
 };
-function tileWork(w){const ol=otherLic(w.id).length;return `<button class="tile" data-a="go" data-v="work-${w.id}"><span class="ph" style="background-image:url(${img(w.id)})" role="img" aria-label="${esc(w.t)}"></span>${ol?'<span class="tag dk">על בקבוק של יקב אחר</span>':w.pick?'<span class="tag">בחירת האוצר</span>':''}<span class="cp">${esc(w.t)}<small>ארז אהרון · ${w.tag}</small><span class="pr">${nis(S.floor)}+</span></span></button>`}
+function tileWork(w){const ol=otherLic(w.id).length;return `<button class="tile" data-a="go" data-v="work-${w.id}"><span class="ph" style="background-image:url(${img(w.id)})" role="img" aria-label="${esc(w.t)}"></span>${ol?'<span class="tag dk">על בקבוק של יקב אחר</span>':w.pick?'<span class="tag">בחירת האוצר</span>':''}<span class="cp">${esc(w.t)}<small>${esc(w.artistN||'ארז אהרון')} · ${w.tag}</small><span class="pr">${nis(S.floor)}+</span></span></button>`}
 V.winery_bank=()=>{
   const tags=['הכל','נוף','טבע דומם','בוטני','סמלי'];
   const list=S.works.filter(w=>w.st==='live'&&w.av&&(S.f.bank==='הכל'||w.tag===S.f.bank)&&(!S.f.q||w.t.includes(S.f.q)||w.tag.includes(S.f.q)||w.tone.includes(S.f.q)));
@@ -556,7 +562,7 @@ V.gallery_artists=()=>`<h1>אמנים</h1>
   <button class="btn alt wide" style="margin-top:14px" data-a="invite">להזמין אמן</button>`;
 V.gallery_works=()=>{
   const p=S.works.filter(w=>w.st==='pending');
-  return `<h1>יצירות</h1><h3>לאישור לפני פרסום (${p.length})</h3>${p.length?`<div class="list">${p.map(w=>`<div class="li"><span class="th" style="background-image:url(${img(w.id)})" data-a="zoomimg" data-v="${w.id}" role="button" aria-label="להגדיל"></span><span class="mt"><b>${esc(w.t)}</b><small>ארז אהרון · ${w.tag} · ${w.y||''}</small><span class="row" style="margin-top:6px"><button class="btn sm" data-a="gapprove" data-v="${w.id}">לאשר</button><button class="btn sm alt" data-a="greturn" data-v="${w.id}">להחזיר עם הערה</button></span></span></div>`).join('')}</div>`:empty('אין יצירות שממתינות','')}
+  return `<h1>יצירות</h1><button class="btn alt wide" data-a="upload">להעלות יצירה של אמן</button><h3>לאישור לפני פרסום (${p.length})</h3>${p.length?`<div class="list">${p.map(w=>`<div class="li"><span class="th" style="background-image:url(${img(w.id)})" data-a="zoomimg" data-v="${w.id}" role="button" aria-label="להגדיל"></span><span class="mt"><b>${esc(w.t)}</b><small>${esc(w.artistN||'ארז אהרון')} · ${esc(w.tech||'')} · ${w.y||''}${w.sz?' · '+esc(w.sz)+' ס״מ':''}</small><span class="row" style="margin-top:6px"><button class="btn sm" data-a="gapprove" data-v="${w.id}">לאשר</button><button class="btn sm alt" data-a="greturn" data-v="${w.id}">להחזיר עם הערה</button></span></span></div>`).join('')}</div>`:empty('אין יצירות שממתינות','')}
   <h3>בסגל</h3><div class="grid">${S.works.filter(w=>w.st!=='pending').map(w=>`<button class="tile" data-a="go" data-v="work-${w.id}"><span class="ph" style="background-image:url(${img(w.id)})"></span>${w.st!=='live'?`<span class="tag dk">${WST[w.st]}</span>`:''}<span class="cp">${esc(w.t)}<small>${w.tag}${activeLic(w.id).length?' · '+lic(activeLic(w.id).length):''}</small></span></button>`).join('')}</div>`;
 };
 V.gallery_more=()=>{
@@ -589,7 +595,7 @@ V.admin_finance=()=>{const fs={all:'הכל',active:'שולמו',open:'פתוחו
   return `<h1>כספים</h1><p class="lead">בפיילוט היקב משלם ישירות לגלריה. המערכת מתעדת, ואינה מחזיקה כסף.</p><div class="kpis"><div class="kpi"><b>${nis(sum)}</b><span>עמלות שנצברו</span></div><div class="kpi"><b>${S.deals.filter(d=>d.st==='active').length}</b><span>עסקאות ששולמו</span></div><div class="kpi"><b>${S.deals.filter(d=>d.st==='pay').length}</b><span>ממתינות לתשלום</span></div></div>
   <div class="tabs" style="margin-top:16px">${Object.entries(fs).map(([k,v])=>`<button data-a="fin" data-v="${k}" aria-selected="${S.f.fin===k}">${v}</button>`).join('')}</div>
   <div class="list">${ds.map(d=>{const p=price(d);return `<button class="li" data-a="go" data-v="deal-${d.id}"><span class="mt"><b>עסקה ${d.id} · ${esc(d.winery)}</b><small>${ST[d.st]} · עמלה <span class="num">${nis(p.comm)}</span></small></span><span class="end num">${nis(p.total)}</span></button>`}).join('')}</div>
-  <button class="link" data-a="toast" data-v="הקובץ יוצא לרואה החשבון">לייצא לרואה החשבון</button>`};
+  <button class="link" data-a="csvexp">לייצא לרואה החשבון</button>`};
 V.admin_engine=()=>`<h1>מנוע ההדמיה</h1><div class="kpis"><div class="kpi"><b>${S.renders}</b><span>צילומים החודש</span></div><div class="kpi"><b>$${(S.renders*0.134).toFixed(0)}</b><span>עלות משוערת, בדולרים כפי שהספק מחייב</span></div><div class="kpi"><b>2K</b><span>ברירת מחדל</span></div></div>
   <h3>הספק הפעיל</h3><div class="panel"><dl><dt>מודל</dt><dd>Gemini · Nano Banana Pro</dd><dt>מחיר</dt><dd>כ־13 סנט ב־2K, כ־24 סנט ב־4K</dd><dt>אימון על התוכן</dt><dd>לא מותר לפי התנאים</dd><dt>מפתח</dt><dd>שמור בשרת בלבד</dd></dl></div>`;
 V.admin_log=()=>{const ty={all:'הכל',deal:'עסקאות',work:'יצירות',admin:'הגדרות והרשאות'};const l=S.log.filter(x=>S.f.log==='all'||x.type===S.f.log);return `<h1>יומן פעולות</h1><p class="lead">כל שינוי ברישיון, בחוזה, בתשלום ובהרשאה, עם שם מי שביצע.</p><div class="hscroll">${Object.entries(ty).map(([k,v])=>`<button class="chip" data-a="flog" data-v="${k}" aria-pressed="${S.f.log===k}">${v}</button>`).join('')}</div><div class="list">${l.map(x=>`<div class="li"><span class="mt"><b style="font-weight:400">${esc(x.t)}</b><small>${esc(x.who)} · ${x.when}</small></span></div>`).join('')||empty('אין פעולות מהסוג הזה')}</div>`};
@@ -633,10 +639,10 @@ function vDeal(d){
 function vWork(w){
   const act=activeLic(w.id).length, ol=otherLic(w.id).length, r=S.role;
   return `${backBtn}<img class="paint" src="${img(w.id)}" alt="${esc(w.t)}" data-a="zoomimg" data-v="${w.id}">
-  <span class="eyebrow" style="display:block;margin-top:14px">ארז אהרון · שמן על בד · ${w.y||''}</span><h2>${esc(w.t)}</h2>
+  <span class="eyebrow" style="display:block;margin-top:14px">${esc(w.artistN||'ארז אהרון')} · ${esc(w.tech||'שמן על בד')}${w.y?' · '+w.y:''}</span><h2>${esc(w.t)}</h2>
   ${ol?`<div class="next" style="margin-top:10px"><b>כבר על בקבוק של יקב אחר</b><p>היצירה מופיעה ברישיון פעיל של יקב נוסף. אפשר לבקש רישיון לא בלעדי.</p></div>`:''}
-  <p style="font-size:15px;color:var(--muted)">${esc(S.bio||'ציור שמן ריאליסטי, טבע דומם ונוף מקומי.')}</p>
-  <div class="panel" style="margin-top:10px"><dl><dt>נושא</dt><dd>${w.tag}</dd><dt>גוון</dt><dd>${w.tone}</dd><dt>מידות</dt><dd>${w.sz||''} ס״מ</dd><dt>רישיונות פעילים</dt><dd>${act}</dd><dt>בלעדיות</dt><dd>${act?'לא זמינה, יש רישיון פעיל':'זמינה'}</dd><dt>מחיר בסיס</dt><dd><span class="num">${nis(S.floor)}</span> לפני מע״מ</dd></dl>
+  ${(S.stories||{})[w.id]?`<p style="font-size:15px">${esc(S.stories[w.id])}</p>`:`<p style="font-size:15px;color:var(--muted)">${esc(S.bio||'')}</p>`}
+  <div class="panel" style="margin-top:10px"><dl><dt>טכניקה</dt><dd>${esc(w.tech||'שמן על בד')}</dd><dt>שנת יצירה</dt><dd>${w.y||'—'}</dd><dt>מידות</dt><dd>${w.sz?esc(w.sz)+' ס״מ':'—'}</dd><dt>נושא</dt><dd>${w.tag}</dd><dt>גוון</dt><dd>${w.tone}</dd>${w.orig?`<dt>המקור</dt><dd>${esc(w.orig)}</dd>`:''}<dt>רישיונות פעילים</dt><dd>${act}</dd><dt>בלעדיות</dt><dd>${act?'לא זמינה, יש רישיון פעיל':'זמינה'}</dd><dt>מחיר בסיס</dt><dd><span class="num">${nis(S.floor)}</span> לפני מע״מ</dd></dl>
   ${Object.keys(S.restrict||{}).some(k=>S.restrict[k])?`<p class="note">האמן אינו מתיר: ${[['merch','מוצרי משנה'],['color','שינוי צבע'],['crop','חיתוך מעבר לאזור המסומן']].filter(([k])=>S.restrict[k]).map(x=>x[1]).join(', ')}.</p>`:''}</div>
   ${r==='winery'?`<button class="btn wide" style="margin-top:14px" data-a="try" data-v="${w.id}">לנסות על הבקבוק שלי</button><button class="btn alt wide" style="margin-top:8px" data-a="req" data-v="${w.id}">לבקש רישיון</button>`:''}`;
 }
@@ -664,7 +670,7 @@ function vOrder(d){
   <div class="stages">${[1,2,3,4].map(i=>`<i class="${i<=o.st?'done':''}"></i>`).join('')}</div><p class="stnow"><b>${OST[o.st]}</b> · שלב ${o.st} מתוך 4 · יעד ${fmtD(o.due)}</p>
   ${o.st<4?`<button class="btn wide" style="margin-top:10px" data-a="ost" data-v="${d.id}">לעדכן ל: ${OST[o.st+1]}</button>`:''}
   <button class="hero" data-a="zoomlabel" data-v="${d.id}" aria-label="להגדיל">${dealBottle(d)}<span class="zm">להגדיל</span></button>
-  <h3>בריף</h3><div class="panel"><dl><dt>יין</dt><dd>${esc(d.wineN)}</dd><dt>כמות</dt><dd>${QTY[d.q].n}</dd><dt>מידות</dt><dd><span class="num">90×120</span> מ״מ</dd><dt>נייר</dt><dd>נייר יין טקסטורה, לבן חם</dd><dt>גימורים</dt><dd>הבלטה עיוורת, זהב חם בשם היין</dd><dt>שטח שמור</dt><dd>פרטי חובה וחותמת כשרות</dd></dl></div>
+  <h3>בריף</h3><div class="panel"><dl><dt>יין</dt><dd>${esc(d.wineN)}</dd><dt>כמות</dt><dd>${QTY[d.q].n}</dd><dt>מידות</dt><dd><span class="num">80×152</span> מ״מ, גלישה 3 מ״מ</dd><dt>נייר וגימור</dt><dd>${esc(d.brief||'בתיאום עם היקב')}</dd><dt>שטח שמור</dt><dd>פרטי חובה וחותמת כשרות</dd></dl></div>
   <h3>משלוח וקשר</h3><div class="panel"><dl><dt>כתובת</dt><dd>יקב הגבעה, הרי יהודה</dd><dt>איש קשר</dt><dd>נוי · <span class="num">050-1234567</span></dd><dt>תאריך יעד</dt><dd>${fmtD(o.due)}</dd></dl></div>
   <h3>קבצים</h3><div class="list"><button class="li" data-a="toast" data-v="נשלח קישור הורדה לדוא״ל של בית הדפוס"><span class="mt"><b>קובץ דפוס וקטורי</b><small>שכבות: חיתוך, הבלטה, זהב</small></span><span class="end">קישור ←</span></button></div>
   <h3>כמות שהודפסה</h3><div class="panel"><div class="fld" style="margin-top:0"><label for="qq">הודפסו בפועל</label><input id="qq" inputmode="numeric" value="${o.qty||''}" placeholder="למשל 2,400"><small>מדרגה ברישיון: ${QTY[d.q].n} בקבוקים</small></div><button class="btn sm wide" style="margin-top:10px" data-a="qty" data-v="${d.id}">לדווח</button>${o.qty?`<p class="note">דווחו <span class="num">${o.qty}</span> · ${+String(o.qty).replace(/\D/g,'')>QTY[d.q].max?'<span class="bad">חורג מהמדרגה. נשלחה הודעה לגלריה</span>':'<span class="ok">בתוך המדרגה ✓</span>'}</p>`:''}</div>
@@ -713,15 +719,29 @@ function reqSheet(wid,step=1){
   <div class="panel" style="margin-top:12px"><dl><dt>בסיס</dt><dd class="m">${nis(p.base)}</dd>${D.ex?`<dt>בלעדיות</dt><dd class="m">${nis(p.exAdd)}</dd>`:''}<dt>מע״מ ${VAT}%</dt><dd class="m">${nis(p.list*VAT/100)}</dd><span class="sep"></span><dt class="tot">הערכה כולל מע״מ</dt><dd class="m tot">${nis(p.list*(1+VAT/100))}</dd></dl><p class="note" style="margin:8px 0 0">המחיר הסופי נקבע בגלריה, בטווח של 15% לכל כיוון.</p></div>
   <button class="btn wide" style="margin-top:14px" data-a="reqnext" data-v="${wid}">להמשיך לסיכום</button>`);
 }
+function readUpload(){const u=S.upload,v=s=>($(s)?.value||'').trim();
+  Object.assign(u,{t:v('#ut'),y:v('#uy'),hh:v('#uh').replace(',','.'),ww:v('#uw').replace(',','.'),tc:v('#utc')||'שמן על בד',g:v('#ug'),tn:v('#utn'),o:v('#uo'),st:v('#ust')});
+  if($('#ua')){u.a=v('#ua');u.an=$('#ua').selectedOptions[0]?.textContent||''}
+  u.s=u.hh&&u.ww?`${u.hh}×${u.ww}`:'';
+  u.e={t:!u.t,y:!!u.y&&(!/^\d{4}$/.test(u.y)||+u.y>new Date().getFullYear()),s:(u.hh||u.ww)&&!(+u.hh>0&&+u.ww>0)};
+  if(u.e.t||u.e.y||u.e.s){uploadSheet();toast('צריך להשלים את השדות המסומנים');return null}return u}
+const TECHS=['שמן על בד','שמן על עץ','אקריליק','צבעי מים','גואש','פסטל','רישום','הדפס','צילום','מדיה מעורבת','דיגיטלי'];
 function uploadSheet(){
   const u=S.upload||(S.upload={src:null,cells:{},w:0,h:0,e:{}});
-  const okRes=Math.max(u.w,u.h)>=3000;
+  const okRes=Math.max(u.w,u.h)>=2000;
   sheet(`<span class="eyebrow">יצירה חדשה</span><h2>להעלות יצירה</h2>
-  ${u.src?`<p class="note" style="margin-top:4px">${okRes?`<span class="ok">✓ רזולוציה מתאימה לדפוס</span> · <span class="num">${u.w}×${u.h}</span>`:`<span class="bad">✗ רזולוציה נמוכה מדי לדפוס</span> · <span class="num">${u.w}×${u.h}</span>. צריך 3,000 פיקסלים לפחות בצד הארוך.`}</p>
-  <div class="mark" id="mk"><img src="${u.src}" alt=""><div class="cells">${[...Array(36)].map((_,i)=>`<i data-cell="${i}" class="${u.cells[i]?'on':''}"></i>`).join('')}</div></div><p class="note">אפשר לגעת או לגרור על אזורים שאסור לחתוך. הם יסומנו בכהה.</p>`:`<label class="up"><input type="file" accept="image/*" data-in="file">להעלות קובץ ברזולוציית דפוס<small>JPG או TIFF, צד ארוך 3,000 פיקסלים לפחות</small></label>`}
+  ${u.src?`<p class="note" style="margin-top:4px">${okRes?`<span class="ok">✓ רזולוציה מתאימה לדפוס</span> · <span class="num">${u.w}×${u.h}</span>`:`<span class="bad">✗ רזולוציה נמוכה מדי לדפוס</span> · <span class="num">${u.w}×${u.h}</span>. צריך 2,000 פיקסלים לפחות בצד הארוך.`}</p>
+  <div class="mark" id="mk"><img src="${u.src}" alt=""><div class="cells">${[...Array(36)].map((_,i)=>`<i data-cell="${i}" class="${u.cells[i]?'on':''}"></i>`).join('')}</div></div><p class="note">אפשר לגעת או לגרור על אזורים שאסור לחתוך. הם יסומנו בכהה.</p>`:`<label class="up"><input type="file" accept="image/*" data-in="file">להעלות קובץ ברזולוציית דפוס<small>JPG או TIFF, צד ארוך 2,000 פיקסלים לפחות</small></label>`}
+  ${(()=>{const L=window.uploadArtists?uploadArtists():[];return L.length>1||(L.length===1&&S.role!=='artist')?`<div class="fld ${u.e.a?'bad':''}"><label for="ua">אמן *</label><select id="ua" class="lv-sel">${L.map(a=>`<option value="${esc(a.id)}" ${u.a===a.id?'selected':''}>${esc(a.n)}</option>`).join('')}</select></div>`:''})()}
+  ${u.src?`<p class="note" id="aist">${u.ai==='working'?'✦ ממלאים את הפרטים אוטומטית מהתמונה…':u.ai==='done'?'✦ הפרטים מולאו אוטומטית מהתמונה. אפשר לשנות כל דבר.':u.ai==='fail'?'לא הצלחנו למלא אוטומטית. אפשר למלא ידנית, או להשאיר את ברירות המחדל.':''}</p>`:''}
   <div class="fld ${u.e.t?'bad':''}"><label for="ut">שם היצירה *</label><input id="ut" value="${esc(u.t||'')}" placeholder="למשל: כותנה III">${u.e.t?'<span class="err">צריך שם ליצירה</span>':''}</div>
-  <div class="two"><div class="fld ${u.e.y?'bad':''}"><label for="uy">שנה *</label><input id="uy" inputmode="numeric" value="${esc(u.y||'')}" placeholder="2026">${u.e.y?'<span class="err">שנה בת ארבע ספרות</span>':''}</div><div class="fld"><label for="us">מידות בס״מ</label><input id="us" value="${esc(u.s||'')}" placeholder="60×80"></div></div>
-  <div class="two"><div class="fld"><label for="utc">טכניקה</label><select id="utc"><option>שמן על בד</option><option>אקריליק</option><option>צבעי מים</option><option>צילום</option><option>אחר</option></select></div><div class="fld"><label for="ug">נושא</label><select id="ug"><option>טבע דומם</option><option>נוף</option><option>בוטני</option><option>סמלי</option></select></div></div>
+  <details class="more" ${u.e.y||u.e.s?'open':''}><summary>פרטים נוספים: טכניקה, שנה, מידות, נושא ותיאור</summary>
+  <div class="two"><div class="fld"><label for="utc">טכניקה</label><input id="utc" list="utcl" value="${esc(u.tc||'שמן על בד')}"><datalist id="utcl">${TECHS.map(t=>`<option value="${t}">`).join('')}</datalist></div><div class="fld ${u.e.y?'bad':''}"><label for="uy">שנת יצירה</label><input id="uy" inputmode="numeric" value="${esc(u.y||'')}" placeholder="2026">${u.e.y?'<span class="err">שנה בת ארבע ספרות</span>':''}</div></div>
+  <div class="two"><div class="fld ${u.e.s?'bad':''}"><label for="uh">גובה בס״מ</label><input id="uh" inputmode="decimal" value="${esc(u.hh||'')}" placeholder="80"></div><div class="fld ${u.e.s?'bad':''}"><label for="uw">רוחב בס״מ</label><input id="uw" inputmode="decimal" value="${esc(u.ww||'')}" placeholder="60"></div></div>
+  <div class="two"><div class="fld"><label for="ug">נושא</label><select id="ug">${['נוף','טבע דומם','בוטני','סמלי','דיוקן','עירוני','מופשט','אחר'].map(t=>`<option ${u.g===t?'selected':''}>${t}</option>`).join('')}</select></div><div class="fld"><label for="utn">גוון עיקרי</label><select id="utn">${['ירוק','חום','בז׳','כחול','אפור','אדום','סגול','צהוב','שחור','לבן','צבעוני'].map(t=>`<option ${u.tn===t?'selected':''}>${t}</option>`).join('')}</select></div></div>
+  <div class="fld"><label for="uo">היכן המקור</label><select id="uo">${['באוסף האמן','בגלריה','באוסף פרטי','נמכר','לא ידוע'].map(t=>`<option ${u.o===t?'selected':''}>${t}</option>`).join('')}</select></div>
+  <div class="fld"><label for="ust">תיאור היצירה</label><textarea id="ust" placeholder="כמה משפטים על היצירה. לקוחות ויקבים רואים אותם">${esc(u.st||'')}</textarea></div></details>
+  <p class="note">היצירה עוברת לאישור הגלריה ולבדיקת קובץ לפני שהיא מופיעה במאגר.</p>
   <button class="btn wide" style="margin-top:16px" data-a="doupload" ${u.src&&okRes?'':'disabled'}>לשלוח לאישור הגלריה</button>`);
   bindMark();
 }
@@ -763,7 +783,7 @@ const plist=f=>`<dl><dt>עד 3,000</dt><dd class="m">${nis(f)}</dd><dt>3,000–1
 function contractSheet(id){
   const d=deal(+id);
   sheet(`<span class="eyebrow">חוזה רישוי · גרסה 1 · טיוטה לבדיקת עורך דין</span><h2>הסכם רישוי לשימוש ביצירה</h2><div class="contract">
-  <h4>1. הצדדים</h4><p>הגלריה, בשם האמן ארז אהרון, והיקב${d?' '+esc(d.winery):''}.</p>
+  <h4>1. הצדדים</h4><p>הגלריה, בשם האמן ${esc(d?.artistN||'ארז אהרון')}, והיקב${d?' '+esc(d.winery):''}.</p>
   <h4>2. היצירה והשימוש</h4><p>${d?esc(work(d.work).t):'היצירה'} על תווית, קרטון ושיווק הבקבוק בלבד. שימוש נוסף, כמו מוצרי משנה, דורש רישיון נפרד.</p>
   <h4>3. תקופה וכמות</h4><p>${d?`${TYPES[d.lt].n}, ${QTY[d.q].n} בקבוקים, בישראל.`:'לפי סוג הרישיון.'} בסוף הרישיון יש שישה חודשים למכירת מלאי שכבר הודפס.</p>
   <h4>4. זכויות</h4><p>זכות היוצרים נשארת בידי האמן. שם האמן מופיע על התווית האחורית. חיתוך או שינוי צבע מעבר לאזורים שהאמן סימן מחייבים את אישורו.</p>
@@ -816,7 +836,7 @@ const A={
   change(v){const t=$('#chx').value.trim();if(!t){$('#chx').focus();return}const d=deal(+v);d.chat.push({w:'artist',t,at:now()});d.st='sent';sys(d,'האמן ביקש שינוי. הבקשה חזרה לגלריה');closeSheet();toast('הבקשה נשלחה');render()},
   signS(v){const d=deal(+v),p=price(d);confirmSheet({k:'חתימה על חוזה',t:'לחתום על חוזה הרישוי?',body:`<div class="panel" style="margin-top:10px"><dl><dt>יצירה</dt><dd>${esc(work(d.work).t)}</dd><dt>יין</dt><dd>${esc(d.wineN)}</dd><dt>סוג</dt><dd>${TYPES[d.lt].n} · ${QTY[d.q].n}</dd><dt>לתשלום</dt><dd class="m tot">${nis(p.gross)}</dd></dl><button class="link" data-a="contract" data-v="${d.id}">לקרוא את החוזה המלא</button></div><p class="note">אחרי החתימה הגלריה תשלח חשבונית. הקבצים ייפתחו אחרי התשלום.</p>`,check:'קראתי את החוזה, והתנאים מקובלים עליי',l:'לחתום',ok(){d.st='pay';d.inv='1043';sys(d,'היקב חתם על החוזה. הגלריה שלחה חשבונית');toast('החוזה נחתם. החשבונית בדרך')}})},
   invoice(v){const d=deal(+v),p=price(d);sheet(`<span class="eyebrow">חשבונית <span class="num">${d.inv||'1043'}</span></span><h2>גלריה לדוגמה</h2><div class="panel" style="margin-top:10px"><dl><dt>עבור</dt><dd>רישיון ${TYPES[d.lt].n} · ${esc(work(d.work).t)}</dd><dt>סכום</dt><dd class="m">${nis(p.total)}</dd><dt>מע״מ</dt><dd class="m">${nis(p.vat)}</dd><span class="sep"></span><dt class="tot">לתשלום</dt><dd class="m tot">${nis(p.gross)}</dd></dl></div><p class="note">פרטי ההעברה מופיעים בחשבונית עצמה. אחרי שהגלריה תאשר את התשלום, סימן המים יורד והקבצים נפתחים.</p><button class="btn wide" style="margin-top:12px" data-a="toast" data-v="החשבונית ירדה כ־PDF">להוריד PDF</button>`)},
-  paidS(v){const d=deal(+v),p=price(d);sheet(`<span class="eyebrow">עסקה ${d.id} · ${esc(d.winery)}</span><h2>לאשר שהתשלום התקבל</h2><div class="fld"><label for="pam">סכום שהתקבל</label><input id="pam" inputmode="numeric" value="${Math.round(p.gross)}"></div><div class="two"><div class="fld"><label for="pdt">תאריך</label><input id="pdt" type="date" value="2026-11-18"></div><div class="fld"><label for="pin">מספר חשבונית</label><input id="pin" value="${d.inv||'1043'}"></div></div><p class="note">אחרי האישור סימן המים יורד והקבצים נפתחים ליקב. אי אפשר לבטל את זה.</p><div class="row"><button class="btn alt" data-a="close">ביטול</button><button class="btn" data-a="paid" data-v="${d.id}">לאשר</button></div>`)},
+  paidS(v){const d=deal(+v),p=price(d);sheet(`<span class="eyebrow">עסקה ${d.id} · ${esc(d.winery)}</span><h2>לאשר שהתשלום התקבל</h2><div class="fld"><label for="pam">סכום שהתקבל</label><input id="pam" inputmode="numeric" value="${Math.round(p.gross)}"></div><div class="two"><div class="fld"><label for="pdt">תאריך</label><input id="pdt" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div class="fld"><label for="pin">מספר חשבונית (לא חובה)</label><input id="pin" value="${d.inv||'1043'}"></div></div><p class="note">אחרי האישור סימן המים יורד והקבצים נפתחים ליקב. אי אפשר לבטל את זה.</p><div class="row"><button class="btn alt" data-a="close">ביטול</button><button class="btn" data-a="paid" data-v="${d.id}">לאשר</button></div>`)},
   paid(v){const d=deal(+v);const amt=+($('#pam').value.replace(/\D/g,''));if(Math.abs(amt-price(d).gross)>1){$('#pam').closest('.fld').classList.add('bad');toast('הסכום שונה מהחשבונית. כדאי לבדוק');return}d.st='active';d.paid=$('#pdt').value;d.inv=$('#pin').value;d.ends=d.lt==='series'?'2027-11-18':'';sys(d,`הגלריה אישרה תשלום, חשבונית ${d.inv}. הקבצים נפתחו`);closeSheet();toast('סימן המים ירד, הקבצים נפתחו ליקב');render()},
   porder(v){const d=deal(+v);confirmSheet({t:'להזמין דפוס מבית הדפוס השותף?',body:`<p class="note">בית הדפוס יקבל את הבריף והקבצים, ויחזור עם הצעת מחיר ותאריך.</p>`,l:'להזמין',ok(){d.order={st:1,qty:null,due:'2026-12-15'};sys(d,'היקב הזמין דפוס מבית הדפוס השותף');toast('ההזמנה נשלחה לבית הדפוס')}})},
   files(){toast('קבצי הדפוס ירדו: וקטור עם שכבות חיתוך, הבלטה וזהב')},
@@ -842,7 +862,7 @@ const A={
   editcells(v){cellsSheet(+v)}, clearcells(){S._cells={};$('#mk').querySelectorAll('i').forEach(i=>i.classList.remove('on'))},
   savecells(v){work(+v).cells={...S._cells};closeSheet();toast('האזורים נשמרו');render()},
   pricelist(){S.floorDraft=S.floor;priceSheet()},
-  savefloor(){const f=S.floorDraft;if(!f||f<500){toast('מחיר רצפה נמוך מדי');return}const prev=S.floor;S.floor=f;log(`מחירון ארז אהרון: ${nis(prev)} ← ${nis(f)}`,'admin');closeSheet();toast('המחירון נשמר',()=>{S.floor=prev});render()},
+  savefloor(){const f=S.floorDraft;if(!f||f<500){toast('מחיר רצפה נמוך מדי');return}const prev=S.floor;S.floor=f;log(`מחירון: ${nis(prev)} ← ${nis(f)}`,'admin');closeSheet();toast('המחירון נשמר',()=>{S.floor=prev});render()},
   invite(){sheet(`<h2>להזמין אמן</h2><div class="fld"><label for="ivn">שם</label><input id="ivn"></div><div class="fld"><label for="ivp">טלפון</label><input id="ivp" inputmode="tel" placeholder="050-0000000"></div><p class="note">האמן יקבל הודעה עם קישור כניסה וחוזה אמן לחתימה.</p><div class="row"><button class="btn alt" data-a="close">ביטול</button><button class="btn" data-a="invite2">לשלוח הזמנה</button></div>`)},
   invite2(){if(!$('#ivn').value.trim()){$('#ivn').focus();return}closeSheet();toast('ההזמנה נשלחה')},
   catalog(){S._cat=S._cat||{w:'יקב עמק הארזים',sel:{}};catSheet()},
@@ -859,11 +879,11 @@ const A={
   zoomlabel(v){const d=deal(+v);zoomLabelSheet(dealBottle(d,{label:true,big:true}),'התווית בהגדלה: שם היין, הבציר ושם האמן')},
   zoomdesign(code){const d=S.designs.find(x=>x.code===code);const w=wine(d.wine);zoomLabelSheet(bottle(w.type,d.work,{wm:true,pos:d.pos,zoom:d.zoom,shape:d.shape,name:w.n,year:w.y,label:true,big:true}),code)},
   okconfirm(){const f=S._ok;S._ok=null;closeSheet();if(f)f();render()},
-  addwine(){sheet(`<h2>להוסיף יין</h2><div class="fld"><label for="wn">שם היין</label><input id="wn" placeholder="למשל: אדום הגבעה"></div><div class="two"><div class="fld"><label for="wy">בציר</label><input id="wy" inputmode="numeric" placeholder="2025"></div><div class="fld"><label for="wq">כמות בקבוקים</label><input id="wq" inputmode="numeric" placeholder="3,000"></div></div><div class="fld"><label for="wt">סוג</label><select id="wt"><option value="red">אדום</option><option value="white">לבן</option><option value="rose">רוזה</option></select></div><div class="row"><button class="btn alt" data-a="close">ביטול</button><button class="btn" data-a="addwine2">להוסיף</button></div>`)},
+  addwine(){sheet(`<h2>להוסיף יין</h2><div class="fld"><label for="wn">שם היין</label><input id="wn" placeholder="למשל: אדום הגבעה"></div><div class="two"><div class="fld"><label for="wy">בציר</label><input id="wy" inputmode="numeric" value="${new Date().getFullYear()-1}"></div><div class="fld"><label for="wq">כמות בקבוקים</label><input id="wq" inputmode="numeric" placeholder="3,000"></div></div><div class="fld"><label for="wt">סוג</label><select id="wt"><option value="red">אדום</option><option value="white">לבן</option><option value="rose">רוזה</option></select></div><div class="row"><button class="btn alt" data-a="close">ביטול</button><button class="btn" data-a="addwine2">להוסיף</button></div>`)},
   addwine2(){const n=$('#wn').value.trim(),y=+$('#wy').value,q=+$('#wq').value.replace(/\D/g,'');if(!n||!y||!q){toast('צריך שם, בציר וכמות');return}S.wines.push({id:Math.max(...S.wines.map(w=>w.id))+1,n,y,type:$('#wt').value,q});closeSheet();toast('היין נוסף');render()},
   upload(){S.upload=null;uploadSheet()},
-  doupload(){const u=S.upload;u.t=$('#ut').value.trim();u.y=$('#uy').value.trim();u.s=$('#us').value.trim();u.e={t:!u.t,y:!/^\d{4}$/.test(u.y)};if(u.e.t||u.e.y){uploadSheet();return}
-    const id=Math.max(...S.works.map(w=>w.id))+1;S.works.push({id,t:u.t,tag:$('#ug').value,tone:'—',st:'pending',av:true,src:u.src,y:+u.y,sz:u.s,cells:{...u.cells}});log(`האמן העלה את "${u.t}"`,'work');S.upload=null;closeSheet();toast('היצירה נשלחה לאישור הגלריה');render()}
+  doupload(){const u=readUpload();if(!u)return;
+    const id=Math.max(...S.works.map(w=>w.id))+1;S.works.push({id,t:u.t,tag:u.g,tone:u.tn,tech:u.tc,orig:u.o,st:'pending',av:true,src:u.src,y:u.y?+u.y:'',sz:u.s,cells:{...u.cells},artist:u.a,artistN:u.an});if(u.st){S.stories=S.stories||{};S.stories[id]=u.st}log(`האמן העלה את "${u.t}"`,'work');S.upload=null;closeSheet();toast('היצירה נשלחה לאישור הגלריה');render()}
 };
 function pricingSheet(d){
   const p0=price({...d,adj:0}),p=price({...d,adj:S._adj});
@@ -879,7 +899,7 @@ A.price=function(v){const d=deal(+v);const note=$('#pnote').value.trim();if(S._a
   S.renderQ.push({deal:d.id,ok:null});closeSheet();toast('ההצעה עברה הלאה');render()};
 const adjLabel=p=>`התאמה: <span class="num">${S._adj>0?'+':''}${S._adj}%</span> · מחיר חדש <span class="num">${nis(p.total)}</span>`;
 const adjSplit=p=>`<dl><dt class="tot">לגלריה</dt><dd class="m tot">${nis(p.gallery)}</dd></dl><details class="more"><summary>איך זה מחושב</summary><dl><dt>מחיר הרישיון</dt><dd class="m">${nis(p.total)}</dd><dt>עמלת פלטפורמה ${S.comm}%</dt><dd class="m">${nis(p.comm)}</dd><dt>לאמן</dt><dd class="m">${nis(p.artist)}</dd></dl></details>`;
-function catSheet(){const c=S._cat;const n=Object.values(c.sel).filter(Boolean).length;sheet(`<h2>קטלוג התאמה</h2><div class="fld"><label>ליקב</label><div class="chips">${['יקב עמק הארזים','יקב הגבעה','יקב חדש'].map(w=>`<button class="chip" data-a="catw" data-v="${w}" aria-pressed="${c.w===w}">${w}</button>`).join('')}</div></div><h3>יצירות (${n} נבחרו)</h3><div class="grid">${S.works.filter(w=>w.st==='live').map(w=>`<button class="tile sel" data-a="cats" data-v="${w.id}" aria-pressed="${!!c.sel[w.id]}"><span class="ph" style="background-image:url(${img(w.id)})"></span><span class="ck">${c.sel[w.id]?'✓':''}</span><span class="cp">${esc(w.t)}</span></button>`).join('')}</div><button class="btn wide" style="margin-top:14px;position:sticky;bottom:0" data-a="catmake" ${n?'':'disabled'}>להפיק קטלוג${n?` עם ${n} הדמיות`:''}</button>`)}
+function catSheet(){const c=S._cat;const n=Object.values(c.sel).filter(Boolean).length;sheet(`<h2>קטלוג התאמה</h2><div class="fld"><label>ליקב</label><div class="chips">${(window.CATW||['יקב עמק הארזים','יקב הגבעה','יקב חדש']).map(w=>`<button class="chip" data-a="catw" data-v="${w}" aria-pressed="${c.w===w}">${w}</button>`).join('')}</div></div><h3>יצירות (${n} נבחרו)</h3><div class="grid">${S.works.filter(w=>w.st==='live').map(w=>`<button class="tile sel" data-a="cats" data-v="${w.id}" aria-pressed="${!!c.sel[w.id]}"><span class="ph" style="background-image:url(${img(w.id)})"></span><span class="ck">${c.sel[w.id]?'✓':''}</span><span class="cp">${esc(w.t)}</span></button>`).join('')}</div><button class="btn wide" style="margin-top:14px;position:sticky;bottom:0" data-a="catmake" ${n?'':'disabled'}>להפיק קטלוג${n?` עם ${n} הדמיות`:''}</button>`)}
 
 document.addEventListener('click',e=>{
   const t=e.target.closest('[data-a]');if(!t)return;
@@ -902,12 +922,15 @@ document.addEventListener('input',e=>{
   if(k==='bio'){S.bio=e.target.value}
 });
 document.addEventListener('change',e=>{
-  if(e.target.dataset.in==='file'){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{S.upload={src:r.result,cells:{},w:im.naturalWidth,h:im.naturalHeight,e:{}};uploadSheet()};im.src=r.result};r.readAsDataURL(f)}
+  if(e.target.dataset.in==='file'){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{S.upload={src:r.result,cells:{},w:im.naturalWidth,h:im.naturalHeight,e:{},a:S.upload?.a};uploadSheet();window.autoFill&&autoFill()};im.src=r.result};r.readAsDataURL(f)}
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.sheetOpen)closeSheet();if(e.key==='Enter'&&e.target.id==='chatin'){document.querySelector('[data-a="chat"]')?.click()}if(e.key==='Enter'&&e.target.id==='ph')A.login1()});
 if(window.LIVE){}else if(location.hash)history.replaceState(null,'',location.pathname+location.search);
 if(window.LIVE){}else if(S.role){S.view=null;S.tab=S.tab||TABS[S.role][0][0];location.hash='tab-'+S.tab}else render();
 </script>
-<script>if(window.LIVE)document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script><script src="live.js?v=1"><\/script>')</script>
+<script src="customer.js?v=8"></script>
+<script src="docs.js?v=5"></script>
+<script src="motion.js?v=1"></script>
+<script>if(window.LIVE)document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script><script src="live.js?v=10"><\/script><script src="ops.js?v=1"><\/script>')</script>
 </body>
 </html>
