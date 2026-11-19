@@ -1332,6 +1332,8 @@ do $$ begin
 exception when duplicate_object then null; end $$;
 create index if not exists engine_usage_org_idx on engine_usage (org_id, kind, created_at);
 create index if not exists engine_usage_time_idx on engine_usage (created_at);
+-- שימוש ישן שלא דווח עליו נחשב כמוצלח
+update engine_usage set state = 'ok' where state = 'pending' and created_at < now() - interval '10 minutes';
 
 create or replace function engine_spend_month() returns numeric
 language sql stable security definer set search_path = public as $$
