@@ -1,5 +1,6 @@
 window.supabase={createClient(){
   const st=JSON.parse(localStorage.getItem('mockdb')||'null')||window.MOCK_INIT;
+  window.__mockst=st;
   const persist=()=>localStorage.setItem('mockdb',JSON.stringify(st));
   const sess=()=>st.session;
   function builder(t){
@@ -30,13 +31,19 @@ window.supabase={createClient(){
       if(fn==='render_quota_left')return {data:5,error:null};
       if(fn==='log_error'){(st.db.client_errors=st.db.client_errors||[]).push({id:(st.db.client_errors.length+1),message:a.p_message,place:a.p_place,n:1,role:st.me_role,last_at:new Date().toISOString(),resolved:false});persist();return {data:null,error:null}}
       if(fn==='monthly_statement')return {data:[{deal_id:1003,paid_at:'2026-11-05',winery:'יקב 1',work:'חורשה',artist:'ארז',net:6300,platform:945,artist_share:2678,gallery_share:2677}],error:null};
+      if(fn==='label_action'){const T=a.p_entity==='deal'?st.db.deals:st.db.customer_orders;const o=T.find(x=>x.id===a.p_id);if(!o)return {data:null,error:{message:'אין גישה לתווית הזו'}};
+        const side=['gallery','artist'].includes(st.me_role)?'art':st.me_role==='winery'?'winery':'customer';o.label_round=o.label_round||1;const L=(st.db.label_notes=st.db.label_notes||[]);
+        L.push({id:L.length+1,entity:a.p_entity,entity_id:a.p_id,round:o.label_round,side,kind:a.p_action,body:a.p_body,created_at:new Date().toISOString()});
+        if(a.p_action==='approve'){if(side==='winery')o.label_ok_w=o.label_round;else o.label_ok_a=o.label_round;if(a.p_entity==='corder'&&o.label_ok_w===o.label_round&&o.label_ok_a===o.label_round)o.status='approved'}
+        if(a.p_action==='change'){o.label_round++;o.label_ok_w=null;o.label_ok_a=null;if(a.p_entity==='corder'&&['label','approved'].includes(o.status))o.status='sent'}
+        persist();return {data:{round:o.label_round},error:null}}
       if(fn==='track'){st.track=(st.track||0)+1;persist();return {data:null,error:null}}
       if(fn==='engine_status')return {data:{spend:42.5,budget:300,breaker:false,images:61,texts:120,failed:2,by_org:{'יקב הבדיקה':12}},error:null};
       if(fn==='application_decide'){const ap=st.db.applications.find(x=>x.id===a.p_id);ap.status=a.p_ok?'approved':'rejected';ap.gallery=a.p_gallery;persist();return {data:ap.status,error:null}}
       if(fn==='join_org'){const i=(st.db.org_invites||[]).find(x=>x.token===a.p_token&&!x.revoked);if(!i)return {data:false,error:null};const p=st.db.profiles.find(x=>x.id===st.user.id);p.role=i.role;p.status='active';p.org_id=i.org_id;st.me_role=i.role;st.me_org=i.org_id;i.uses=(i.uses||0)+1;persist();return {data:true,error:null}}
       if(fn==='delete_my_account'){st.db.profiles=st.db.profiles.filter(x=>x.id!==st.user.id);st.deleted=true;persist();return {data:null,error:null}}
       if(fn==='join_as_customer'){const p=st.db.profiles.find(x=>x.id===st.user.id);p.role='customer';p.status='active';p.org_id='w1';st.me_role='customer';persist();return {data:true,error:null}}
-      if(fn==='corder_action'){const o=st.db.customer_orders.find(x=>x.id===a.p_id);const M={wsave:[null,null],wsend:['sent','review'],wok:['sent','approved'],cok:['review','approved'],cchange:['review','sent'],wprint:['approved','print'],done:['print','done'],wundo:[null,null],wpaid:['approved','approved'],cancel:[null,'cancel']};const f=M[a.p_action];if(f[0]&&o.status!==f[0])return {data:null,error:{message:'הפעולה אינה אפשרית בשלב הזה'}};if(a.p_action==='wsave')o.winery_design=a.p_design;if(a.p_action==='wundo')o.winery_design=null;if(a.p_action==='wpaid')o.paid_at='2026-11-19';if(f[1])o.status=f[1];o.log.push({t:a.p_action,at:new Date().toISOString()});persist();return {data:o.status,error:null}}
+      if(fn==='corder_action'){const o=st.db.customer_orders.find(x=>x.id===a.p_id);const M={wsave:[null,null],wsend:['sent','review'],wok:['sent','label'],cok:['review','label'],cchange:['review','sent'],wprint:['approved','print'],done:['print','done'],wundo:[null,null],wpaid:['approved','approved'],cancel:[null,'cancel']};const f=M[a.p_action];if(f[0]&&o.status!==f[0])return {data:null,error:{message:'הפעולה אינה אפשרית בשלב הזה'}};if(a.p_action==='wsave')o.winery_design=a.p_design;if(a.p_action==='wok'||a.p_action==='cok'){o.label_round=o.label_round||1;o.label_ok_w=o.label_round}if(a.p_action==='wundo')o.winery_design=null;if(a.p_action==='wpaid')o.paid_at='2026-11-19';if(f[1])o.status=f[1];o.log.push({t:a.p_action,at:new Date().toISOString()});persist();return {data:o.status,error:null}}
       if(fn==='advance_deal'){const d=st.db.deals.find(x=>x.id===a.p_deal);if(a.p_action==='order'){st.db.print_orders.push({deal_id:d.id,stage:1,due:'2026-12-10'});persist();return {data:d.status,error:null}}const f=FLOW[a.p_action];if(!f||(f[0]&&d.status!==f[0]))return {data:null,error:{message:'הפעולה '+a.p_action+' אינה אפשרית בשלב הזה'}};d.status=f[1];if(a.p_action==='price')d.adj_pct=a.p_adj;if(a.p_action==='paid'){d.paid_at='2026-11-19';d.ends_at='2027-11-19'}persist();return {data:d.status,error:null}}},
     storage:{from(){return {async createSignedUrls(p){return {data:p.map(x=>({path:x,signedUrl:'img/p3.jpg'})),error:null}},async createSignedUrl(p){return {data:{signedUrl:'img/p3.jpg'},error:null}},getPublicUrl(p){return {data:{publicUrl:'img/p3.jpg'}}},async upload(p){(window._ups=window._ups||[]).push(p);return {data:{path:p},error:null}}}}},
     auth:{async getSession(){return {data:{session:sess()}}},async setSession(){st.session={user:st.user};persist();return {error:null}},

@@ -247,7 +247,7 @@ document.addEventListener('change',e=>{const t=e.target;if(t.dataset?.in!=='auto
 
 const _gm=V.gallery_more;V.gallery_more=()=>_gm()+`<h3>אוטומציה</h3><div class="list">${sw('auto_price',myOrg().auto_price,'תמחור אוטומטי','כל בקשה מתומחרת מיד לפי הנוסחה, בלי התאמה. אם לאמן יש הסכמה מראש, בקשה קטנה עוברת ישר לחתימה.')}</div>
   <h3>דוח חודשי</h3><div class="panel"><p class="note" style="margin-top:0">כל העסקאות ששולמו בחודש, עם החלוקה בין האמן, הגלריה והפלטפורמה.</p><button class="btn sm wide" data-a="stmt">להפיק דוח לחודש הקודם</button> <button class="btn sm alt wide" style="margin-top:8px" data-a="stmt" data-v="now">לחודש הנוכחי</button></div>`;
-const _wm=V.winery_more;V.winery_more=()=>_wm()+`<h3>אוטומציה</h3><div class="list">${sw('auto_approve',myOrg().auto_approve,'אישור אוטומטי להזמנות לקוחות','הזמנה של לקוח מאושרת ברגע שהיא נשלחת. המחיר תמיד לפי המחירון שלך.')}${sw('auto_print',myOrg().auto_print!==false,'דפוס מיד אחרי תשלום','רישיון ששולם והזמנת לקוח שסימנת כמשולמת עוברים לבית הדפוס בלי לחיצה נוספת.')}</div>`;
+const _wm=V.winery_more;V.winery_more=()=>_wm()+`<h3>אוטומציה</h3><div class="list">${sw('auto_print',myOrg().auto_print!==false,'דפוס מיד אחרי תשלום','רישיון ששולם והזמנת לקוח שסימנת כמשולמת עוברים לבית הדפוס בלי לחיצה נוספת.')}</div>`;
 const _ai=V.artist_income;if(_ai)V.artist_income=()=>_ai()+`<h3>דוח חודשי</h3><div class="panel"><p class="note" style="margin-top:0">מה הגיע אליך מכל רישיון שנסגר בחודש.</p><button class="btn sm wide" data-a="stmt">לחודש הקודם</button> <button class="btn sm alt wide" style="margin-top:8px" data-a="stmt" data-v="now">לחודש הנוכחי</button></div>`;
 
 /* מנהל: הגדרות העבודה היומית */

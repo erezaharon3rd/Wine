@@ -19,7 +19,7 @@ with sync_playwright() as p:
     d=np.value;d.wait_for_timeout(500);t=d.inner_text('body');print('statement:',t[:90].replace('\n',' | '));assert 'חורשה' in t and '₪6,300' in t
     pg=page(init('winery','w1'));pg.evaluate("go('tab-more')");pg.wait_for_timeout(400)
     assert pg.is_checked('[data-k=auto_print]'),'auto print default on'
-    pg.check('[data-k=auto_approve]');pg.wait_for_timeout(700);print('winery auto_approve:',org(pg,'w1').get('auto_approve'));assert org(pg,'w1').get('auto_approve') is True
+    print('no auto approve switch:',pg.locator('[data-k=auto_approve]').count()==0);assert pg.locator('[data-k=auto_approve]').count()==0
     pg=page(init('admin','o-adm'));pg.evaluate("go('tab-settings')");pg.wait_for_timeout(600);t=pg.inner_text('#m')
     print('admin daily:', 'עבודה אוטומטית יומית' in t, 'המלצות לפי פופולריות' in t);assert 'עבודה אוטומטית יומית' in t
     pg.fill('#dsd','4');pg.fill('#dcd','20');pg.click('[data-a=dailysave]');pg.wait_for_timeout(700)

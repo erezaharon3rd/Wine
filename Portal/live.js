@@ -147,7 +147,7 @@ async function hydrate(){
   if(!S.wines.some(w=>w.id===S.activeWine))S.activeWine=S.wines[0]?.id;
   S.designs=(designs||[]).map(d=>({code:d.code,wine:d.wine_id,work:d.work_id,pos:d.pos,zoom:d.zoom,shape:d.layout?.shape}));
   S.deals=(deals||[]).map(d=>{const inv=one(d.invoices),o=one(d.print_orders),wi=d.wine;return {
-    id:d.id,ver:d.version,wid:d.winery_id,ended:d.status==='active'&&!!d.ends_at&&d.ends_at<new Date().toISOString().slice(0,10),winery:d.winery?.name||'',galleryN:d.gallery?.name||'',artistN:AR[d.artist_id]?.name||'',fl:+(AR[d.artist_id]?.floor_price||S.floor),
+    id:d.id,ver:d.version,wid:d.winery_id,lr:d.label_round,okw:d.label_ok_w,oka:d.label_ok_a,ended:d.status==='active'&&!!d.ends_at&&d.ends_at<new Date().toISOString().slice(0,10),winery:d.winery?.name||'',galleryN:d.gallery?.name||'',artistN:AR[d.artist_id]?.name||'',fl:+(AR[d.artist_id]?.floor_price||S.floor),
     wineN:d.wine_label||(wi?`${wi.name} ${wi.vintage||''}`.trim():''),type:WINE[wi?.type]?wi.type:'red',work:d.work_id,lt:d.license_type,q:d.qty_tier,ex:d.exclusive,
     st:d.status==='cancelled'?'rejected':d.status,adj:d.adj_pct,code:d.design_code||'—',note:d.status==='rejected'||d.status==='cancelled'?'':d.note,reason:d.status==='rejected'||d.status==='cancelled'?(d.note||(d.status==='cancelled'?'בוטלה':'')):'',
     paid:dt(d.paid_at),ends:dt(d.ends_at),inv:inv?.number||'',order:o?{st:o.stage,qty:o.qty,due:dt(o.due)}:null,
@@ -166,7 +166,7 @@ async function hydrate(){
   S._px={};(works||[]).forEach(w=>{if(w.px_w)S._px[w.id]=[w.px_w,w.px_h]});
   /* customer orders */
   const co=await q(sb.from('customer_orders').select('*').order('id',{ascending:false}));
-  S.corders=co.map(o=>({id:o.id,ver:o.version,wid:o.winery_id,at:dt(o.created_at),cust:o.cust||{},d:o.design,wv:o.winery_design,wnote:o.winery_note,st:o.status,paid:dt(o.paid_at),winery:S._orgN[o.winery_id]||'',log:(o.log||[]).map(l=>({t:l.t,at:tm(l.at)}))}));
+  S.corders=co.map(o=>({id:o.id,ver:o.version,wid:o.winery_id,lr:o.label_round,okw:o.label_ok_w,oka:o.label_ok_a,at:dt(o.created_at),cust:o.cust||{},d:o.design,wv:o.winery_design,wnote:o.winery_note,st:o.status,paid:dt(o.paid_at),winery:S._orgN[o.winery_id]||'',log:(o.log||[]).map(l=>({t:l.t,at:tm(l.at)}))}));
   S._rurl=S._rurl||{};const rp=[...new Set(co.flatMap(o=>[o.design?.render,o.winery_design?.render]).filter(x=>x&&!S._rurl[x]))];
   if(rp.length){try{const r=await q(sb.storage.from('renders').createSignedUrls(rp,3600));r.forEach(x=>{if(x.signedUrl)S._rurl[x.path]=x.signedUrl})}catch(e){}}
   /* notifications and my organization's people */

@@ -65,6 +65,9 @@ with sync_playwright() as p:
     print('orgren buttons:',len(pg3.query_selector_all('[data-a=orgren]')))
     pg3.evaluate("A.role('winery')");pg3.wait_for_timeout(400);pg3.evaluate("closeSheet()");oid=pg3.evaluate("S.corders[0]&&S.corders[0].id")
     pg3.evaluate(f"SB.rpc('corder_action',{{p_id:{oid},p_action:'cok'}}).then(()=>liveHydrate()).then(render)");pg3.wait_for_timeout(400)
+    pg3.evaluate(f"go('corder-{oid}')");pg3.wait_for_timeout(500);t=pg3.inner_text('#m');print('label panel:', 'אישור התווית' in t, 'ממתין' in t);assert 'אישור התווית' in t
+    pg3.evaluate(f"(async()=>{{window.__mockst.me_role='artist';await SB.rpc('label_action',{{p_entity:'corder',p_id:{oid},p_action:'approve'}});window.__mockst.me_role='winery';await liveHydrate();render()}})()");pg3.wait_for_timeout(700)
+    print('after artist approved:',pg3.evaluate(f"S.corders.find(o=>o.id=={oid}).st"))
     pg3.evaluate(f"go('corder-{oid}')");pg3.wait_for_timeout(300);print('bar:',pg3.inner_text('.actbar')[:60].replace('\n',' '))
     pg3.click('.actbar [data-a=cwpaid]');pg3.wait_for_timeout(200);pg3.click('#cfok');pg3.wait_for_timeout(600);print('paid:',pg3.evaluate(f"S.corders.find(o=>o.id=={oid}).paid"))
     print('ERRORS:',errs);b.close()

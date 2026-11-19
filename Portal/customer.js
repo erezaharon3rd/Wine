@@ -147,13 +147,13 @@ VX.csum=()=>{const d=S.cd;if(!d)return empty('אין עיצוב פתוח');const
   bar:priceBar(`<button class="btn sm" id="csend" data-a="csend" disabled>לשלוח ליקב</button>`)}};
 
 /* ── orders ── */
-const CST={sent:['נשלחה ליקב','היקב בודק את העיצוב'],review:['ממתינה לאישורך','היקב הציע התאמות'],approved:['אושרה','היקב ייצור קשר לתשלום'],print:['בהדפסה','התוויות בהדפסה'],done:['מוכנה','הבקבוקים מוכנים לאיסוף או משלוח'],cancel:['בוטלה','']};
-const CSTAGE=['sent','review','approved','print','done'];window.CST=CST;
+const CST={sent:['נשלחה ליקב','היקב בודק את העיצוב'],label:['ממתינה לאישור האמן','היינן אישר. האמן או הגלריה בודקים את התווית'],review:['ממתינה לאישורך','היקב הציע התאמות'],approved:['אושרה','היקב ייצור קשר לתשלום'],print:['בהדפסה','התוויות בהדפסה'],done:['מוכנה','הבקבוקים מוכנים לאיסוף או משלוח'],cancel:['בוטלה','']};
+const CSTAGE=['sent','review','label','approved','print','done'];window.CST=CST;
 V.customer_orders=()=>{const L=S.corders;return `<h1>ההזמנות שלי</h1><p class="lead">כל הזמנה עוברת לאישור היקב לפני הדפסה. כאן רואים איפה היא עומדת.</p>
   ${L.length?`<div class="list">${L.map(o=>{const d=o.wv&&o.st!=='review'?o.wv:o.d;return `<button class="li ${o.st==='review'?'unread':''}" data-a="go" data-v="corder-${o.id}"><span style="width:40px;flex:none">${cbottle(d,{wm:true})}</span><span class="mt"><b>הזמנה ${o.id} · ${esc(work(d.work).t)}</b><small>${d.qty} בקבוקים · ${fmtD(o.at)}</small><small><span class="pill ${o.st==='review'?'solid':o.st==='approved'||o.st==='done'?'on':''}">${CST[o.st][0]}</span></small></span><span class="end num">${nis(cprice(d).total)}</span></button>`}).join('')}</div>`:empty('עדיין אין הזמנות','מתחילים מבחירת אמן.')}
   <button class="btn wide" style="margin-top:14px" data-a="go" data-v="tab-artists">לעצב בקבוק חדש</button>`};
 
-V.winery_clients=()=>{const L=S.corders;const f=S.f.co||'open';const fl={open:['פתוחות',o=>['sent','review'].includes(o.st)],go:['אושרו',o=>['approved','print','done'].includes(o.st)],all:['הכל',()=>true]};
+V.winery_clients=()=>{const L=S.corders;const f=S.f.co||'open';const fl={open:['פתוחות',o=>['sent','review','label'].includes(o.st)],go:['אושרו',o=>['approved','print','done'].includes(o.st)],all:['הכל',()=>true]};
   return `<h1>הזמנות לקוחות</h1><p class="lead">לקוחות מעצבים בקבוק אישי מהקישור של היקב. כל הזמנה מגיעה לכאן מוכנה, ואפשר לערוך אותה לפני הדפסה.</p>
   <div class="tabs">${Object.entries(fl).map(([k,[l,fn]])=>`<button data-a="cof" data-v="${k}" aria-selected="${f===k}">${l} (${L.filter(fn).length})</button>`).join('')}</div>
   <div class="list">${L.filter(fl[f][1]).map(o=>{const d=o.wv||o.d;return `<button class="li ${o.st==='sent'?'unread':''}" data-a="go" data-v="corder-${o.id}"><span style="width:40px;flex:none">${cbottle(d,{wm:true})}</span><span class="mt"><b>${esc(o.cust.n)} · ${esc(work(d.work).t)}</b><small>הזמנה ${o.id} · ${d.qty} בקבוקים · ${fmtD(o.at)}</small><small><span class="pill ${o.st==='sent'?'solid':''}">${o.st==='sent'?'חדשה, תורך':o.st==='review'?'אצל הלקוח לאישור':CST[o.st][0]}</span></small></span><span class="end num">${nis(cprice(d).total)}</span></button>`}).join('')||empty('אין הזמנות כאן','')}</div>
@@ -166,16 +166,16 @@ VX.corder=id=>{const o=S.corders.find(x=>x.id===+id);if(!o)return empty('ההז�
     <h3>מה היקב שינה (${changes.length})</h3>${changes.length?`<ul class="chg">${changes.map(c=>`<li>${c.l}<small>${esc(String(c.from))} ← ${esc(String(c.to))}</small></li>`).join('')}</ul>`:'<p class="note">לא בוצעו שינויים.</p>'}${o.wnote?`<p class="note">הערת היקב: ${esc(o.wnote)}</p>`:''}`:'';
   let bar='';
   if(wn&&o.st==='sent')bar=`<div class="actbar"><div class="t"><b>תורך: לבדוק את העיצוב</b><span>${o.wv?`${changes.length} שינויים מוכנים לשליחה`:'אפשר לאשר כמו שהוא או לערוך'}</span></div><button class="btn sm" data-a="${o.wv?'cwsend':'cwok'}" data-v="${o.id}">${o.wv?'לשלוח ללקוח':'לאשר כמו שהוא'}</button></div>`;
-  if(!wn&&o.st==='review')bar=`<div class="actbar"><div class="t"><b>תורך: לאשר את ההתאמות</b><span>${changes.length} שינויים · ${nis(cprice(o.wv).total)}</span></div><button class="btn sm" data-a="ccok" data-v="${o.id}">לאשר</button></div>`;
+  if(S.role==='customer'&&o.st==='review')bar=`<div class="actbar"><div class="t"><b>תורך: לאשר את ההתאמות</b><span>${changes.length} שינויים · ${nis(cprice(o.wv).total)}</span></div><button class="btn sm" data-a="ccok" data-v="${o.id}">לאשר</button></div>`;
   if(wn&&o.st==='approved')bar=o.paid?`<div class="actbar"><div class="t"><b>שולם · מוכנה לדפוס</b><span>${fmtD(o.paid)}</span></div><button class="btn sm" data-a="cwprint" data-v="${o.id}">להעביר לדפוס</button></div>`:`<div class="actbar"><div class="t"><b>ממתינה לתשלום</b><span>${nis(cprice(o.wv||o.d).total)} כולל מע״מ</span></div><button class="btn sm" data-a="cwpaid" data-v="${o.id}">לסמן ששולם</button></div>`;
   const d=o.wv||o.d,p=cprice(d);
   return {html:`${backBtn}<span class="eyebrow" style="display:block">הזמנה <span class="num">${o.id}</span> · ${fmtD(o.at)}</span><h2>${wn?esc(o.cust.n):CST[o.st][0]}</h2>
   <div class="stages" aria-hidden="true">${CSTAGE.map((s,i)=>`<i class="${i<=si?'done':''}"></i>`).join('')}</div><p class="stnow"><b>${CST[o.st][0]}</b>${CST[o.st][1]?' · '+CST[o.st][1]:''}</p>
   ${o.wv?cmp:`<button class="hero" data-a="czoomo" data-v="${o.id}">${cbottle(o.d)}<span class="wm">העיצוב של הלקוח</span><span class="zm">להגדיל</span></button>`}
   ${wn&&['sent'].includes(o.st)?`<div class="row" style="margin-top:12px"><button class="btn alt" data-a="cwedit" data-v="${o.id}">${o.wv?'להמשיך לערוך':'לערוך את העיצוב'}</button>${o.wv?`<button class="btn alt" data-a="cwundo" data-v="${o.id}">לבטל את השינויים</button>`:''}</div>`:''}
-  ${!wn&&o.st==='review'?`<div class="row" style="margin-top:12px"><button class="btn alt" data-a="ccchg" data-v="${o.id}">לבקש שינוי</button></div>`:''}
-  ${['sent','review'].includes(o.st)&&(wn||S.role==='customer')?`<button class="link" data-a="ccancel" data-v="${o.id}">לבטל את ההזמנה</button>`:''}
-  ${o.st==='approved'&&!wn?`<div class="panel" style="margin-top:10px;font-size:14.5px">${o.paid?'התשלום התקבל. ההזמנה תעבור לדפוס.':'היקב ייצור איתך קשר לתשלום. אחרי התשלום ההזמנה עוברת לדפוס.'}</div>`:''}
+  ${S.role==='customer'&&o.st==='review'?`<div class="row" style="margin-top:12px"><button class="btn alt" data-a="ccchg" data-v="${o.id}">לבקש שינוי</button></div>`:''}
+  ${['sent','review','label'].includes(o.st)&&(wn||S.role==='customer')?`<button class="link" data-a="ccancel" data-v="${o.id}">לבטל את ההזמנה</button>`:''}
+  ${o.st==='approved'&&S.role==='customer'?`<div class="panel" style="margin-top:10px;font-size:14.5px">${o.paid?'התשלום התקבל. ההזמנה תעבור לדפוס.':'היקב ייצור איתך קשר לתשלום. אחרי התשלום ההזמנה עוברת לדפוס.'}</div>`:''}
   <h3>פרטים</h3><div class="panel"><dl><dt>אמן ויצירה</dt><dd>${esc(artistOf(d.artist)?.n||'')} · ${esc(work(d.work).t)}</dd><dt>יין</dt><dd>${esc(wine(d.wine).n)} ${wine(d.wine).y}</dd><dt>שם</dt><dd>${esc(d.name)}</dd><dt>הקדשה</dt><dd>${esc(d.ded||'ללא')}</dd><dt>כמות</dt><dd>${d.qty} בקבוקים</dd><span class="sep"></span><dt class="tot">סה״כ כולל מע״מ</dt><dd class="m tot">${nis(p.total)}</dd></dl></div>
   ${wn?`<h3>הלקוח</h3><div class="panel"><dl><dt>שם</dt><dd>${esc(o.cust.n)}</dd><dt>טלפון</dt><dd class="num">${esc(o.cust.ph)}</dd><dt>דוא״ל</dt><dd class="num">${esc(o.cust.em)}</dd></dl>${o.cust.note?`<p class="note">"${esc(o.cust.note)}"</p>`:''}</div>`:''}
   ${o.log.length?`<h3>מה קרה</h3><div class="chat">${o.log.map(m=>`<div class="msg sys">${esc(m.t)} · ${m.at}</div>`).join('')}</div>`:''}`,bar}};

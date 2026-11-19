@@ -747,7 +747,7 @@ begin
     update customer_orders set status = 'done' where id = p_id;
     msg := 'הבקבוקים מוכנים';
     perform notify_users(null, null, o.customer_id, msg);
-  elsif p_action = 'cancel' and (win or cus) and o.status in ('sent','review') then
+  elsif p_action = 'cancel' and (win or cus) and o.status in ('sent','review','label') then
     update customer_orders set status = 'cancel' where id = p_id; msg := 'ההזמנה בוטלה';
   else
     raise exception 'הפעולה אינה אפשרית בשלב הזה';
@@ -1209,11 +1209,16 @@ begin
     update customer_orders set status = 'review', winery_note = p_note where id = p_id;
     msg := 'היקב הציע התאמות לאישורך'; perform notify_users(null, null, o.customer_id, msg);
   elsif p_action = 'wok' and win and o.status = 'sent' then
-    update customer_orders set status = 'approved', winery_design = null where id = p_id;
-    msg := 'היקב אישר את ההזמנה'; perform notify_users(null, null, o.customer_id, msg);
+    -- היינן מאשר מצידו; התווית עוברת לאישור האמן או הגלריה
+    update customer_orders set status = 'label', winery_design = null, label_ok_w = o.label_round where id = p_id;
+    insert into label_notes (entity, entity_id, round, side, kind) values ('corder', p_id, o.label_round, 'winery', 'approve');
+    msg := 'היקב אישר את העיצוב. התווית עברה לאישור האמן'; perform notify_users(null, null, o.customer_id, msg);
+    perform label_notify('corder', p_id, 'תווית של לקוח מחכה לאישור שלך', array['art']);
   elsif p_action = 'cok' and cus and o.status = 'review' then
-    update customer_orders set status = 'approved' where id = p_id;
-    msg := 'הלקוח אישר את ההתאמות'; perform notify_users(o.winery_id, 'winery', null, msg);
+    update customer_orders set status = 'label', label_ok_w = o.label_round where id = p_id;
+    insert into label_notes (entity, entity_id, round, side, kind) values ('corder', p_id, o.label_round, 'winery', 'approve');
+    msg := 'הלקוח אישר את ההתאמות. התווית עברה לאישור האמן'; perform notify_users(o.winery_id, 'winery', null, msg);
+    perform label_notify('corder', p_id, 'תווית של לקוח מחכה לאישור שלך', array['art']);
   elsif p_action = 'cchange' and cus and o.status = 'review' then
     update customer_orders set status = 'sent' where id = p_id;
     msg := 'הלקוח ביקש שינוי: ' || coalesce(p_note, ''); perform notify_users(o.winery_id, 'winery', null, msg);
@@ -1745,7 +1750,7 @@ begin
   if ar.pre_consent and x.license_type = 'one' and x.qty_tier = 'a' and not x.exclusive then
     update deals set status = 'sign', updated_at = now() where id = p_deal;
     perform deal_make_contract(p_deal);
-    perform notify_deal(p_deal, 'הבקשה אושרה אוטומטית. החוזה מוכן לחתימה', array['winery','artist','gallery']::app_role[]);
+    perform notify_deal(p_deal, 'המחיר אושר מראש. נשאר שהיינן והאמן או הגלריה יאשרו את התווית, ואז חותמים', array['winery','artist','gallery']::app_role[]);
   else
     perform notify_deal(p_deal, 'הבקשה תומחרה אוטומטית. נדרשת הסכמת האמן', array['artist']::app_role[]);
   end if;
@@ -1896,7 +1901,7 @@ begin
   end loop;
 
   -- הזמנות לקוח שלא זזו
-  for o in select * from customer_orders where status in ('sent','review') and updated_at < now() - ca loop
+  for o in select * from customer_orders where status in ('sent','review','label') and updated_at < now() - ca loop
     update customer_orders set status = 'cancel',
       log = log || jsonb_build_array(jsonb_build_object('t', 'ההזמנה נסגרה אוטומטית אחרי ' || s.cancel_days || ' יום בלי תגובה', 'at', now())) where id = o.id;
     perform notify_users(o.winery_id, 'winery', null, 'הזמנת לקוח ' || o.id || ' נסגרה אחרי ' || s.cancel_days || ' יום בלי תגובה');
@@ -1908,6 +1913,9 @@ begin
   end loop;
   for o in select * from customer_orders where status = 'review' and updated_at < now() - st and customer_id is not null loop
     if remind_once('corder', o.id, 'stale:review', st) then perform notify_users(null, null, o.customer_id, 'תזכורת: היקב הציע התאמות להזמנה שלך, והן מחכות לאישורך'); n_co := n_co + 1; end if;
+  end loop;
+  for o in select * from customer_orders where status = 'label' and updated_at < now() - st loop
+    if remind_once('corder', o.id, 'stale:label', st) then perform label_notify('corder', o.id, 'תזכורת: תווית של לקוח מחכה לאישור שלך', array['art']); n_co := n_co + 1; end if;
   end loop;
   for o in select * from customer_orders where status = 'approved' and paid_at is null and updated_at < now() - st loop
     if remind_once('corder', o.id, 'stale:unpaid', st) then perform notify_users(o.winery_id, 'winery', null, 'תזכורת: הזמנת לקוח ' || o.id || ' אושרה ומחכה לתשלום'); n_co := n_co + 1; end if;
@@ -1975,5 +1983,188 @@ do $$ begin
     perform cron.schedule('daily-maintenance', '17 1 * * *', 'select public.daily_maintenance()');
   end if;
 end $$;
+
+-- =====================================================================
+--  שלב 8 · אישור תווית בסבבים: היינן והאמן או הגלריה, אף פעם לא אוטומטי
+--  כל צד מאשר, מבקש שינוי או מוסיף הערה. כל שינוי פותח סבב חדש,
+--  ומאפס את שני האישורים. בלי שני האישורים אין חתימה ואין דפוס.
+-- =====================================================================
+
+-- אישור אוטומטי של הזמנות לקוח בוטל: האישור הסופי של התווית תמיד ידני
+drop trigger if exists corders_auto_approve_t on customer_orders;
+update organizations set auto_approve = false where auto_approve;
+
+alter table deals add column if not exists label_round int not null default 1;
+alter table deals add column if not exists label_ok_w int;
+alter table deals add column if not exists label_ok_a int;
+alter table customer_orders add column if not exists label_round int not null default 1;
+alter table customer_orders add column if not exists label_ok_w int;
+alter table customer_orders add column if not exists label_ok_a int;
+alter table customer_orders drop constraint if exists customer_orders_status_check;
+alter table customer_orders add constraint customer_orders_status_check
+  check (status in ('sent','review','label','approved','print','done','cancel'));
+
+create table if not exists label_notes (
+  id         bigint generated by default as identity primary key,
+  entity     text   not null check (entity in ('deal','corder')),
+  entity_id  bigint not null,
+  round      int    not null,
+  author     uuid   default auth.uid(),
+  side       text   not null check (side in ('winery','art','customer','system')),
+  kind       text   not null check (kind in ('comment','change','approve','round')),
+  body       text   check (length(body) <= 1000),
+  created_at timestamptz not null default now()
+);
+create index if not exists label_notes_idx on label_notes (entity, entity_id, id);
+alter table label_notes enable row level security;
+
+-- מי אני מול התווית הזו: יקב, צד האמן (אמן או הגלריה שלו), לקוח
+create or replace function label_side(p_entity text, p_id bigint) returns text
+language plpgsql stable security definer set search_path = public as $$
+declare r text := coalesce(my_role()::text, ''); d deals; o customer_orders; a artists;
+begin
+  if p_entity = 'deal' then
+    select * into d from deals where id = p_id; if not found then return null; end if;
+    if r = 'winery' and d.winery_id = my_org() then return 'winery'; end if;
+    if (r = 'gallery' and d.gallery_id = my_org()) or d.artist_id = my_artist() then return 'art'; end if;
+  else
+    select * into o from customer_orders where id = p_id; if not found then return null; end if;
+    if r = 'winery' and o.winery_id = my_org() then return 'winery'; end if;
+    select * into a from artists where id = (coalesce(o.winery_design, o.design) ->> 'artist')::uuid;
+    if found and ((r = 'gallery' and a.gallery_id = my_org()) or a.user_id = auth.uid()) and (o.status in ('label','approved','print','done') or o.label_round > 1) then return 'art'; end if;
+    if o.customer_id = auth.uid() then return 'customer'; end if;
+  end if;
+  if is_admin() then return 'admin'; end if;
+  return null;
+end $$;
+grant execute on function label_side(text, bigint) to authenticated;
+
+drop policy if exists ln_read on label_notes;
+create policy ln_read on label_notes for select to authenticated using (label_side(entity, entity_id) is not null);
+
+-- הצד של האמן רואה את הזמנות הלקוחות שמחכות לאישור התווית שלו
+drop policy if exists co_art on customer_orders;
+create policy co_art on customer_orders for select to authenticated using (
+  (status in ('label','approved','print','done') or label_round > 1) and exists (
+    select 1 from artists a where a.id = (coalesce(winery_design, design) ->> 'artist')::uuid
+      and ((my_role()::text = 'gallery' and a.gallery_id = my_org()) or a.user_id = auth.uid())));
+
+create or replace function label_notify(p_entity text, p_id bigint, msg text, p_to text[]) returns void
+language plpgsql security definer set search_path = public as $$
+declare o customer_orders; a artists;
+begin
+  if p_entity = 'deal' then
+    perform notify_deal(p_id, msg, (select array_agg(x) from unnest(array[
+      case when 'winery' = any(p_to) then 'winery' end, case when 'art' = any(p_to) then 'artist' end,
+      case when 'art' = any(p_to) then 'gallery' end]) x where x is not null)::app_role[]);
+  else
+    select * into o from customer_orders where id = p_id;
+    if 'winery' = any(p_to) then perform notify_users(o.winery_id, 'winery', null, msg); end if;
+    if 'customer' = any(p_to) and o.customer_id is not null then perform notify_users(null, null, o.customer_id, msg); end if;
+    if 'art' = any(p_to) then
+      select * into a from artists where id = (coalesce(o.winery_design, o.design) ->> 'artist')::uuid;
+      if found then
+        perform notify_users(a.gallery_id, 'gallery', null, msg);
+        if a.user_id is not null then perform notify_users(null, null, a.user_id, msg); end if;
+      end if;
+    end if;
+  end if;
+end $$;
+revoke execute on function label_notify(text,bigint,text,text[]) from public, anon, authenticated;
+
+-- הפעולה: לאשר, לבקש שינוי, להוסיף הערה
+create or replace function label_action(p_entity text, p_id bigint, p_action text, p_body text default null) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare side text := label_side(p_entity, p_id); rnd int; okw int; oka int; st text; who text;
+begin
+  if side is null or side = 'admin' and p_action <> 'comment' then raise exception 'אין גישה לתווית הזו'; end if;
+  p_body := nullif(left(btrim(coalesce(p_body, '')), 1000), '');
+  if p_entity = 'deal' then
+    select label_round, label_ok_w, label_ok_a, status::text into rnd, okw, oka, st from deals where id = p_id for update;
+    if st in ('active','rejected','cancelled') then raise exception 'העסקה כבר סגורה'; end if;
+  else
+    select label_round, label_ok_w, label_ok_a, status into rnd, okw, oka, st from customer_orders where id = p_id for update;
+    if st in ('print','done','cancel') then raise exception 'ההזמנה כבר בדפוס או סגורה'; end if;
+  end if;
+  who := case side when 'winery' then 'היינן' when 'art' then 'האמן או הגלריה' else 'הלקוח' end;
+
+  if p_action = 'comment' then
+    if p_body is null then raise exception 'ההערה ריקה'; end if;
+    insert into label_notes (entity, entity_id, round, side, kind, body) values (p_entity, p_id, rnd, side, 'comment', p_body);
+    perform label_notify(p_entity, p_id, 'הערה חדשה על התווית: ' || left(p_body, 80),
+      array_remove(array['winery','art', case when p_entity = 'corder' then 'customer' end], side));
+
+  elsif p_action = 'approve' then
+    if side not in ('winery','art') then raise exception 'רק היינן והאמן או הגלריה מאשרים את התווית'; end if;
+    if p_entity = 'corder' and side = 'art' and st <> 'label' then raise exception 'התווית עוד לא הגיעה לאישור שלך'; end if;
+    insert into label_notes (entity, entity_id, round, side, kind, body) values (p_entity, p_id, rnd, side, 'approve', p_body);
+    if side = 'winery' then okw := rnd; else oka := rnd; end if;
+    if p_entity = 'deal' then
+      update deals set label_ok_w = okw, label_ok_a = oka where id = p_id;
+    else
+      update customer_orders set label_ok_w = okw, label_ok_a = oka where id = p_id;
+    end if;
+    if okw = rnd and oka = rnd then
+      if p_entity = 'corder' then
+        update customer_orders set status = 'approved',
+          log = log || jsonb_build_array(jsonb_build_object('t', 'התווית אושרה על ידי היינן והאמן', 'at', now())) where id = p_id;
+        perform label_notify(p_entity, p_id, 'התווית אושרה סופית. אפשר לעבור לתשלום', array['winery','customer','art']);
+      else
+        perform label_notify(p_entity, p_id, 'התווית אושרה על ידי שני הצדדים', array['winery','art']);
+      end if;
+    else
+      perform label_notify(p_entity, p_id, who || ' אישר את התווית. מחכים לאישור השני', array_remove(array['winery','art'], side));
+    end if;
+
+  elsif p_action = 'change' then
+    if side not in ('winery','art') then raise exception 'רק היינן והאמן או הגלריה מבקשים שינוי בתווית'; end if;
+    if p_body is null then raise exception 'צריך לכתוב מה לשנות'; end if;
+    insert into label_notes (entity, entity_id, round, side, kind, body) values (p_entity, p_id, rnd, side, 'change', p_body);
+    rnd := rnd + 1;
+    insert into label_notes (entity, entity_id, round, side, kind, body) values (p_entity, p_id, rnd, 'system', 'round', 'סבב ' || rnd);
+    if p_entity = 'deal' then
+      update deals set label_round = rnd, label_ok_w = null, label_ok_a = null where id = p_id;
+    else
+      update customer_orders set label_round = rnd, label_ok_w = null, label_ok_a = null,
+        status = case when status in ('label','approved') then 'sent' else status end,
+        log = log || jsonb_build_array(jsonb_build_object('t', who || ' ביקש שינוי בתווית', 'at', now())) where id = p_id;
+    end if;
+    perform label_notify(p_entity, p_id, who || ' ביקש שינוי בתווית: ' || left(p_body, 80), array_remove(array['winery','art'], side));
+  else
+    raise exception 'פעולה לא מוכרת';
+  end if;
+
+  return jsonb_build_object('round', rnd, 'ok_w', okw, 'ok_a', oka);
+end $$;
+grant execute on function label_action(text, bigint, text, text) to authenticated;
+
+-- חתימה על חוזה רק אחרי ששני הצדדים אישרו את התווית בסבב הנוכחי
+create or replace function deals_label_gate() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if old.status = 'sign' and new.status = 'pay'
+     and not (coalesce(old.label_ok_w, 0) = old.label_round and coalesce(old.label_ok_a, 0) = old.label_round) then
+    raise exception 'לפני החתימה צריך שהיינן והאמן או הגלריה יאשרו את התווית';
+  end if;
+  return new;
+end $$;
+drop trigger if exists deals_label_gate_t on deals;
+create trigger deals_label_gate_t before update of status on deals for each row execute function deals_label_gate();
+
+-- היקב ערך את העיצוב של עסקה פתוחה: נפתח סבב חדש והאישורים מתאפסים
+create or replace function designs_new_round() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare d record;
+begin
+  if (new.pos, new.zoom, new.layout, new.work_id, new.wine_id) is not distinct from (old.pos, old.zoom, old.layout, old.work_id, old.wine_id) then return new; end if;
+  for d in select id, label_round from deals where design_code = new.code and status in ('sent','priced','sign') loop
+    update deals set label_round = d.label_round + 1, label_ok_w = null, label_ok_a = null where id = d.id;
+    insert into label_notes (entity, entity_id, round, side, kind, body) values ('deal', d.id, d.label_round + 1, 'system', 'round', 'סבב ' || (d.label_round + 1) || ': היקב עדכן את העיצוב');
+    perform label_notify('deal', d.id, 'גרסה חדשה של התווית מחכה לאישור', array['art']);
+  end loop;
+  return new;
+end $$;
+drop trigger if exists designs_new_round_t on designs;
+create trigger designs_new_round_t after update on designs for each row execute function designs_new_round();
 
 select 'ההקמה הסתיימה בהצלחה' as result;
