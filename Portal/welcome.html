@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>סדנת התווית · ציור אמיתי על בקבוק היין</title>
+<meta name="description" content="יקבים בוחרים ציורים של אמנים ישראלים, רואים את הבקבוק המוגמר וסוגרים רישיון במקום אחד.">
+<meta name="theme-color" content="#EEEDEA">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;900&family=IBM+Plex+Sans+Hebrew:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--stone:#EEEDEA;--paper:#FBFBF9;--ink:#1D1D1B;--muted:#5E5D59;--line:#DCDBD7;--gold:#A6884A;--glass:#1F2A22;
+  --display:"Frank Ruhl Libre","David Libre",serif;--body:"IBM Plex Sans Hebrew",Heebo,Arial,sans-serif}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--stone);color:var(--ink);font:17px/1.7 var(--body)}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+header.top{display:flex;justify-content:space-between;align-items:center;padding:22px 0}
+.mark{font-family:var(--display);font-size:22px;font-weight:500;text-decoration:none}
+.enter{font-size:15px;text-decoration:none;border-bottom:1px solid var(--ink);padding-bottom:2px}
+
+/* פתיחה: הבקבוק הוא הרגע היחיד שזז */
+.hero{display:grid;grid-template-columns:1fr;gap:24px;align-items:center;padding:24px 0 72px}
+.hero h1{font-family:var(--display);font-weight:400;font-size:clamp(44px,8vw,92px);line-height:1.02;letter-spacing:-.01em;margin:0}
+.hero p{font-size:19px;color:var(--muted);max-width:30em;margin:22px 0 32px}
+.cta{display:inline-flex;align-items:center;min-height:52px;padding:0 26px;background:var(--ink);color:var(--paper);text-decoration:none;font-weight:500;border-radius:2px}
+.cta.alt{background:none;color:var(--ink);border:1px solid var(--ink);margin-inline-start:10px}
+.stage{position:relative;display:grid;place-items:center;min-height:520px}
+.stage::before{content:"";position:absolute;bottom:42px;width:62%;height:28px;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.18),transparent)}
+.bottle{width:min(170px,42vw);height:auto;animation:rise 1.4s cubic-bezier(.2,.8,.2,1) both}
+.bottle .lbl{animation:show .9s .7s both}
+@keyframes rise{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:none}}
+@keyframes show{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.bottle,.bottle .lbl{animation:none}}
+
+section{padding:72px 0;border-top:1px solid var(--line)}
+h2{font-family:var(--display);font-weight:400;font-size:clamp(30px,4.4vw,44px);line-height:1.15;margin:0 0 36px;max-width:16em}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:28px;counter-reset:s}
+.steps li{counter-increment:s;padding-top:18px;border-top:1px solid var(--ink)}
+.steps li::before{content:counter(s);font-family:var(--display);font-size:40px;line-height:1;display:block;margin-bottom:10px;color:#86692F}
+.steps b{display:block;font-weight:600;margin-bottom:4px}
+.steps span{color:var(--muted);font-size:16px}
+
+.who{display:grid;gap:40px}
+.who h3{font-family:var(--display);font-weight:500;font-size:26px;margin:0 0 8px}
+.who p{margin:0;color:var(--muted)}
+
+.wall{display:flex;gap:18px;overflow-x:auto;padding:4px 2px 18px;scroll-snap-type:x mandatory}
+.wall figure{margin:0;flex:none;scroll-snap-align:start}
+.wall img{display:block;height:300px;width:auto;background:var(--paper);box-shadow:0 1px 0 var(--line),0 12px 24px -16px rgba(0,0,0,.35)}
+.wall figcaption{font-size:14px;color:var(--muted);margin-top:10px}
+.note{font-size:15px;color:var(--muted);margin-top:8px}
+
+.close{text-align:center;padding:96px 0}
+.close h2{margin:0 auto 28px}
+footer{border-top:1px solid var(--line);padding:28px 0 48px;font-size:14px;color:var(--muted);display:flex;gap:18px;flex-wrap:wrap}
+
+@media (min-width:860px){
+  .hero{grid-template-columns:1.15fr .85fr;padding:40px 0 96px}
+  .steps{grid-template-columns:repeat(4,1fr)}
+  .who{grid-template-columns:repeat(3,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="mark" href="welcome.html">סדנת התווית</a>
+    <a class="enter" href="./">כניסה</a>
+  </header>
+
+  <main>
+    <div class="hero">
+      <div>
+        <h1>ציור אמיתי על בקבוק היין</h1>
+        <p>יקבים בוחרים יצירה של אמן ישראלי, רואים מיד את הבקבוק המוגמר, וסוגרים רישיון מסודר. האמן מקבל קרדיט ותמורה על כל בציר.</p>
+        <a class="cta" href="./">להיכנס או להצטרף</a><a class="cta alt" href="#how">איך זה עובד</a>
+      </div>
+      <div class="stage" aria-hidden="true">
+        <svg class="bottle" viewBox="0 0 120 400" role="img">
+          <defs>
+            <linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#121A15"/><stop offset=".35" stop-color="#2E3B31"/><stop offset=".55" stop-color="#1F2A22"/><stop offset="1" stop-color="#0E1410"/></linearGradient>
+            <linearGradient id="sh" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".18"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+            <clipPath id="c"><rect x="22" y="196" width="76" height="98"/></clipPath>
+          </defs>
+          <rect x="49" y="6" width="22" height="30" rx="2" fill="#6B1F24"/>
+          <path d="M50 34h20v62c0 18 34 34 34 62v226c0 6-4 10-10 10H26c-6 0-10-4-10-10V158c0-28 34-44 34-62z" fill="url(#g)"/>
+          <g class="lbl">
+            <rect x="18" y="186" width="84" height="150" fill="#F7F5F0"/>
+            <image href="img/p7.jpg" x="22" y="196" width="76" height="98" preserveAspectRatio="xMidYMid slice" clip-path="url(#c)"/>
+            <text x="60" y="312" text-anchor="middle" font-family="Frank Ruhl Libre,serif" font-size="9" fill="#1D1D1B">פרח סגול</text>
+            <text x="60" y="324" text-anchor="middle" font-family="IBM Plex Sans Hebrew,sans-serif" font-size="5" fill="#5E5D59">ארז אהרון</text>
+          </g>
+          <rect x="24" y="150" width="10" height="230" fill="url(#sh)" opacity=".8"/>
+        </svg>
+      </div>
+    </div>
+
+    <section id="how" aria-labelledby="how-h">
+      <h2 id="how-h">מהציור לבקבוק, בארבעה צעדים</h2>
+      <ol class="steps">
+        <li><b>בוחרים יצירה</b><span>מאגר אצור של ציורים, כל אחד עם הסיפור שלו ועם האמן מאחוריו.</span></li>
+        <li><b>רואים את הבקבוק</b><span>התווית נבנית על היין שלכם, עם צילום ריאליסטי לפני שמחליטים.</span></li>
+        <li><b>סוגרים רישיון</b><span>המחיר שקוף, הגלריה מאשרת, והחוזה נחתם בתוך המערכת.</span></li>
+        <li><b>מדפיסים</b><span>קובץ דפוס מוכן עובר לבית הדפוס, עם גלישה וסימני חיתוך.</span></li>
+      </ol>
+    </section>
+
+    <section aria-labelledby="who-h">
+      <h2 id="who-h">שלושה צדדים, מקום אחד</h2>
+      <div class="who">
+        <div><h3>ליקבים</h3><p>תווית שאין לאף יקב אחר, בלי לרדוף אחרי אמנים ובלי חוזים מאפס. ואפשר לפתוח את זה גם ללקוחות, שיעצבו בקבוק אישי מתוך היצירות שבחרתם.</p></div>
+        <div><h3>לאמנים ולגלריות</h3><p>היצירה מגיעה לשולחנות חדשים, עם קרדיט על כל בקבוק ותמורה על כל רישיון. קובץ המקור נשאר שמור, והאמן קובע מה מותר לחתוך ולשנות.</p></div>
+        <div><h3>ללקוחות היקב</h3><p>בקבוק לאירוע, למתנה או לחברה, עם ציור שבחרתם והקדשה משלכם. המחיר מתעדכן בכל בחירה, והיקב מאשר לפני הדפוס.</p></div>
+      </div>
+    </section>
+
+    <section aria-labelledby="wall-h">
+      <h2 id="wall-h">מתוך המאגר</h2>
+      <div class="wall" tabindex="0" aria-label="יצירות לדוגמה, אפשר לגלול הצידה">
+        <figure><img src="img/p7.jpg" alt="פרח סגול תלוי על רקע תכלת" loading="lazy"><figcaption>פרח סגול · ארז אהרון</figcaption></figure>
+        <figure><img src="img/p1.jpg" alt="ענף כותנה על רקע טפט" loading="lazy"><figcaption>כותנה על טפט · ארז אהרון</figcaption></figure>
+        <figure><img src="img/p3.jpg" alt="חורשה ירוקה" loading="lazy"><figcaption>חורשה · ארז אהרון</figcaption></figure>
+        <figure><img src="img/p8.jpg" alt="שיבולת" loading="lazy"><figcaption>שיבולת · ארז אהרון</figcaption></figure>
+        <figure><img src="img/p10.jpg" alt="נוף ים" loading="lazy"><figcaption>ים · ארז אהרון</figcaption></figure>
+        <figure><img src="img/p5.jpg" alt="ענף כותנה" loading="lazy"><figcaption>כותנה I · ארז אהרון</figcaption></figure>
+      </div>
+      <p class="note">ציורי שמן על בד. אמנים וגלריות נוספים מצטרפים בהדרגה.</p>
+    </section>
+
+    <section class="close" aria-labelledby="close-h">
+      <h2 id="close-h">יש לכם יקב, גלריה או אמנות שמחכה לבקבוק?</h2>
+      <a class="cta" href="./">להצטרף</a>
+    </section>
+  </main>
+
+  <footer>
+    <span>סדנת התווית</span>
+    <a href="privacy.html">פרטיות ותנאי שימוש</a>
+    <a href="accessibility.html">הצהרת נגישות</a>
+  </footer>
+</div>
+</body>
+</html>

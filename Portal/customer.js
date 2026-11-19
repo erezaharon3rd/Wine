@@ -6,7 +6,7 @@ window.VX=window.VX||{};
 (function(){
 const VX=window.VX;
 document.head.insertAdjacentHTML('beforeend',`<style>
-.face{width:132px;height:132px;border-radius:50%;background:#DADAD8 center/cover;display:grid;place-items:center;margin:8px auto 10px;font-family:var(--display);font-size:40px;color:#fff;border:1px solid var(--line)}
+.face{width:132px;height:132px;border-radius:50%;background:#8E8C85 center/cover;display:grid;place-items:center;margin:8px auto 10px;font-family:var(--display);font-size:40px;color:#fff;border:1px solid var(--line)}
 .face.sm{width:64px;height:64px;font-size:22px;margin:0}
 .acard{display:flex;gap:14px;align-items:center;width:100%;text-align:start;background:var(--surface);border:1px solid var(--line);padding:12px;cursor:pointer;margin-top:10px}
 .acard[disabled]{opacity:.55;cursor:default}

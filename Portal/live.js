@@ -49,7 +49,7 @@ function vLive(){
     <div class="fld" id="lemf"><label for="lem">דוא״ל</label><input id="lem" type="email" inputmode="email" autocomplete="email" dir="ltr" placeholder="name@example.com" value="${esc(LV.email)}"><span class="err" id="lemerr" hidden>צריך כתובת דוא״ל תקינה</span></div>
     <div class="fld" id="lpwf"><label for="lpw">סיסמה</label><input id="lpw" type="password" autocomplete="current-password" dir="ltr" placeholder="לפחות 8 תווים"><span class="err" id="lpwerr" hidden>צריך סיסמה של 8 תווים לפחות</span></div>
     <div class="row" style="margin-top:14px"><button class="btn alt" data-a="lup">חשבון חדש</button><button class="btn" data-a="lin">להיכנס</button></div>
-    <p class="note" style="text-align:center;margin-top:18px">פתיחת חשבון היא הסכמה <a href="privacy.html" style="color:inherit">לתנאי השימוש ולמדיניות הפרטיות</a></p>
+    <p class="note" style="text-align:center;margin-top:18px">פתיחת חשבון היא הסכמה <a href="privacy.html" style="color:inherit">לתנאי השימוש ולמדיניות הפרטיות</a> · <a href="accessibility.html" style="color:inherit">נגישות</a></p>
     <p class="note">בפעם הראשונה בוחרים "חשבון חדש" עם סיסמה שבוחרים עכשיו. בפעמים הבאות נכנסים עם אותה סיסמה.</p>
     <button class="link" data-a="lsend">לקבל קישור כניסה במייל במקום סיסמה</button></div>`;
   if(LV.state==='sent')return `<div class="login"><span class="eyebrow">כמעט שם</span><h1>בדוק את המייל</h1><p class="lead">שלחנו קישור כניסה ל־<span class="num">${esc(LV.email)}</span>. כדאי לפתוח אותו בטלפון הזה וללחוץ על הקישור. אם המייל לא מגיע תוך דקה, כדאי לבדוק גם בתיקיית הספאם.</p>
@@ -335,9 +335,9 @@ sb.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_OUT'&&LV.state==='ready'){window.
   const {data:{session}}=await sb.auth.getSession();
   if(!session){LV.state='login';render();return}
   await loadMe(session.user);
-window.LX=window.LX||{};['sb','q','run','run2','heb2','textModel','gfetch'].forEach(k=>{try{const v=eval(k);if(v!==undefined&&!window.LX[k])window.LX[k]=v}catch(e){}});
+window.LX=window.LX||{};try{window.LX.sb=window.LX.sb||sb}catch(e){}try{window.LX.q=window.LX.q||q}catch(e){}try{window.LX.run=window.LX.run||run}catch(e){}try{window.LX.run2=window.LX.run2||run2}catch(e){}try{window.LX.heb2=window.LX.heb2||heb2}catch(e){}try{window.LX.textModel=window.LX.textModel||textModel}catch(e){}try{window.LX.gfetch=window.LX.gfetch||gfetch}catch(e){}
 })();
-window.LX=window.LX||{};['sb','q','run','run2','heb2','textModel','gfetch'].forEach(k=>{try{const v=eval(k);if(v!==undefined&&!window.LX[k])window.LX[k]=v}catch(e){}});
+window.LX=window.LX||{};try{window.LX.sb=window.LX.sb||sb}catch(e){}try{window.LX.q=window.LX.q||q}catch(e){}try{window.LX.run=window.LX.run||run}catch(e){}try{window.LX.run2=window.LX.run2||run2}catch(e){}try{window.LX.heb2=window.LX.heb2||heb2}catch(e){}try{window.LX.textModel=window.LX.textModel||textModel}catch(e){}try{window.LX.gfetch=window.LX.gfetch||gfetch}catch(e){}
 })();
 
 /* ════════ stage 2: customer flow, render engine, notifications, real data ════════ */
@@ -431,7 +431,7 @@ window.aiAnalyze=async function(src){
 };
 let shooting=false;
 function shootUI(where,spec,done){if(shooting)return;shooting=true;const h=document.querySelector(where);if(h)h.innerHTML=wait('מצלמים את הבקבוק','בדרך כלל עד דקה. אפשר להמשיך לחכות כאן');
-  shootReal(spec).then(r=>{done(r);toast(r.cached?'הצילום הזה כבר היה מוכן':'הצילום מוכן')}).catch(e=>{console.error(e);toast(heb2(e));render()}).finally(()=>{shooting=false})}
+  shootReal(spec).then(r=>{done(r);if(!r.cached&&window.track)track('render_done');toast(r.cached?'הצילום הזה כבר היה מוכן':'הצילום מוכן')}).catch(e=>{console.error(e);toast(heb2(e));render()}).finally(()=>{shooting=false})}
 A.cshoot=function(){const d=S.cd;if(!d)return;const wi=wine(d.wine);
   shootUI('.hero',{type:wi.type,work:d.work,o:{pos:d.pos,zoom:d.zoom,shape:d.shape,name:d.name||wi.n,year:wi.y,ded:d.ded,foil:d.foil,emboss:d.emboss,artist:artistName(d.artist)}},r=>{d.render=r.path;save();render()})};
 A.shoot=function(){const D=S.draft,wi=wine(D.wine);
@@ -467,7 +467,7 @@ V.gallery_more=()=>{const now=new Date();const ms=[...Array(5)].map((_,i)=>{cons
 A.catalog=()=>{const ws=(S._orgL||[]).filter(o=>o.kind==='winery').map(o=>o.name);S._cat=S._cat||{w:ws[0]||'',sel:{}};window.CATW=ws;catSheet()};
 /* curator: the file's real pixel size */
 V.curator_review=()=>{const r=S.works.filter(w=>w.st==='review');return `<h1>בדיקת קבצים</h1><p class="lead">איכות קובץ ורזולוציה. את היצירה עצמה הגלריה כבר אישרה.</p>${r.length?r.map(w=>{const p=S._px[w.id];const cm=p?Math.round(Math.max(...p)/300*2.54):0;return `<div class="panel" style="margin-top:10px"><div style="display:flex;gap:12px"><span class="th sq" style="width:72px;height:72px;background-image:url(${img(w.id)})"></span><div style="flex:1"><b style="font-weight:500">${esc(w.t)}</b><div class="note" style="margin:2px 0 0">${p?`<span class="num">${p[0]}×${p[1]}</span> פיקסלים · בהדפסה 300dpi עד ${cm} ס״מ ${Math.max(...p)>=3000?'✓':'· קטן מהנדרש'}`:'גודל הקובץ לא נשמר'}</div></div></div><div class="row" style="margin-top:10px"><button class="btn alt sm" data-a="creturn" data-v="${w.id}">להחזיר לגלריה</button><button class="btn sm" data-a="cok" data-v="${w.id}">לפרסם במאגר</button></div></div>`}).join(''):empty('הכול נבדק','יצירה חדשה תגיע אחרי אישור הגלריה.')}`};
-window.LX=window.LX||{};['sb','q','run','run2','heb2','textModel','gfetch'].forEach(k=>{try{const v=eval(k);if(v!==undefined&&!window.LX[k])window.LX[k]=v}catch(e){}});
+window.LX=window.LX||{};try{window.LX.sb=window.LX.sb||sb}catch(e){}try{window.LX.q=window.LX.q||q}catch(e){}try{window.LX.run=window.LX.run||run}catch(e){}try{window.LX.run2=window.LX.run2||run2}catch(e){}try{window.LX.heb2=window.LX.heb2||heb2}catch(e){}try{window.LX.textModel=window.LX.textModel||textModel}catch(e){}try{window.LX.gfetch=window.LX.gfetch||gfetch}catch(e){}
 })();
 
 (function(){
@@ -500,5 +500,5 @@ const _h=window.liveHydrate;window.liveHydrate=async()=>{await _h();if(['curator
   const P={};(S.profiles||[]).forEach(p=>P[p.id]=p.full_name||p.email);let urls={};const ps=r.map(x=>x.image_path).filter(Boolean);
   if(ps.length){try{const u=await q(sb.storage.from('renders').createSignedUrls(ps,3600));u.forEach(x=>{if(x.signedUrl)urls[x.path]=x.signedUrl})}catch(e){}}
   S._rq=r.map(x=>({...x,url:urls[x.image_path],who:P[x.created_by]}))}};
-window.LX=window.LX||{};['sb','q','run','run2','heb2','textModel','gfetch'].forEach(k=>{try{const v=eval(k);if(v!==undefined&&!window.LX[k])window.LX[k]=v}catch(e){}});
+window.LX=window.LX||{};try{window.LX.sb=window.LX.sb||sb}catch(e){}try{window.LX.q=window.LX.q||q}catch(e){}try{window.LX.run=window.LX.run||run}catch(e){}try{window.LX.run2=window.LX.run2||run2}catch(e){}try{window.LX.heb2=window.LX.heb2||heb2}catch(e){}try{window.LX.textModel=window.LX.textModel||textModel}catch(e){}try{window.LX.gfetch=window.LX.gfetch||gfetch}catch(e){}
 })();

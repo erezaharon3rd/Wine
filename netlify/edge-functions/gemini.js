@@ -64,9 +64,12 @@ export default async (req) => {
           : { headers: { 'x-goog-api-key': key } });
         const txt = await r.text();
         clearInterval(beat);
+        // הצלחה נספרת במכסה; כישלון של הספק לא נספר ונכנס למפסק הבטיחות
+        if (input.body) await sb('/rest/v1/rpc/engine_report', { method: 'POST', body: JSON.stringify({ p_ok: r.ok }) }).catch(() => {});
         ctrl.enqueue(enc.encode('{"status":' + r.status + ',"data":' + (txt.trim() || '{}') + '}'));
       } catch (e) {
         clearInterval(beat);
+        if (input.body) await sb('/rest/v1/rpc/engine_report', { method: 'POST', body: JSON.stringify({ p_ok: false }) }).catch(() => {});
         ctrl.enqueue(enc.encode(JSON.stringify({ status: 502, data: { error: { message: String(e && e.message || e) } } })));
       }
       ctrl.close();

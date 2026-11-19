@@ -3,13 +3,13 @@
 'use strict';
 (function(){
 document.head.insertAdjacentHTML('beforeend',`<style>
-:root{--bg:#EEEDEA;--surface:#FBFBF9;--ink:#1D1D1B;--muted:#5E5D59;--soft:#77766F;--line:#DCDBD7;--gold:#A6884A;--gold2:#C9AE72;--goldsoft:rgba(166,136,74,.13);--ease:cubic-bezier(.2,.8,.2,1);--spring:cubic-bezier(.2,.9,.25,1.12)}
+:root{--bg:#EEEDEA;--surface:#FBFBF9;--ink:#1D1D1B;--muted:#5E5D59;--soft:#64635D;--line:#DCDBD7;--gold:#A6884A;--gold2:#C9AE72;--goldsoft:rgba(166,136,74,.13);--ease:cubic-bezier(.2,.8,.2,1);--spring:cubic-bezier(.2,.9,.25,1.12)}
 body{background:#E2E1DD}
 .app{box-shadow:0 0 0 1px rgba(0,0,0,.03),0 30px 80px -40px rgba(0,0,0,.25)}
 h1{font-size:34px;letter-spacing:-.015em}
 .login h1{font-size:46px;letter-spacing:-.02em}
 ::selection{background:var(--goldsoft)}
-:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px;box-shadow:0 0 0 4px var(--goldsoft)}
 
 /* touch: everything answers the finger */
 .btn,.chip,.li,.tile,.acard,.role,.tabbar button,.hero,.ib{transition:transform .14s var(--ease),box-shadow .2s var(--ease),border-color .2s,background-color .2s,color .2s}
@@ -100,6 +100,21 @@ main.enter~.actbar{animation:barUp .45s var(--spring) both}
 main.enter .face:not(.sm){animation:bRise .8s var(--spring) both}
 
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.login h1{color:var(--ink);background:none}}
+
+/* ── מחשב: ניווט בצד, תוכן רחב יותר, חלונות במרכז ── */
+@media (min-width:1000px){
+  body{background:#E3E2DE}
+  .app{max-width:1120px;padding-inline-start:232px;box-shadow:0 0 0 1px var(--line)}
+  .tabbar{top:0;bottom:0;transform:none;left:auto;right:max(0px,calc(50% - 560px));width:232px;max-width:none;flex-direction:column;justify-content:flex-start;gap:2px;border-top:0;border-inline-end:1px solid var(--line);padding:84px 14px 20px}
+  .tabbar button{flex:none;flex-direction:row;justify-content:flex-start;gap:12px;min-height:46px;padding:0 14px;font-size:15px}
+  .tabbar button[aria-current="page"]{background:var(--surface)}
+  .tabbar .bd{position:static;margin:0 auto 0 0}
+  #m{max-width:820px;margin-inline:auto;width:100%}
+  .actbar{max-width:820px;left:calc(50% - 116px)}
+  .ov{align-items:center}
+  .sheet{max-width:560px;border-radius:6px;max-height:86%}
+  .toast{left:calc(50% - 116px)}
+}
 </style>`);
 
 /* ── screen changes: settle, or slide when going deeper ── */

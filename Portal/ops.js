@@ -68,7 +68,7 @@ V.admin_settings=()=>{let h=_as();h=h.replace(/<h3>תבניות חוזה<\/h3>[\
   const on=id=>(S.orgs||[]).find(o=>o.id===id)?.name||'';
   const live=(S._inv||[]).filter(i=>!i.revoked&&new Date(i.expires_at)>new Date());
   return h+`
-  <h3>קובצי יצירות</h3><div class="panel"><p class="note" style="margin-top:0">${mv?`${mv} יצירות עדיין בלי הגנה. ההעברה שומרת את קובץ המקור באחסון פרטי ויוצרת תצוגה מקדימה עם סימן מים. יקבים ולקוחות רואים רק את התצוגה, ובית הדפוס מקבל את המקור אחרי אישור.`:'כל היצירות שמורות באחסון פרטי, עם תצוגה מקדימה מוגנת.'}</p>
+  <h3>קובצי יצירות</h3><div class="panel"><p class="note" style="margin-top:0">${!(S.works||[]).filter(w=>w.st!=='hidden').length?'אין עדיין יצירות במערכת. אחרי שיצירות יועלו, אפשר יהיה להעביר אותן מכאן.':mv?`${mv} יצירות עדיין בלי הגנה. ההעברה שומרת את קובץ המקור באחסון פרטי ויוצרת תצוגה מקדימה עם סימן מים. יקבים ולקוחות רואים רק את התצוגה, ובית הדפוס מקבל את המקור אחרי אישור.`:`כל ${(S.works||[]).filter(w=>w.st!=='hidden').length} היצירות שמורות באחסון פרטי, עם תצוגה מקדימה מוגנת.`}</p>
     ${mv?`<button class="btn sm wide" data-a="migrate">להעביר ${mv} יצירות</button>`:''}</div>
   <h3>קישורי הצטרפות</h3><div class="panel"><p class="note" style="margin-top:0">שולחים קישור לאדם חדש. אחרי ההרשמה הוא משויך לארגון ולתפקיד, בלי לחכות לאישור. הקישור בתוקף 14 יום.</p>
     <div class="two"><div class="fld"><label for="ivo">ארגון</label><select id="ivo">${orgs.filter(o=>KIND_ROLE[o.kind]).map(o=>`<option value="${o.id}" data-k="${o.kind}">${esc(o.name)}</option>`).join('')}</select></div>
@@ -131,6 +131,82 @@ const _ap=V.artist_profile;
 if(_ap)V.artist_profile=()=>_ap().replace(/(<textarea id="bio">[\s\S]*?<\/textarea><\/div>)/,'$1<button class="btn sm alt wide" style="margin:8px 0" data-a="aibio">לנסח הצעה בעזרת AI</button>');
 
 document.head.insertAdjacentHTML('beforeend','<style>.lnk{background:none;border:0;padding:0;color:var(--muted);text-decoration:underline;font:inherit;cursor:pointer}</style>');
+
+
+/* ── הצטרפות עצמית: מי שנרשם בלי קישור משאיר בקשה ── */
+const KINDS={gallery:['גלריה','שם הגלריה','אמנים שהגלריה מייצגת, סגנון'],artist:['אמן או אמנית','השם שלך כפי שיופיע על התווית','טכניקה, נושאים, גלריה אם יש'],winery:['יקב','שם היקב','אזור, סוגי יין, כמויות בשנה'],printer:['בית דפוס','שם בית הדפוס','סוגי הדפסה, זהב והבלטה']};
+let myApp;const pending=()=>window.ME&&!ME.role&&ME.status==='pending';
+async function loadMyApp(){try{myApp=(await sb.from('applications').select('id,kind,name,status,note').eq('created_by',ME.id).order('id',{ascending:false}).limit(1).maybeSingle()).data||null}catch(e){myApp=null}}
+function joinBox(){const k=S._jk||'gallery',K=KINDS[k];
+  if(myApp&&myApp.status==='new')return `<div class="panel" style="margin-top:22px;text-align:right"><b style="font-weight:600">הבקשה שלך נשלחה</b><p class="note" style="margin:6px 0 0">${esc(KINDS[myApp.kind]?.[0]||'')} · ${esc(myApp.name)}. נעדכן כאן כשהיא תאושר. אפשר לבדוק שוב מדי פעם.</p></div>`;
+  return `<div class="panel" style="margin-top:22px;text-align:right">${myApp?.status==='rejected'?`<p class="note" style="margin-top:0">הבקשה הקודמת לא אושרה${myApp.note?`: ${esc(myApp.note)}`:''}. אפשר לשלוח בקשה חדשה.</p>`:''}
+    <b style="font-weight:600">הגעת בלי קישור הזמנה? אפשר לבקש להצטרף</b>
+    <div class="chips" role="group" aria-label="סוג ההצטרפות" style="margin:12px 0 4px">${Object.entries(KINDS).map(([v,x])=>`<button class="chip" aria-pressed="${v===k}" data-a="jkind" data-v="${v}">${x[0]}</button>`).join('')}</div>
+    <div class="fld"><label for="jn">${K[1]}</label><input id="jn" maxlength="80" autocomplete="organization"></div>
+    <div class="fld"><label for="jd">כמה מילים</label><textarea id="jd" maxlength="600" placeholder="${K[2]}"></textarea></div>
+    <div class="two"><div class="fld"><label for="js">אתר או אינסטגרם</label><input id="js" maxlength="200" dir="ltr"></div><div class="fld"><label for="jc">טלפון</label><input id="jc" maxlength="40" inputmode="tel" dir="ltr" autocomplete="tel"></div></div>
+    <button class="btn wide" style="margin-top:12px" data-a="jsend">לשלוח בקשה</button></div>`}
+const _rnd=window.render;
+window.render=render=function(){_rnd();if(!pending())return;const box=document.querySelector('#app .login');if(!box||box.querySelector('[data-join]'))return;
+  const d=document.createElement('div');d.dataset.join='1';d.innerHTML=myApp===undefined?'':joinBox();box.appendChild(d);
+  if(myApp===undefined)loadMyApp().then(()=>{d.innerHTML=joinBox()})};
+setTimeout(()=>{if(pending())render()},0);setTimeout(()=>{if(pending()&&!document.querySelector('[data-join]'))render()},800);
+A.jkind=v=>{S._jk=v;const d=document.querySelector('[data-join]');if(d)d.innerHTML=joinBox()};
+A.jsend=function(){const g=id=>(document.getElementById(id)?.value||'').trim(),n=g('jn');if(n.length<2){document.getElementById('jn').focus();toast('צריך שם');return}
+  (async()=>{try{const row=await q(sb.from('applications').insert({kind:S._jk||'gallery',name:n,details:g('jd')||null,site:g('js')||null,contact:g('jc')||null}).select('id,kind,name,status,note').single());myApp={...row,status:'new'};
+    const d=document.querySelector('[data-join]');if(d)d.innerHTML=joinBox();toast('הבקשה נשלחה');track('apply')}catch(e){console.error(e);toast(heb2(e))}})()};
+
+/* ── אישור בקשות הצטרפות: מנהל ואוצר ── */
+async function loadApps(){if(!['admin','curator'].includes(ME?.role))return;
+  const ap=await q(sb.from('applications').select('*').order('id',{ascending:false}));
+  S.apps=ap.map(a=>({id:a.id,kind:a.kind,n:a.name,d:[KINDS[a.kind]?.[0],a.details].filter(Boolean).join(' · '),site:a.site||'',why:a.contact||'',st:a.status==='approved'?'ok':a.status==='rejected'?'no':'new'}))}
+A.app=function(v){const [i,s]=v.split(':'),a=S.apps[+i];if(!a)return;const ok=s==='ok';
+  const gs=(S.orgs||S._orgL||[]).filter(o=>o.kind==='gallery');
+  sheet(`<h2>${ok?'לאשר':'לדחות'} את ${esc(a.n)}?</h2><p class="note">${ok?(a.kind==='artist'?'האמן יקבל חשבון וישויך לגלריה שנבחרת כאן.':`ייפתח ארגון חדש מסוג ${KINDS[a.kind]?.[0]||''}, והמבקש יהיה מנהל שלו.`):'המבקש יקבל הודעה, ויוכל לשלוח בקשה חדשה.'}</p>
+    ${ok&&a.kind==='artist'?`<div class="fld"><label for="apg">גלריה</label><select id="apg">${gs.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join('')}</select></div>`:''}
+    ${ok?'':`<div class="fld"><label for="apn">סיבה, אם רוצים לכתוב</label><textarea id="apn" maxlength="500"></textarea></div>`}
+    <div class="row" style="margin-top:14px"><button class="btn alt" data-a="close">ביטול</button><button class="btn" data-a="appgo" data-v="${a.id}:${s}">${ok?'לאשר':'לדחות'}</button></div>`)};
+A.appgo=function(v){const [id,s]=v.split(':');const g=document.getElementById('apg')?.value||null,n=document.getElementById('apn')?.value.trim()||null;closeSheet();
+  run(async()=>{await q(sb.rpc('application_decide',{p_id:+id,p_ok:s==='ok',p_gallery:g,p_note:n}));await loadApps()},s==='ok'?'הבקשה אושרה':'הבקשה נדחתה')};
+const appsBlock=()=>{const open=(S.apps||[]).filter(a=>a.st==='new');if(!open.length)return '';
+  return `<h3>בקשות הצטרפות</h3><div class="list">${open.map(a=>{const i=S.apps.indexOf(a);return `<div class="panel"><b style="font-weight:600">${esc(a.n)}</b><div class="note" style="margin:4px 0 10px">${esc(a.d)}${a.site?` · <span dir="ltr">${esc(a.site)}</span>`:''}${a.why?` · <span dir="ltr">${esc(a.why)}</span>`:''}</div><div class="row"><button class="btn sm alt" data-a="app" data-v="${i}:no">לדחות</button><button class="btn sm" data-a="app" data-v="${i}:ok">לאשר</button></div></div>`}).join('')}</div>`};
+const _au=V.admin_users;V.admin_users=()=>{const h=_au();const b=appsBlock();return b?h.replace(/(<\/h1>)/,'$1'+b):h};
+
+/* ── מנוע: תקציב, עלות, מכסות לפי יקב, מצב המפסק ── */
+async function loadEngine(){if(ME?.role!=='admin')return;try{
+  const [st,set,use]=await Promise.all([q(sb.rpc('engine_status')),q(sb.from('settings').select('*').eq('id',1).single()),q(sb.from('usage_daily').select('*').gte('day',new Date(Date.now()-30*864e5).toISOString().slice(0,10)))]);
+  S._eng=st;S._set=set;S._use=use}catch(e){console.warn(e)}}
+const nisx=n=>'₪'+Number(n||0).toLocaleString('he-IL',{maximumFractionDigits:2});
+const EV={open_app:'כניסות לאפליקציה',apply:'בקשות הצטרפות',order_sent:'הזמנות לקוח',license_request:'בקשות רישיון',render_done:'צילומים'};
+V.admin_engine=()=>{const e=S._eng||{},s=S._set||{},pct=e.budget?Math.round(100*e.spend/e.budget):0;
+  const wins=(S.orgs||[]).filter(o=>o.kind==='winery');
+  const use={};(S._use||[]).forEach(u=>{use[u.event]=(use[u.event]||0)+u.n});
+  return `<h1>מנוע הצילום</h1><p class="lead">כמה המנוע עולה החודש, וכמה כל יקב יכול לצלם.</p>
+  <div class="kpis"><div class="kpi"><b class="num">${nisx(e.spend)}</b><span>מתוך ${nisx(e.budget)} החודש</span></div><div class="kpi"><b class="num">${e.images??'—'}</b><span>צילומים</span></div><div class="kpi"><b class="num">${e.texts??'—'}</b><span>ניתוחים</span></div></div>
+  <div class="panel" style="margin-top:12px"><div style="height:6px;background:var(--line);border-radius:3px;overflow:hidden" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="ניצול התקציב"><div style="height:100%;width:${Math.min(100,pct)}%;background:${pct>=90?'#9B3B2F':'var(--ink)'}"></div></div>
+    <p class="note" style="margin:8px 0 0">${e.breaker?'<b>המנוע מושבת כרגע</b> בגלל כשלים רצופים אצל הספק. הוא יחזור לבד תוך כמה דקות.':`המנוע פעיל. ${e.failed?`${e.failed} כשלים ב-24 השעות האחרונות, והם לא נספרו במכסה.`:'אין כשלים ב-24 השעות האחרונות.'}`}</p></div>
+  <h3>הגדרות</h3><div class="panel">
+    <div class="two"><div class="fld"><label for="eb">תקציב חודשי ₪</label><input id="eb" inputmode="decimal" value="${s.engine_budget??''}"></div><div class="fld"><label for="ec">עלות צילום ₪</label><input id="ec" inputmode="decimal" value="${s.cost_image??''}"></div></div>
+    <div class="two"><div class="fld"><label for="eq">צילומים ליקב בחודש</label><input id="eq" inputmode="numeric" value="${s.render_quota??''}"></div><div class="fld"><label for="ecq">צילומים ללקוח בחודש</label><input id="ecq" inputmode="numeric" value="${s.customer_render_quota??''}"></div></div>
+    <button class="btn sm wide" style="margin-top:10px" data-a="engsave">לשמור</button></div>
+  ${wins.length?`<h3>מכסה מיוחדת ליקב</h3><div class="list">${wins.map(o=>`<div class="li"><span class="mt"><b>${esc(o.name)}</b><small>${(e.by_org||{})[o.name]||0} צילומים החודש</small></span><span class="end"><input aria-label="מכסה ל${esc(o.name)}" inputmode="numeric" style="width:70px" placeholder="${s.render_quota??''}" value="${o.render_quota??''}" data-oq="${o.id}"></span></div>`).join('')}</div><button class="btn sm alt wide" style="margin-top:10px" data-a="engorg">לשמור מכסות</button>`:''}
+  <h3>שימוש ב-30 הימים האחרונים</h3><div class="panel"><dl>${Object.entries(EV).map(([k,v])=>`<dt>${v}</dt><dd class="num">${use[k]||0}</dd>`).join('')}</dl><p class="note" style="margin:8px 0 0">ספירות בלבד, בלי לשמור מי עשה מה.</p></div>`};
+A.engsave=function(){const n=id=>{const v=document.getElementById(id).value.replace(/[^\d.]/g,'');return v===''?null:+v};
+  const u={engine_budget:n('eb'),cost_image:n('ec'),render_quota:n('eq'),customer_render_quota:n('ecq')};Object.keys(u).forEach(k=>u[k]===null&&delete u[k]);
+  run(async()=>{await q(sb.from('settings').update(u).eq('id',1));await loadEngine()},'ההגדרות נשמרו')};
+A.engorg=function(){const ins=[...document.querySelectorAll('[data-oq]')];
+  run(async()=>{for(const i of ins){const v=i.value.replace(/\D/g,'');await q(sb.from('organizations').update({render_quota:v===''?null:+v}).eq('id',i.dataset.oq))}await loadEngine()},'המכסות נשמרו')};
+
+/* ── מדידת שימוש: ספירות בלבד ── */
+function track(e){try{sb.rpc('track',{p_event:e}).then(()=>{},()=>{})}catch(x){}}
+window.track=track;
+let opened=false;
+const _so=window.submitOrder;if(_so)window.submitOrder=o=>{track('order_sent');return _so(o)};
+const _sr=A.sendreq;if(_sr)A.sendreq=function(){track('license_request');return _sr.apply(this,arguments)};
+
+const _lh2=window.liveHydrate;window.liveHydrate=async()=>{await _lh2();try{await Promise.all([loadApps(),loadEngine()])}catch(e){console.warn(e)}
+  if(!opened&&window.ME?.role){opened=true;track('open_app')}};
+setTimeout(()=>{if(window.ME?.role){Promise.all([loadApps(),loadEngine()]).then(()=>render()).catch(()=>{});if(!opened){opened=true;track('open_app')}}},1600);
 
 /* ── התקנה לטלפון ── */
 if(!document.querySelector('link[rel=manifest]'))document.head.insertAdjacentHTML('beforeend','<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#E9E7E3">');
