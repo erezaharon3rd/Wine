@@ -117,6 +117,10 @@ select t_eq((select count(*) from storage.objects where bucket_id='works')::int,
 select t_as('00000000-0000-0000-0000-0000000000f1');
 select t_eq((select count(*) from storage.objects where bucket_id='works')::int, 0, 'לקוח לא מקבל את קובץ המקור');
 
+-- רישיון בלעדי פעיל נועל את היצירה מיד
+select t_as('00000000-0000-0000-0000-0000000000b2');
+select t_fail($$select request_license(1,2,null,'x','one','a',false)$$, 'יקב אחר לא יכול לבקש יצירה בבלעדיות');
+reset role; update deals set exclusive = false where id = 1000; select work_refresh_available(1); update deals set exclusive = true where id = 1000; set role authenticated;
 -- הסכמה מראש
 select t_as('00000000-0000-0000-0000-0000000000a1');
 update artists set pre_consent = true;
@@ -147,6 +151,7 @@ select t_as('00000000-0000-0000-0000-0000000000f1');
 select t_eq(corder_action(5001,'cok'),'approved','הלקוח אישר');
 select t_as('00000000-0000-0000-0000-0000000000b1');
 select t_fail($$select corder_action(5001,'wprint')$$, 'אין דפוס לפני תשלום');
+reset role; update organizations set auto_print = false where id='10000000-0000-0000-0000-0000000000b1'; set role authenticated; select t_as('00000000-0000-0000-0000-0000000000b1');
 select t_eq(corder_action(5001,'wpaid'),'approved','סומן ששולם');
 select t_eq(corder_action(5001,'wprint'),'print','עבר לדפוס');
 
@@ -255,5 +260,62 @@ reset role;
 select t_eq((select n from client_errors), 2, 'אותה שגיאה נספרת פעם אחת, בלי פרטים אישיים');
 select t_eq((select message from client_errors), 'TypeError at x for <email> id <id> phone <n>', 'מייל, מזהה ומספר הוסרו');
 select t_eq((health()->>'client_errors_1h')::int, 2, 'בדיקת התקינות רואה את השגיאות');
+
+-- ---------- אוטומציות ----------
+reset role;
+select t_eq((select number from invoices where deal_id=1000) ~ '^INV-\d{4}-\d{4}$' or (select number from invoices where deal_id=1000)='INV-1', true, 'לחשבונית יש מספר');
+-- בלעדיות: עסקה 1000 פעילה ובלעדית, אז היצירה לא זמינה ליקבים אחרים
+select t_eq((select count(*) from print_orders where deal_id=1000)::int, 1, 'הזמנת הדפוס נפתחה אוטומטית אחרי התשלום');
+-- תמחור אוטומטי + הסכמה מראש: בקשה קטנה עוברת ישר לחתימה בלי אף אדם
+update organizations set auto_price = true where id='10000000-0000-0000-0000-0000000000c1';
+update works set available = true, excl_lock = false where id=1;
+set role authenticated;
+select t_as('00000000-0000-0000-0000-0000000000b1');
+select request_license(1,1,null,'אדום','one','a',false);
+select t_eq((select status::text from deals order by id desc limit 1), 'sign', 'בקשה קטנה תומחרה ואושרה אוטומטית');
+reset role;
+update artists set pre_consent = false;
+set role authenticated; select t_as('00000000-0000-0000-0000-0000000000b1');
+select request_license(1,1,null,'אדום','one','b',false);
+select t_eq((select status::text from deals order by id desc limit 1), 'priced', 'בקשה גדולה תומחרה אוטומטית וממתינה לאמן');
+reset role;
+select t_eq((select note from deals order by id desc limit 1), 'תומחר אוטומטית לפי הנוסחה', 'רשום שהתמחור אוטומטי');
+update organizations set auto_price = false;
+update works set available = true, excl_lock = false where id=1;
+-- הזמנת לקוח: אישור מיד, ודפוס מיד אחרי תשלום
+select set_config('request.jwt.claim.sub','',false);
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000e9','c9@t');
+update profiles set role='customer', status='active', org_id='10000000-0000-0000-0000-0000000000b1' where email='c9@t';
+update organizations set auto_approve = true, auto_print = true where id='10000000-0000-0000-0000-0000000000b1';
+set role authenticated; select t_as('00000000-0000-0000-0000-0000000000e9');
+insert into customer_orders (winery_id, cust, design) values ('10000000-0000-0000-0000-0000000000b1','{"n":"רון"}','{"artist":"20000000-0000-0000-0000-000000000001","work":1,"wine":1,"qty":6}');
+select t_eq((select status::text from customer_orders where cust->>'n'='רון'), 'approved', 'הזמנה אושרה אוטומטית');
+select t_as('00000000-0000-0000-0000-0000000000b1');
+select t_eq(corder_action((select id from customer_orders where cust->>'n'='רון'),'wpaid'), 'print', 'אחרי סימון תשלום ההזמנה עברה לדפוס לבד');
+reset role;
+update organizations set auto_approve = false;
+-- העבודה היומית: תזכורת, סגירה, סוף רישיון (רצה בשרת, בלי משתמש מחובר)
+select set_config('request.jwt.claim.sub','',false);
+update deals set updated_at = now() - interval '5 days' where status = 'priced';
+select daily_maintenance();
+select t_eq((select count(*) from reminders where kind = 'stale:priced')::int >= 1, true, 'נשלחה תזכורת לבקשה שמחכה');
+select t_eq((daily_maintenance()->>'reminders')::int, 0, 'אותה תזכורת לא נשלחת פעמיים באותו יום');
+update deals set updated_at = now() - interval '40 days' where status = 'priced';
+select daily_maintenance();
+select t_eq((select count(*) from deals where status='priced')::int, 0, 'בקשה שתקועה 40 יום נסגרה');
+update deals set ends_at = current_date + 20 where id = 1000;
+select daily_maintenance();
+select t_eq((select count(*) from reminders where entity_id=1000 and kind='end30')::int, 1, 'התראה חודש לפני סוף הרישיון');
+update deals set ends_at = current_date - 1 where id = 1000;
+update works set available = false, excl_lock = true where id = 1;
+select daily_maintenance();
+select t_eq((select available from works where id=1), true, 'אחרי סוף רישיון בלעדי היצירה חוזרת להיות זמינה');
+select t_eq((select pick_rank from works where id=1) is not null, true, 'יצירה פופולרית נכנסה להמלצות');
+-- דוח חודשי
+set role authenticated; select t_as('00000000-0000-0000-0000-0000000000c1');
+select t_eq((select count(*) from monthly_statement(current_date))::int >= 1, true, 'הגלריה רואה את הדוח החודשי שלה');
+select t_as('00000000-0000-0000-0000-0000000000b2');
+select t_eq((select count(*) from monthly_statement(current_date))::int, 0, 'יקב לא רואה דוח של גלריה');
+reset role;
 
 select 'כל הבדיקות עברו' as result;

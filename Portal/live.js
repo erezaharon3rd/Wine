@@ -147,7 +147,7 @@ async function hydrate(){
   if(!S.wines.some(w=>w.id===S.activeWine))S.activeWine=S.wines[0]?.id;
   S.designs=(designs||[]).map(d=>({code:d.code,wine:d.wine_id,work:d.work_id,pos:d.pos,zoom:d.zoom,shape:d.layout?.shape}));
   S.deals=(deals||[]).map(d=>{const inv=one(d.invoices),o=one(d.print_orders),wi=d.wine;return {
-    id:d.id,ver:d.version,wid:d.winery_id,winery:d.winery?.name||'',galleryN:d.gallery?.name||'',artistN:AR[d.artist_id]?.name||'',fl:+(AR[d.artist_id]?.floor_price||S.floor),
+    id:d.id,ver:d.version,wid:d.winery_id,ended:d.status==='active'&&!!d.ends_at&&d.ends_at<new Date().toISOString().slice(0,10),winery:d.winery?.name||'',galleryN:d.gallery?.name||'',artistN:AR[d.artist_id]?.name||'',fl:+(AR[d.artist_id]?.floor_price||S.floor),
     wineN:d.wine_label||(wi?`${wi.name} ${wi.vintage||''}`.trim():''),type:WINE[wi?.type]?wi.type:'red',work:d.work_id,lt:d.license_type,q:d.qty_tier,ex:d.exclusive,
     st:d.status==='cancelled'?'rejected':d.status,adj:d.adj_pct,code:d.design_code||'—',note:d.status==='rejected'||d.status==='cancelled'?'':d.note,reason:d.status==='rejected'||d.status==='cancelled'?(d.note||(d.status==='cancelled'?'בוטלה':'')):'',
     paid:dt(d.paid_at),ends:dt(d.ends_at),inv:inv?.number||'',order:o?{st:o.stage,qty:o.qty,due:dt(o.due)}:null,
@@ -336,9 +336,9 @@ sb.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_OUT'&&LV.state==='ready'){window.
   const {data:{session}}=await sb.auth.getSession();
   if(!session){LV.state='login';render();return}
   await loadMe(session.user);
-window.LX=window.LX||{};try{window.LX.sb=window.LX.sb||sb}catch(e){}try{window.LX.q=window.LX.q||q}catch(e){}try{window.LX.run=window.LX.run||run}catch(e){}try{window.LX.run2=window.LX.run2||run2}catch(e){}try{window.LX.heb2=window.LX.heb2||heb2}catch(e){}try{window.LX.textModel=window.LX.textModel||textModel}catch(e){}try{window.LX.gfetch=window.LX.gfetch||gfetch}catch(e){}
+window.LX=window.LX||{};try{window.LX.sb=window.LX.sb||sb}catch(e){}try{window.LX.q=window.LX.q||q}catch(e){}try{window.LX.run=window.LX.run||run}catch(e){}try{window.LX.run2=window.LX.run2||run2}catch(e){}try{window.LX.heb2=window.LX.heb2||heb2}catch(e){}try{window.LX.textModel=window.LX.textModel||textModel}catch(e){}try{window.LX.gfetch=window.LX.gfetch||gfetch}catch(e){}try{window.LX.shootReal=window.LX.shootReal||shootReal}catch(e){}
 })();
-window.LX=window.LX||{};try{window.LX.sb=window.LX.sb||sb}catch(e){}try{window.LX.q=window.LX.q||q}catch(e){}try{window.LX.run=window.LX.run||run}catch(e){}try{window.LX.run2=window.LX.run2||run2}catch(e){}try{window.LX.heb2=window.LX.heb2||heb2}catch(e){}try{window.LX.textModel=window.LX.textModel||textModel}catch(e){}try{window.LX.gfetch=window.LX.gfetch||gfetch}catch(e){}
+window.LX=window.LX||{};try{window.LX.sb=window.LX.sb||sb}catch(e){}try{window.LX.q=window.LX.q||q}catch(e){}try{window.LX.run=window.LX.run||run}catch(e){}try{window.LX.run2=window.LX.run2||run2}catch(e){}try{window.LX.heb2=window.LX.heb2||heb2}catch(e){}try{window.LX.textModel=window.LX.textModel||textModel}catch(e){}try{window.LX.gfetch=window.LX.gfetch||gfetch}catch(e){}try{window.LX.shootReal=window.LX.shootReal||shootReal}catch(e){}
 })();
 
 /* ════════ stage 2: customer flow, render engine, notifications, real data ════════ */
@@ -405,7 +405,18 @@ async function shootReal(spec){
   const blob=await (await fetch(url)).blob();const path=`${ME.id}/${Date.now()}.${blob.type.includes('png')?'png':'jpg'}`;
   await q(sb.storage.from('renders').upload(path,blob,{contentType:blob.type}));
   await q(sb.from('renders').insert({image_path:path,design_code:spec.code||null,deal_id:spec.deal||null,created_by:ME.id,design_hash:h}));
-  S._rurl=S._rurl||{};S._rurl[path]=url;return {path,url};
+  S._rurl=S._rurl||{};S._rurl[path]=url;
+  renderCheck(path,label,url).catch(e=>console.warn('render check',e));
+  return {path,url};
+}
+/* בדיקה אוטומטית שהצילום תואם לתווית. תואם: מאושר. לא תואם: נשאר לבדיקת האוצרת */
+async function renderCheck(path,labelB64,url){
+  const m=await textModel(),img=await small(url,768);
+  const prompt='Image 1 is a wine label design. Image 2 is a photo of a bottle that should carry exactly this label. Answer only JSON {"match":true|false,"reason":"short Hebrew reason"}. match=false if the painting on the bottle differs, is distorted, cropped wrongly, or extra text was invented.';
+  const r=await gfetch(`models/${m}:generateContent`,{contents:[{parts:[{text:prompt},{inline_data:{mime_type:'image/png',data:labelB64}},{inline_data:{mime_type:'image/jpeg',data:img}}]}],generationConfig:{temperature:0,responseMimeType:'application/json'}});
+  if(!r.ok)return;const t=((((r.data.candidates||[])[0]||{}).content||{}).parts||[]).map(x=>x.text||'').join('');
+  let j;try{j=JSON.parse(t)}catch(e){return}
+  await q(sb.rpc('render_auto_check',{p_path:path,p_match:!!j.match,p_reason:String(j.reason||'').slice(0,200)}));
 }
 /* ── artwork analysis: fills title, subject, technique, tone and a short description ── */
 let TMODEL=null;
@@ -468,7 +479,7 @@ V.gallery_more=()=>{const now=new Date();const ms=[...Array(5)].map((_,i)=>{cons
 A.catalog=()=>{const ws=(S._orgL||[]).filter(o=>o.kind==='winery').map(o=>o.name);S._cat=S._cat||{w:ws[0]||'',sel:{}};window.CATW=ws;catSheet()};
 /* curator: the file's real pixel size */
 V.curator_review=()=>{const r=S.works.filter(w=>w.st==='review');return `<h1>בדיקת קבצים</h1><p class="lead">איכות קובץ ורזולוציה. את היצירה עצמה הגלריה כבר אישרה.</p>${r.length?r.map(w=>{const p=S._px[w.id];const cm=p?Math.round(Math.max(...p)/300*2.54):0;return `<div class="panel" style="margin-top:10px"><div style="display:flex;gap:12px"><span class="th sq" style="width:72px;height:72px;background-image:url(${img(w.id)})"></span><div style="flex:1"><b style="font-weight:500">${esc(w.t)}</b><div class="note" style="margin:2px 0 0">${p?`<span class="num">${p[0]}×${p[1]}</span> פיקסלים · בהדפסה 300dpi עד ${cm} ס״מ ${Math.max(...p)>=3000?'✓':'· קטן מהנדרש'}`:'גודל הקובץ לא נשמר'}</div></div></div><div class="row" style="margin-top:10px"><button class="btn alt sm" data-a="creturn" data-v="${w.id}">להחזיר לגלריה</button><button class="btn sm" data-a="cok" data-v="${w.id}">לפרסם במאגר</button></div></div>`}).join(''):empty('הכול נבדק','יצירה חדשה תגיע אחרי אישור הגלריה.')}`};
-window.LX=window.LX||{};try{window.LX.sb=window.LX.sb||sb}catch(e){}try{window.LX.q=window.LX.q||q}catch(e){}try{window.LX.run=window.LX.run||run}catch(e){}try{window.LX.run2=window.LX.run2||run2}catch(e){}try{window.LX.heb2=window.LX.heb2||heb2}catch(e){}try{window.LX.textModel=window.LX.textModel||textModel}catch(e){}try{window.LX.gfetch=window.LX.gfetch||gfetch}catch(e){}
+window.LX=window.LX||{};try{window.LX.sb=window.LX.sb||sb}catch(e){}try{window.LX.q=window.LX.q||q}catch(e){}try{window.LX.run=window.LX.run||run}catch(e){}try{window.LX.run2=window.LX.run2||run2}catch(e){}try{window.LX.heb2=window.LX.heb2||heb2}catch(e){}try{window.LX.textModel=window.LX.textModel||textModel}catch(e){}try{window.LX.gfetch=window.LX.gfetch||gfetch}catch(e){}try{window.LX.shootReal=window.LX.shootReal||shootReal}catch(e){}
 })();
 
 (function(){
@@ -501,5 +512,5 @@ const _h=window.liveHydrate;window.liveHydrate=async()=>{await _h();if(['curator
   const P={};(S.profiles||[]).forEach(p=>P[p.id]=p.full_name||p.email);let urls={};const ps=r.map(x=>x.image_path).filter(Boolean);
   if(ps.length){try{const u=await q(sb.storage.from('renders').createSignedUrls(ps,3600));u.forEach(x=>{if(x.signedUrl)urls[x.path]=x.signedUrl})}catch(e){}}
   S._rq=r.map(x=>({...x,url:urls[x.image_path],who:P[x.created_by]}))}};
-window.LX=window.LX||{};try{window.LX.sb=window.LX.sb||sb}catch(e){}try{window.LX.q=window.LX.q||q}catch(e){}try{window.LX.run=window.LX.run||run}catch(e){}try{window.LX.run2=window.LX.run2||run2}catch(e){}try{window.LX.heb2=window.LX.heb2||heb2}catch(e){}try{window.LX.textModel=window.LX.textModel||textModel}catch(e){}try{window.LX.gfetch=window.LX.gfetch||gfetch}catch(e){}
+window.LX=window.LX||{};try{window.LX.sb=window.LX.sb||sb}catch(e){}try{window.LX.q=window.LX.q||q}catch(e){}try{window.LX.run=window.LX.run||run}catch(e){}try{window.LX.run2=window.LX.run2||run2}catch(e){}try{window.LX.heb2=window.LX.heb2||heb2}catch(e){}try{window.LX.textModel=window.LX.textModel||textModel}catch(e){}try{window.LX.gfetch=window.LX.gfetch||gfetch}catch(e){}try{window.LX.shootReal=window.LX.shootReal||shootReal}catch(e){}
 })();

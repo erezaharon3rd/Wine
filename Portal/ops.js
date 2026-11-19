@@ -207,9 +207,10 @@ let opened=false;
 const _so=window.submitOrder;if(_so)window.submitOrder=o=>{track('order_sent');return _so(o)};
 const _sr=A.sendreq;if(_sr)A.sendreq=function(){track('license_request');return _sr.apply(this,arguments)};
 
-const _lh2=window.liveHydrate;window.liveHydrate=async()=>{await _lh2();try{await Promise.all([loadApps(),loadEngine(),loadErrs()])}catch(e){console.warn(e)}
+const _lh2=window.liveHydrate;window.liveHydrate=async()=>{await _lh2();try{await Promise.all([loadApps(),loadEngine(),loadErrs(),loadDaily()])}catch(e){console.warn(e)}
+  setTimeout(()=>autoShoot(),4000);
   if(!opened&&window.ME?.role){opened=true;track('open_app')}};
-setTimeout(()=>{if(window.ME?.role){Promise.all([loadApps(),loadEngine(),loadErrs()]).then(()=>render()).catch(()=>{});if(!opened){opened=true;track('open_app')}}},1600);
+setTimeout(()=>{if(window.ME?.role){setTimeout(()=>autoShoot(),4000);Promise.all([loadApps(),loadEngine(),loadErrs(),loadDaily()]).then(()=>render()).catch(()=>{});if(!opened){opened=true;track('open_app')}}},1600);
 
 
 /* ── הגנה מרובוטים בכניסה ובהרשמה (Cloudflare Turnstile). פועל רק כשיש מפתח ב-config.js ── */
@@ -235,6 +236,51 @@ async function loadErrs(){if(ME?.role!=='admin')return;try{S._errs=await q(sb.fr
 const _alog=V.admin_log;V.admin_log=()=>{const h=_alog(),e=S._errs||[];
   return h+`<h3>שגיאות באתר</h3>${e.length?`<p class="note" style="margin-top:0">שגיאות שקרו אצל משתמשים, מקובצות לפי סוג. בלי שמות ובלי פרטים אישיים.</p><div class="list">${e.map(x=>`<div class="li"><span class="mt"><b dir="ltr" style="text-align:left;font-family:var(--mono);font-size:13px">${esc(x.message)}</b><small>${x.n} פעמים · ${esc(x.role||'')} · אחרונה ${new Date(x.last_at).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})}</small></span><span class="end"><button class="btn sm alt" data-a="errok" data-v="${x.id}">טופל</button></span></div>`).join('')}</div>`:'<div class="panel"><p class="note" style="margin:0">אין שגיאות פתוחות.</p></div>'}`};
 A.errok=v=>run(async()=>{await q(sb.from('client_errors').update({resolved:true}).eq('id',+v));await loadErrs()},'סומן כטופל');
+
+
+/* ── אוטומציות: הגדרות לכל ארגון ── */
+const myOrg=()=>(S._orgL||[]).find(o=>o.id===ME?.orgId)||{};
+const sw=(id,on,label,sub)=>`<label class="li" style="cursor:pointer;align-items:flex-start"><span class="mt"><b>${label}</b><small>${sub}</small></span><span class="end"><input type="checkbox" data-in="auto" data-k="${id}" ${on?'checked':''} aria-label="${label}" style="width:22px;height:22px;accent-color:var(--ink)"></span></label>`;
+document.addEventListener('change',e=>{const t=e.target;if(t.dataset?.in!=='auto')return;const k=t.dataset.k,v=t.checked;
+  if(['auto_price','auto_approve','auto_print'].includes(k))run(()=>q(sb.from('organizations').update({[k]:v}).eq('id',ME.orgId)),v?'הופעל':'כובה');
+  else run(()=>q(sb.from('settings').update({[k]:v}).eq('id',1)),v?'הופעל':'כובה')});
+
+const _gm=V.gallery_more;V.gallery_more=()=>_gm()+`<h3>אוטומציה</h3><div class="list">${sw('auto_price',myOrg().auto_price,'תמחור אוטומטי','כל בקשה מתומחרת מיד לפי הנוסחה, בלי התאמה. אם לאמן יש הסכמה מראש, בקשה קטנה עוברת ישר לחתימה.')}</div>
+  <h3>דוח חודשי</h3><div class="panel"><p class="note" style="margin-top:0">כל העסקאות ששולמו בחודש, עם החלוקה בין האמן, הגלריה והפלטפורמה.</p><button class="btn sm wide" data-a="stmt">להפיק דוח לחודש הקודם</button> <button class="btn sm alt wide" style="margin-top:8px" data-a="stmt" data-v="now">לחודש הנוכחי</button></div>`;
+const _wm=V.winery_more;V.winery_more=()=>_wm()+`<h3>אוטומציה</h3><div class="list">${sw('auto_approve',myOrg().auto_approve,'אישור אוטומטי להזמנות לקוחות','הזמנה של לקוח מאושרת ברגע שהיא נשלחת. המחיר תמיד לפי המחירון שלך.')}${sw('auto_print',myOrg().auto_print!==false,'דפוס מיד אחרי תשלום','רישיון ששולם והזמנת לקוח שסימנת כמשולמת עוברים לבית הדפוס בלי לחיצה נוספת.')}</div>`;
+const _ai=V.artist_income;if(_ai)V.artist_income=()=>_ai()+`<h3>דוח חודשי</h3><div class="panel"><p class="note" style="margin-top:0">מה הגיע אליך מכל רישיון שנסגר בחודש.</p><button class="btn sm wide" data-a="stmt">לחודש הקודם</button> <button class="btn sm alt wide" style="margin-top:8px" data-a="stmt" data-v="now">לחודש הנוכחי</button></div>`;
+
+/* מנהל: הגדרות העבודה היומית */
+async function loadDaily(){if(ME?.role!=='admin')return;try{S._daily=(await q(sb.from('audit_log').select('created_at,data').eq('action','daily').order('created_at',{ascending:false}).limit(1)))[0]||null}catch(e){}}
+const _as2=V.admin_settings;V.admin_settings=()=>{const s=S._set||{},d=S._daily;
+  return _as2()+`<h3>עבודה אוטומטית יומית</h3><div class="panel"><p class="note" style="margin-top:0">${d?`רצה לאחרונה ${new Date(d.created_at).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})}: ${d.data?.reminders||0} תזכורות, ${d.data?.cancelled||0} בקשות נסגרו, ${d.data?.ended||0} רישיונות הסתיימו.`:'עוד לא רצה. כדי שתרוץ כל לילה צריך להפעיל ב-Supabase את התוסף pg_cron, ואז להריץ שוב את setup.sql.'}</p>
+    <div class="two"><div class="fld"><label for="dsd">תזכורת אחרי (ימים)</label><input id="dsd" inputmode="numeric" value="${s.stale_days??3}"></div><div class="fld"><label for="dcd">סגירה אחרי (ימים)</label><input id="dcd" inputmode="numeric" value="${s.cancel_days??30}"></div></div>
+    <div class="fld"><label for="drd">מחיקת פרטי לקוח מהזמנות שהסתיימו, אחרי (ימים)</label><input id="drd" inputmode="numeric" placeholder="ריק = לא מוחקים. עורך הדין יקבע" value="${s.customer_retention_days??''}"></div>
+    <button class="btn sm wide" style="margin-top:10px" data-a="dailysave">לשמור</button></div>
+  <div class="list" style="margin-top:10px">${sw('auto_picks',s.auto_picks!==false,'המלצות לפי פופולריות','שמונה היצירות שהכי מנסים ומזמינים ב-90 הימים האחרונים מופיעות ראשונות. כשכבוי, האוצרת בוחרת ידנית.')}</div>`};
+A.dailysave=()=>{const n=id=>{const v=document.getElementById(id).value.replace(/\D/g,'');return v===''?null:+v};
+  const u={stale_days:Math.max(1,n('dsd')||3),cancel_days:Math.max(7,n('dcd')||30),customer_retention_days:n('drd')};
+  run(async()=>{await q(sb.from('settings').update(u).eq('id',1));await loadEngine()},'נשמר')};
+
+/* ── דוח חודשי ── */
+A.stmt=v=>{const d=new Date();if(v!=='now')d.setMonth(d.getMonth()-1);const m=new Date(d.getFullYear(),d.getMonth(),1);
+  const iso=`${m.getFullYear()}-${String(m.getMonth()+1).padStart(2,'0')}-01`,title=m.toLocaleDateString('he-IL',{month:'long',year:'numeric'});
+  (async()=>{try{const rows=await q(sb.rpc('monthly_statement',{p_month:iso}));const sum=k=>rows.reduce((a,r)=>a+(+r[k]||0),0);
+    const art=ME.role==='artist';
+    openDoc(`דוח ${title}`,`<h1>דוח חודשי · ${title}</h1><div class="meta">${esc(ME.org||ME.name||'')} · הופק ${today()}</div>
+    ${rows.length?`<table><tr><th>עסקה</th><th>תאריך</th><th>יקב</th><th>יצירה</th>${art?'':'<th>אמן</th>'}<th>לפני מע״מ</th>${art?'<th>החלק שלך</th>':'<th>לאמן</th><th>לגלריה</th><th>עמלה</th>'}</tr>
+      ${rows.map(r=>`<tr><td>${r.deal_id}</td><td>${new Date(r.paid_at).toLocaleDateString('he-IL')}</td><td>${esc(r.winery)}</td><td>${esc(r.work)}</td>${art?'':`<td>${esc(r.artist)}</td>`}<td>${nis(r.net)}</td>${art?`<td>${nis(r.artist_share)}</td>`:`<td>${nis(r.artist_share)}</td><td>${nis(r.gallery_share)}</td><td>${nis(r.platform)}</td>`}</tr>`).join('')}
+      <tr class="tot"><td colspan="${art?4:5}">סה״כ</td><td>${nis(sum('net'))}</td>${art?`<td>${nis(sum('artist_share'))}</td>`:`<td>${nis(sum('artist_share'))}</td><td>${nis(sum('gallery_share'))}</td><td>${nis(sum('platform'))}</td>`}</tr></table>`:'<p>לא נסגרו עסקאות בחודש הזה.</p>'}
+    <p class="note">הסכומים לפני מע״מ. החלוקה לפי העמלה ואחוז האמן שהיו בתוקף בכל עסקה.</p>`)}catch(e){console.error(e);toast(heb2(e))}})()};
+
+/* ── צילום אוטומטי לכל רישיון שנחתם, פעם אחת ── */
+async function autoShoot(){if(ME?.role!=='winery'||!LX.shootReal)return;
+  const ds=(S.deals||[]).filter(d=>['pay','active'].includes(d.st));if(!ds.length)return;
+  let have=[];try{have=(await q(sb.from('renders').select('deal_id').in('deal_id',ds.map(d=>d.id)))).map(r=>r.deal_id)}catch(e){return}
+  const d=ds.find(x=>!have.includes(x.id)&&!localStorage.getItem('wl-as-'+x.id));if(!d)return;
+  try{localStorage.setItem('wl-as-'+d.id,'1')}catch(e){}
+  const g=(S.designs||[]).find(x=>x.code===d.code)||{};
+  try{await LX.shootReal({type:d.type,work:d.work,code:g.code||null,deal:d.id,o:{pos:g.pos??50,zoom:g.zoom??100,shape:g.shape||'rect',name:d.wineN,artist:d.artistN}});toast(`הצילום של הבקבוק לעסקה ${d.id} מוכן לשיווק`)}catch(e){console.warn('auto shoot',e)}}
 
 /* ── התקנה לטלפון ── */
 if(!document.querySelector('link[rel=manifest]'))document.head.insertAdjacentHTML('beforeend','<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#E9E7E3">');

@@ -275,7 +275,7 @@ const WHO_ACTS={sent:'gallery',priced:'artist',sign:'winery',pay:'gallery'};
 const MINE={sent:'תורך לתמחר',priced:'תורך לתת הסכמה',sign:'תורך לחתום',pay:'תורך לאשר שהתשלום התקבל'};
 const OTHER={sent:'אצל הגלריה לתמחור',priced:'אצל האמן להסכמה',sign:'אצל היקב לחתימה',pay:'ממתינה לתשלום',active:'רישיון פעיל',rejected:'נדחתה'};
 function isMine(d,role){return WHO_ACTS[d.st]===role&&(role!=='winery'||d.winery===MYW())}
-function stFor(d,role=S.role){if(isMine(d,role))return MINE[d.st];if(role==='winery'&&d.st==='pay'&&d.winery===MYW())return 'תורך לשלם לפי החשבונית';return OTHER[d.st]}
+function stFor(d,role=S.role){if(isMine(d,role))return MINE[d.st];if(role==='winery'&&d.st==='pay'&&d.winery===MYW())return 'תורך לשלם לפי החשבונית';return (d.ended?'הרישיון הסתיים':OTHER[d.st])}
 const lic=n=>n===0?'עדיין אין רישיונות':n===1?'רישיון אחד':`${n} רישיונות`;
 const ETA={sent:'בדרך כלל עד יומיים',priced:'בדרך כלל עד שלושה ימים',sign:'',pay:'עד יום עסקים אחרי התשלום'};
 const TYPES={one:{n:'בציר אחד',m:1,d:'תווית לבציר אחד, עד שתימכר הכמות',per:'עד שתימכר הכמות של הבציר'},series:{n:'סדרה שנתית',m:2.2,d:'עד שלושה בצירים במשך שנה, עם חידוש שנתי',per:'12 חודשים'}};
@@ -530,7 +530,7 @@ V.artist_requests=()=>{
 V.artist_income=()=>{
   const paid=S.deals.filter(d=>d.st==='active'), exp=S.deals.filter(d=>['sign','pay'].includes(d.st));
   const sum=a=>a.reduce((x,d)=>x+price(d).artist,0);
-  const li=d=>`<button class="li" data-a="go" data-v="deal-${d.id}"><span class="th sq" style="background-image:url(${img(d.work)})"></span><span class="mt"><b>${esc(work(d.work).t)}</b><small>${esc(d.winery)} · ${d.st==='active'?'שולם '+fmtD(d.paid):ST[d.st]}</small></span><span class="end num">${nis(price(d).artist)}</span></button>`;
+  const li=d=>`<button class="li" data-a="go" data-v="deal-${d.id}"><span class="th sq" style="background-image:url(${img(d.work)})"></span><span class="mt"><b>${esc(work(d.work).t)}</b><small>${esc(d.winery)} · ${d.st==='active'?'שולם '+fmtD(d.paid):(d.ended?'הרישיון הסתיים':ST[d.st])}</small></span><span class="end num">${nis(price(d).artist)}</span></button>`;
   return `<h1>הכנסות</h1><p class="lead">החלק שלך בכל רישיון, לפי הסכם הייצוג עם הגלריה. הגלריה מעבירה לך אותו.</p>
   <div class="kpis" style="grid-template-columns:1fr 1fr"><div class="kpi"><b>${nis(sum(paid))}</b><span>שולם</span></div><div class="kpi"><b>${nis(sum(exp))}</b><span>צפוי, אחרי חתימה ותשלום</span></div></div>
   <h3>שולם</h3><div class="list">${paid.map(li).join('')||empty('עדיין לא')}</div>
@@ -594,7 +594,7 @@ V.admin_settings=()=>`<h1>הגדרות</h1>
 V.admin_finance=()=>{const fs={all:'הכל',active:'שולמו',open:'פתוחות'};const ds=S.deals.filter(d=>d.st!=='rejected'&&(S.f.fin==='all'||(S.f.fin==='active'?d.st==='active':d.st!=='active')));const sum=S.deals.filter(d=>d.st==='active').reduce((a,d)=>a+price(d).comm,0);
   return `<h1>כספים</h1><p class="lead">בפיילוט היקב משלם ישירות לגלריה. המערכת מתעדת, ואינה מחזיקה כסף.</p><div class="kpis"><div class="kpi"><b>${nis(sum)}</b><span>עמלות שנצברו</span></div><div class="kpi"><b>${S.deals.filter(d=>d.st==='active').length}</b><span>עסקאות ששולמו</span></div><div class="kpi"><b>${S.deals.filter(d=>d.st==='pay').length}</b><span>ממתינות לתשלום</span></div></div>
   <div class="tabs" style="margin-top:16px">${Object.entries(fs).map(([k,v])=>`<button data-a="fin" data-v="${k}" aria-selected="${S.f.fin===k}">${v}</button>`).join('')}</div>
-  <div class="list">${ds.map(d=>{const p=price(d);return `<button class="li" data-a="go" data-v="deal-${d.id}"><span class="mt"><b>עסקה ${d.id} · ${esc(d.winery)}</b><small>${ST[d.st]} · עמלה <span class="num">${nis(p.comm)}</span></small></span><span class="end num">${nis(p.total)}</span></button>`}).join('')}</div>
+  <div class="list">${ds.map(d=>{const p=price(d);return `<button class="li" data-a="go" data-v="deal-${d.id}"><span class="mt"><b>עסקה ${d.id} · ${esc(d.winery)}</b><small>${(d.ended?'הרישיון הסתיים':ST[d.st])} · עמלה <span class="num">${nis(p.comm)}</span></small></span><span class="end num">${nis(p.total)}</span></button>`}).join('')}</div>
   <button class="link" data-a="csvexp">לייצא לרואה החשבון</button>`};
 V.admin_engine=()=>`<h1>מנוע ההדמיה</h1><div class="kpis"><div class="kpi"><b>${S.renders}</b><span>צילומים החודש</span></div><div class="kpi"><b>$${(S.renders*0.134).toFixed(0)}</b><span>עלות משוערת, בדולרים כפי שהספק מחייב</span></div><div class="kpi"><b>2K</b><span>ברירת מחדל</span></div></div>
   <h3>הספק הפעיל</h3><div class="panel"><dl><dt>מודל</dt><dd>Gemini · Nano Banana Pro</dd><dt>מחיר</dt><dd>כ־13 סנט ב־2K, כ־24 סנט ב־4K</dd><dt>אימון על התוכן</dt><dd>לא מותר לפי התנאים</dd><dt>מפתח</dt><dd>שמור בשרת בלבד</dd></dl></div>`;
@@ -611,7 +611,7 @@ function nextStep(d,r){
   if(r==='winery'&&d.st==='active') return {t:'הקבצים פתוחים',s:d.order?`הזמנת דפוס: ${OST[d.order.st]}`:'אפשר להוריד או להזמין דפוס',a:d.order?'files':'porder',l:d.order?'קבצים':'להזמין דפוס'};
   const w=WHO_ACTS[d.st];
   if(w) return {t:`ממתין ל${ROLES[w].n==='יקב'?'יקב':ROLES[w].n}`,s:ETA[d.st]||'',a:null};
-  return {t:ST[d.st],s:d.st==='active'?`בתוקף עד ${fmtD(d.ends)||'סוף הבציר'}`:'',a:null};
+  return {t:(d.ended?'הרישיון הסתיים':ST[d.st]),s:d.st==='active'?`בתוקף עד ${fmtD(d.ends)||'סוף הבציר'}`:'',a:null};
 }
 function vDeal(d){
   const w=work(d.work), p=price(d), r=S.role, idx=STIDX[d.st], paid=d.st==='active';
@@ -661,7 +661,7 @@ function vDesign(code){
   const w=wine(d.wine), [st]=designStatus(code), dl=S.deals.find(x=>x.code===code&&x.winery===MYW());
   return `${backBtn}<span class="eyebrow" style="display:block">דגם <span class="num">${code}</span> · ${st}</span><h2>${esc(work(d.work).t)} · ${w.n} ${w.y}</h2>
   <button class="hero" data-a="zoomdesign" data-v="${code}" aria-label="להגדיל">${bottle(w.type,d.work,{wm:st!=='מורשה',pos:d.pos,zoom:d.zoom,shape:d.shape,name:w.n,year:w.y})}<span class="zm">להגדיל</span></button>
-  ${dl?`<button class="btn wide" style="margin-top:12px" data-a="go" data-v="deal-${dl.id}">לחדר העסקה · ${ST[dl.st]}</button>`:`<button class="btn wide" style="margin-top:12px" data-a="reqd" data-v="${code}">לבקש רישיון</button>`}
+  ${dl?`<button class="btn wide" style="margin-top:12px" data-a="go" data-v="deal-${dl.id}">לחדר העסקה · ${(dl.ended?'הרישיון הסתיים':ST[dl.st])}</button>`:`<button class="btn wide" style="margin-top:12px" data-a="reqd" data-v="${code}">לבקש רישיון</button>`}
   <div class="row"><button class="btn alt" data-a="editd" data-v="${code}">לערוך</button><button class="btn alt" data-a="dupd" data-v="${code}">לשכפל</button>${dl?'':`<button class="btn danger" data-a="deld" data-v="${code}">למחוק</button>`}</div>`;
 }
 function vOrder(d){
@@ -935,6 +935,6 @@ if(window.LIVE){}else if(S.role){S.view=null;S.tab=S.tab||TABS[S.role][0][0];loc
 <script src="customer.js?v=10"></script>
 <script src="docs.js?v=6"></script>
 <script src="motion.js?v=2"></script>
-<script>if(window.LIVE)document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script><script src="live.js?v=13"><\/script><script src="ops.js?v=5"><\/script>')</script>
+<script>if(window.LIVE)document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script><script src="live.js?v=14"><\/script><script src="ops.js?v=6"><\/script>')</script>
 </body>
 </html>

@@ -29,6 +29,7 @@ window.supabase={createClient(){
     async rpc(fn,a){if(fn==='request_license'){const id=(st.dseq=(st.dseq||999)+1);st.db.deals.push({id,winery_id:st.me_org,gallery_id:'g1',artist_id:'a1',work_id:a.p_work,wine_id:a.p_wine,design_code:a.p_design,license_type:a.p_type,qty_tier:a.p_qty,exclusive:a.p_exclusive,adj_pct:0,status:'sent',created_at:new Date().toISOString()});persist();return {data:id,error:null}}
       if(fn==='render_quota_left')return {data:5,error:null};
       if(fn==='log_error'){(st.db.client_errors=st.db.client_errors||[]).push({id:(st.db.client_errors.length+1),message:a.p_message,place:a.p_place,n:1,role:st.me_role,last_at:new Date().toISOString(),resolved:false});persist();return {data:null,error:null}}
+      if(fn==='monthly_statement')return {data:[{deal_id:1003,paid_at:'2026-11-05',winery:'יקב 1',work:'חורשה',artist:'ארז',net:6300,platform:945,artist_share:2678,gallery_share:2677}],error:null};
       if(fn==='track'){st.track=(st.track||0)+1;persist();return {data:null,error:null}}
       if(fn==='engine_status')return {data:{spend:42.5,budget:300,breaker:false,images:61,texts:120,failed:2,by_org:{'יקב הבדיקה':12}},error:null};
       if(fn==='application_decide'){const ap=st.db.applications.find(x=>x.id===a.p_id);ap.status=a.p_ok?'approved':'rejected';ap.gallery=a.p_gallery;persist();return {data:ap.status,error:null}}
