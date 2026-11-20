@@ -689,7 +689,8 @@ create or replace function notify_users(p_org uuid, p_role text, p_user uuid, ms
 language sql security definer set search_path = public as $$
   insert into notifications (user_id, body)
   select id, msg from profiles
-  where status = 'active' and (id = p_user or (p_org is not null and org_id = p_org and role::text = p_role));
+  where id = p_user   -- הודעה אישית מגיעה גם למי שעוד לא פעיל (למשל בקשה שנדחתה)
+     or (status = 'active' and p_org is not null and org_id = p_org and role::text = p_role);
 $$;
 revoke execute on function notify_users(uuid,text,uuid,text) from public, anon, authenticated;
 
