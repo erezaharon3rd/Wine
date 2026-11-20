@@ -62,8 +62,10 @@ with sync_playwright() as p:
     pg.fill('#le','m@x.com');pg.fill('#lp','password123');pg.click('#lin');pg.wait_for_timeout(900)
     t=pg.inner_text('main');assert 'סיכום' in t,'back to details'
     assert pg.input_value('#bn')=='חברת בדיקה בע"מ'
-    pg.click('#send');pg.wait_for_timeout(900);t=pg.inner_text('main');print(t[:80].replace('\n',' '));assert 'בקשת הצעת המחיר התקבלה' in t
-    po=[c for c in calls(pg) if c[0]=='place_order'][-1][1]['p'];print('order:',po['design'],po['buyer'],po['quote']);assert po['design']['zone']=='band' and po['design']['name']=='חברת בדיקה' and po['quote'] and po['buyer_kind']=='business'
+    pg.click('#send');pg.wait_for_timeout(600);assert '18' in pg.inner_text('#err'),'age required'
+    pg.check('#adult');pg.click('#send');pg.wait_for_timeout(600);assert 'תנאי השימוש' in pg.inner_text('#err'),'terms required'
+    pg.check('#terms');pg.click('#send');pg.wait_for_timeout(900);t=pg.inner_text('main');print(t[:80].replace('\n',' '));assert 'בקשת הצעת המחיר התקבלה' in t
+    po=[c for c in calls(pg) if c[0]=='place_order'][-1][1]['p'];print('order:',po['design'],po['buyer'],po['quote']);assert po['design']['zone']=='band' and po['design']['name']=='חברת בדיקה' and po['quote'] and po['buyer_kind']=='business' and po['adult'] and po['terms']=='2026-11'
     assert any(c[0]=='join_direct' for c in calls(pg))
     pg.click('a[href="#orders"]');pg.wait_for_timeout(600);t=pg.inner_text('main');assert 'הצעת מחיר' in t and 'לאשר את ההצעה' in t,t
     pg.click('[data-acc]');pg.wait_for_timeout(700);t=pg.inner_text('main');print('after accept:', 'ממתינה לתשלום' in t);assert 'ממתינה לתשלום' in t

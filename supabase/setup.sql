@@ -2976,6 +2976,9 @@ language sql security definer set search_path = public as $$
 $$;
 revoke execute on function notify_admins(text) from public, anon, authenticated;
 
+alter table customer_orders add column if not exists adult_at timestamptz;
+alter table customer_orders add column if not exists terms_version text;
+
 create or replace function place_order(p jsonb) returns bigint
 language plpgsql security definer set search_path = public as $$
 declare me profiles; d jsonb := p -> 'design'; pk packages; w wines; st settings; lvl text; n int; oid bigint;
@@ -3000,6 +3003,8 @@ begin
     raise exception 'תאריך האספקה המוקדם ביותר הוא %', to_char(current_date + st.lead_days, 'DD.MM.YYYY'); end if;
   if c is null or length(coalesce(c ->> 'n', '')) < 2 or length(coalesce(c ->> 'ph', '')) < 7 then
     raise exception 'צריך שם וטלפון'; end if;
+  if coalesce((p ->> 'adult')::boolean, false) is not true then raise exception 'צריך לאשר שגילך 18 ומעלה'; end if;
+  if length(coalesce(p ->> 'terms', '')) < 4 then raise exception 'צריך לאשר את תנאי השימוש'; end if;
   if (p ->> 'buyer_kind') = 'business' then
     if p -> 'buyer' is null or length(coalesce(p -> 'buyer' ->> 'name', '')) < 2 then raise exception 'צריך את שם העסק'; end if;
     if me.buyer_id is null then
@@ -3012,11 +3017,11 @@ begin
   first := split_part(btrim(c ->> 'n'), ' ', 1);
   perform set_config('app.bypass', '1', true);
   insert into customer_orders (winery_id, customer_id, cust, design, status, channel, buyer_id, buyer_kind,
-                               package_id, series_id, delivery_date, quote_until, collector_consent)
+                               package_id, series_id, delivery_date, quote_until, collector_consent, adult_at, terms_version)
   values (w.winery_id, me.id, jsonb_build_object('n', first), d, case when quote then 'quote' else 'approved' end, 'direct', b,
           coalesce(p ->> 'buyer_kind', case when lvl = 'case' then 'private' else 'collector' end),
           pk.id, nullif(d ->> 'series', '')::bigint, dd, case when quote then least(dd - st.lead_days, current_date + 14) end,
-          coalesce((p ->> 'consent')::boolean, false))
+          coalesce((p ->> 'consent')::boolean, false), now(), left(p ->> 'terms', 20))
   returning id into oid;
   insert into order_contacts (order_id, cust) values (oid, jsonb_build_object(
     'n', left(c ->> 'n', 80), 'ph', left(c ->> 'ph', 30), 'em', left(coalesce(c ->> 'em', ''), 120),
@@ -3267,5 +3272,44 @@ language sql stable security definer set search_path = public as $$
   from settings s where s.id = 1
 $$;
 grant execute on function catalog() to anon, authenticated;
+
+-- ═══ 14. מיילים: תור יוצא ═══
+-- כל הודעה במערכת נכנסת גם לתור מיילים. הפונקציה mail-outbox שולחת מהתור כשיש מפתח של ספק המיילים.
+-- משתמש יכול לבטל מיילים (profiles.mail_opt). בלי מפתח שום דבר לא נשלח, והתור פשוט מחכה.
+alter table profiles add column if not exists mail_opt boolean not null default true;
+create table if not exists mail_outbox (
+  id bigint generated always as identity primary key,
+  user_id uuid, to_email text not null, subject text not null, body text not null, link text,
+  created_at timestamptz not null default now(), sent_at timestamptz, tries int not null default 0, error text);
+create index if not exists mail_outbox_wait on mail_outbox (id) where sent_at is null;
+alter table mail_outbox enable row level security;
+drop policy if exists mo_admin on mail_outbox;
+create policy mo_admin on mail_outbox for select using (is_admin());
+
+create or replace function notif_mail() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare em text; pr profiles;
+begin
+  select * into pr from profiles where id = new.user_id;
+  if not found or not pr.mail_opt then return new; end if;
+  select email into em from auth.users where id = new.user_id;
+  if em is null or em like '%@test.local' then return new; end if;
+  insert into mail_outbox (user_id, to_email, subject, body, link)
+  values (new.user_id, em, 'Grape Arts: ' || left(new.body, 70), new.body,
+          case when pr.role::text = 'customer' and pr.org_id is null then '/Portal/shop.html#orders' else '/Portal/' end);
+  return new;
+end $$;
+drop trigger if exists notif_mail_t on notifications;
+create trigger notif_mail_t after insert on notifications for each row execute function notif_mail();
+
+-- המשתמש מדליק או מכבה מיילים לעצמו
+create or replace function set_mail_opt(p_on boolean) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is null then raise exception 'צריך להתחבר'; end if;
+  perform set_config('app.bypass', '1', true);
+  update profiles set mail_opt = p_on where id = auth.uid();
+end $$;
+grant execute on function set_mail_opt(boolean) to authenticated;
 
 select 'ההקמה הסתיימה בהצלחה' as result;

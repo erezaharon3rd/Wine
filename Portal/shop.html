@@ -114,6 +114,7 @@ let tt;function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on
 const PREV=p=>p?`${window.SB_URL}/storage/v1/object/public/previews/${p.split('/').map(encodeURIComponent).join('/')}`:'';
 const LVL={case:'מארז',collector:'אספנים',patron:'פטרון'};
 const ZONE={band:'פס מתחת לציור',neck:'תווית צוואר',back:'התווית האחורית',card:'כרטיס במארז'};
+const TERMS_V='2026-11';
 const ST={quote:'הצעת מחיר',approved:'ממתינה לתשלום',print:'בהפקה',done:'מוכנה למשלוח',cancel:'בוטלה'};
 const TYPE={red:'אדום',white:'לבן',rose:'רוזה',sparkling:'מבעבע',dessert:'קינוח',other:'אחר'};
 const KEY='ga-draft';
@@ -294,10 +295,12 @@ function vDetails(){const d=D(),w=work(d.work),p=pkg(d.package),wn=wine(d.wine);
   <div class="fld"><label for="dd">תאריך אספקה</label><input id="dd" type="date" min="${minDate()}" value="${esc(d.dd||'')}"><p class="note">המוקדם ביותר: ${minDate().split('-').reverse().join('.')}${S.cat.cutoff?` · ההזמנות לחג נסגרות ב־${S.cat.cutoff.split('-').reverse().join('.')}`:''}</p></div>
   <div class="fld"><label for="cnote">הערה (לא חובה)</label><textarea id="cnote" maxlength="500">${esc(d.cnote||'')}</textarea></div>
   ${lv!=='case'?`<div class="check"><input type="checkbox" id="cons" ${d.cons?'checked':''}><label for="cons">אפשר למסור את הפרטים שלי לגלריה של האמן, כדי שתעדכן אותי על יצירות חדשות</label></div>`:''}
+  <div class="check"><input type="checkbox" id="adult" ${d.adult?'checked':''}><label for="adult">אני בן או בת 18 ומעלה. ההזמנה כוללת יין</label></div>
+  <div class="check"><input type="checkbox" id="terms" ${d.terms?'checked':''}><label for="terms">קראתי ואני מסכים ל<a href="terms.html" target="_blank">תנאי השימוש</a> ול<a href="privacy.html" target="_blank">מדיניות הפרטיות</a></label></div>
   <p class="note">המחיר כולל את האמנות, המארז והיין. היקב מוכר את היין, ו־Grape Arts את האמנות, המארז והתעודה. פרטי התשלום נשלחים אחרי ${biz&&d.quote!==false?'אישור ההצעה':'שליחת ההזמנה'}.</p>
   ${biz?`<button class="btn alt wide" id="share" style="margin-top:8px">לשלוח קישור לטיוטה למאשר בחברה</button>`:''}
   <div id="err"></div>`;
-  const keep=()=>{['cn','cp','ce','ca','dd','cnote','bn','bv'].forEach(k=>{const e=$('#'+k);if(e)d[k]=e.value});const bk=$('#bk');if(bk)d.bk=bk.value;const qt=$('#qt');if(qt)d.quote=qt.checked;const c=$('#cons');if(c)d.cons=c.checked;save()};
+  const keep=()=>{['cn','cp','ce','ca','dd','cnote','bn','bv'].forEach(k=>{const e=$('#'+k);if(e)d[k]=e.value});const bk=$('#bk');if(bk)d.bk=bk.value;const qt=$('#qt');if(qt)d.quote=qt.checked;const c=$('#cons');if(c)d.cons=c.checked;d.adult=$('#adult').checked;d.terms=$('#terms').checked;save()};
   document.querySelectorAll('#main input,#main select,#main textarea').forEach(e=>e.addEventListener('change',keep));
   $('#biz').onchange=()=>{keep();d.biz=$('#biz').checked;save();vDetails()};
   if($('#share'))$('#share').onclick=async()=>{keep();if(!S.user){d.after='share';save();return location.hash='login'}await shareDraft()};
@@ -317,8 +320,10 @@ async function send(){const d=D(),b=$('#send');if(b){b.disabled=true;b.textConte
   try{
     if(S.card?.channel==='winery_customer')throw new Error(`החשבון שלך שייך ל${S.card.owner_name||'יקב'}. ההזמנות שלך נשלחות דרך היקב, באפליקציה`);
     if(S.role&&S.role!=='customer')throw new Error('החשבון הזה הוא של צוות. להזמנה צריך להיכנס עם חשבון לקוח');
+    if(!d.adult)throw new Error('צריך לאשר שגילך 18 ומעלה');
+    if(!d.terms)throw new Error('צריך לאשר את תנאי השימוש');
     await uploadLogo();
-    const p={design:design(),cust:{n:d.cn,ph:d.cp,em:d.ce,addr:d.ca,note:d.cnote},delivery:d.dd,consent:!!d.cons};
+    const p={design:design(),cust:{n:d.cn,ph:d.cp,em:d.ce,addr:d.ca,note:d.cnote},delivery:d.dd,consent:!!d.cons,adult:true,terms:TERMS_V};
     if(d.biz){p.buyer_kind='business';p.buyer={name:d.bn,kind:d.bk||'company',vat:d.bv};p.quote=d.quote!==false}
     const r=await sb.rpc('place_order',{p});if(r.error)throw r.error;
     S.lastOrder=r.data;S.lastQuote=!!p.quote;S.draft={};save();S.orders=null;location.hash='done';

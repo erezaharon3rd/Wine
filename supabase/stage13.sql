@@ -534,6 +534,9 @@ language sql security definer set search_path = public as $$
 $$;
 revoke execute on function notify_admins(text) from public, anon, authenticated;
 
+alter table customer_orders add column if not exists adult_at timestamptz;
+alter table customer_orders add column if not exists terms_version text;
+
 create or replace function place_order(p jsonb) returns bigint
 language plpgsql security definer set search_path = public as $$
 declare me profiles; d jsonb := p -> 'design'; pk packages; w wines; st settings; lvl text; n int; oid bigint;
@@ -558,6 +561,8 @@ begin
     raise exception 'תאריך האספקה המוקדם ביותר הוא %', to_char(current_date + st.lead_days, 'DD.MM.YYYY'); end if;
   if c is null or length(coalesce(c ->> 'n', '')) < 2 or length(coalesce(c ->> 'ph', '')) < 7 then
     raise exception 'צריך שם וטלפון'; end if;
+  if coalesce((p ->> 'adult')::boolean, false) is not true then raise exception 'צריך לאשר שגילך 18 ומעלה'; end if;
+  if length(coalesce(p ->> 'terms', '')) < 4 then raise exception 'צריך לאשר את תנאי השימוש'; end if;
   if (p ->> 'buyer_kind') = 'business' then
     if p -> 'buyer' is null or length(coalesce(p -> 'buyer' ->> 'name', '')) < 2 then raise exception 'צריך את שם העסק'; end if;
     if me.buyer_id is null then
@@ -570,11 +575,11 @@ begin
   first := split_part(btrim(c ->> 'n'), ' ', 1);
   perform set_config('app.bypass', '1', true);
   insert into customer_orders (winery_id, customer_id, cust, design, status, channel, buyer_id, buyer_kind,
-                               package_id, series_id, delivery_date, quote_until, collector_consent)
+                               package_id, series_id, delivery_date, quote_until, collector_consent, adult_at, terms_version)
   values (w.winery_id, me.id, jsonb_build_object('n', first), d, case when quote then 'quote' else 'approved' end, 'direct', b,
           coalesce(p ->> 'buyer_kind', case when lvl = 'case' then 'private' else 'collector' end),
           pk.id, nullif(d ->> 'series', '')::bigint, dd, case when quote then least(dd - st.lead_days, current_date + 14) end,
-          coalesce((p ->> 'consent')::boolean, false))
+          coalesce((p ->> 'consent')::boolean, false), now(), left(p ->> 'terms', 20))
   returning id into oid;
   insert into order_contacts (order_id, cust) values (oid, jsonb_build_object(
     'n', left(c ->> 'n', 80), 'ph', left(c ->> 'ph', 30), 'em', left(coalesce(c ->> 'em', ''), 120),
