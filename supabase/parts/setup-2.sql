@@ -1,4 +1,4 @@
--- סדנת התווית · התקנה בחלקים · חלק 2 מתוך 6
+-- Grape Arts · התקנה בחלקים · חלק 2 מתוך 8
 -- מריצים לפי הסדר: 1, 2, 3... כל חלק בנפרד. מותר להריץ שוב חלק שכבר רץ.
 
 -- =====================================================================
@@ -33,7 +33,7 @@ create policy "private read" on storage.objects for select to authenticated
 --  ארגון הפלטפורמה. אחרי ההתחברות הראשונה מריצים את השורה שבסוף ההוראות.
 -- =====================================================================
 insert into organizations (kind, name)
-select 'admin', 'סדנת התווית'
+select 'admin', 'Grape Arts'
 where not exists (select 1 from organizations where kind = 'admin');
 
 
@@ -284,4 +284,4 @@ language sql stable security definer set search_path = public as $$
        and created_at >= date_trunc('month', now())))
 $$;
 
-select 'חלק 2 מתוך 6 הסתיים בהצלחה' as result;
+select 'חלק 2 מתוך 8 הסתיים בהצלחה' as result;

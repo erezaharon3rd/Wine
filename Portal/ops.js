@@ -12,7 +12,7 @@ async function makeVariants(src,who){
   const im=await loadImg(src),W0=im.naturalWidth,H0=im.naturalHeight;
   const mk=(max,mark)=>{const k=Math.min(1,max/Math.max(W0,H0)),c=document.createElement('canvas');c.width=Math.round(W0*k);c.height=Math.round(H0*k);
     const g=c.getContext('2d');g.drawImage(im,0,0,c.width,c.height);
-    if(mark){const f=Math.max(14,Math.round(c.width/26)),t=`© ${who||'האמן'} · סדנת התווית`,d=Math.hypot(c.width,c.height);
+    if(mark){const f=Math.max(14,Math.round(c.width/26)),t=`© ${who||'האמן'} · Grape Arts`,d=Math.hypot(c.width,c.height);
       g.save();g.translate(c.width/2,c.height/2);g.rotate(-Math.PI/7);g.font=`${f}px Heebo, Arial, sans-serif`;g.textAlign='center';g.direction='rtl';
       g.fillStyle='rgba(255,255,255,.20)';g.strokeStyle='rgba(0,0,0,.10)';g.lineWidth=1;
       for(let y=-d/2;y<d/2;y+=f*5)for(let x=-d/2+((y/(f*5))%2?f*6:0);x<d/2;x+=f*13){g.fillText(t,x,y);g.strokeText(t,x,y)}

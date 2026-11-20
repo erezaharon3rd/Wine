@@ -6,7 +6,7 @@ MOCK=open(D+'/mock.js').read()
 def init(role='admin',status='active',session=True,org=None,data=True):
     ADM='u-admin'
     db={'settings':[{'id':1,'comm_pct':15,'render_quota':6,'artist_share':50}],
-        'organizations':[{'id':'o-adm','kind':'admin','name':'סדנת התווית'},{'id':'g1','kind':'gallery','name':'הגלריה'},{'id':'w1','kind':'winery','name':'יקב הבדיקה'},{'id':'p1','kind':'printer','name':'דפוס'}],
+        'organizations':[{'id':'o-adm','kind':'admin','name':'Grape Arts'},{'id':'g1','kind':'gallery','name':'הגלריה'},{'id':'w1','kind':'winery','name':'יקב הבדיקה'},{'id':'p1','kind':'printer','name':'דפוס'}],
         'profiles':[{'id':ADM,'email':'erez@x.com','full_name':'ארז אהרון','role':role,'status':status,'org_id':org or ('o-adm' if role=='admin' else None),'created_at':'2026-11-19'},{'id':'u2','email':'new@x.com','role':None,'status':'pending','created_at':'2026-11-19'}],
         'artists':[{'id':'a1','user_id':ADM,'gallery_id':'g1','name':'ארז אהרון','floor_price':2500,'restrict_tags':[],'bio':''}],
         'works':[],'wines':[],'designs':[],'deals':[],'deal_messages':[],'print_orders':[],'applications':[],'audit_log':[]}

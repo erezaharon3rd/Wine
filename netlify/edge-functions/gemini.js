@@ -1,4 +1,4 @@
-// מנוע הצילום של סדנת התווית.
+// מנוע הצילום של Grape Arts.
 // המפתח של Google נשמר רק ב־Netlify (משתנה GEMINI_API_KEY) ולא מגיע לדפדפן.
 // כל קריאה דורשת משתמש מחובר. כל שימוש נרשם במסד הנתונים, ושם נבדקות המכסה והקצב.
 const GAPI = 'https://generativelanguage.googleapis.com/v1beta/';

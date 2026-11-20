@@ -6,7 +6,7 @@ MOCK=open(D+'/mock.js').read()
 def init(role,org,session=True,pending=False):
     U='u1'
     db={'settings':[{'id':1,'comm_pct':15,'render_quota':6,'artist_share':50}],
-     'organizations':[{'id':'o-adm','kind':'admin','name':'סדנת התווית','pricing':{},'details':{}},{'id':'g1','kind':'gallery','name':'הגלריה','pricing':{},'details':{}},{'id':'w1','kind':'winery','name':'יקב הבדיקה','slug':'wtest','pricing':{'prices':{'1':110}},'details':{'address':'רחוב היין 1','contact':'נוי','phone':'050-1111111'}},{'id':'p1','kind':'printer','name':'דפוס','pricing':{},'details':{}}],
+     'organizations':[{'id':'o-adm','kind':'admin','name':'Grape Arts','pricing':{},'details':{}},{'id':'g1','kind':'gallery','name':'הגלריה','pricing':{},'details':{}},{'id':'w1','kind':'winery','name':'יקב הבדיקה','slug':'wtest','pricing':{'prices':{'1':110}},'details':{'address':'רחוב היין 1','contact':'נוי','phone':'050-1111111'}},{'id':'p1','kind':'printer','name':'דפוס','pricing':{},'details':{}}],
      'profiles':[{'id':U,'email':'me@x.com','full_name':'בודק','role':None if pending else role,'status':'pending' if pending else 'active','org_id':None if pending else org,'created_at':'2026-11-19'}],
      'artists':[{'id':'a1','user_id':'zz','gallery_id':'g1','name':'ארז אהרון','floor_price':2500,'restrict_tags':[],'bio':'ציור שמן','country':'ישראל'}],
      'works':[{'id':1,'artist_id':'a1','title':'חורשה','status':'live','available':True,'image_path':'http://localhost:8777/img/p3.jpg','no_crop':{},'year':2024,'tag':'נוף','tone':'ירוק','story':'סיפור'},{'id':3,'artist_id':'a1','title':'ים','status':'review','available':True,'image_path':'x/3.jpg','no_crop':{},'px_w':4000,'px_h':3000}],

@@ -1,4 +1,4 @@
-/* סדנת התווית · שכבת החיבור ל־Supabase
+/* Grape Arts · שכבת החיבור ל־Supabase
    נטען רק כשקיים config.js וכתובת האתר אינה ?demo.
    האב־טיפוס נשאר כמו שהוא; כאן מחליפים את מקור הנתונים ואת הפעולות. */
 'use strict';
@@ -43,7 +43,7 @@ const adv=(id,action,adj=0,note=null)=>rpc('advance_deal',{p_deal:+id,p_action:a
 /* ── screens before the app ── */
 function vLive(){
   if(LV.state==='boot')return `<div class="login"><div class="lv-spin" role="status" aria-label="טוען"></div></div>`;
-  if(LV.state==='login')return `<div class="login"><span class="eyebrow">אמנות אמיתית על בקבוק</span><h1>סדנת התווית</h1><p class="lead">שוק אצור שבו יקבים בוחרים ציורים של אמנים, רואים את הבקבוק המוגמר וסוגרים רישיון במקום אחד.</p>
+  if(LV.state==='login')return `<div class="login"><span class="eyebrow">אמנות ישראלית על יין ישראלי</span><h1>Grape Arts</h1><p class="lead">בקבוקים ומארזים עם ציור מקורי של אמן ישראלי, במהדורות מוגבלות. לחברות, למסעדות, למלונות, לאספנים וליקבים.</p>
     ${LV.err?`<div class="panel" style="margin-top:8px;font-size:14.5px">${esc(LV.err)}</div>`:''}
     ${Y()?`<div class="panel" style="margin-top:8px;font-size:14.5px">נכנסים כדי לעצב בקבוק אישי מהיקב.</div>`:''}
     <div class="fld" id="lemf"><label for="lem">דוא״ל</label><input id="lem" type="email" inputmode="email" autocomplete="email" dir="ltr" placeholder="name@example.com" value="${esc(LV.email)}"><span class="err" id="lemerr" hidden>צריך כתובת דוא״ל תקינה</span></div>

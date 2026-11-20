@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>אימות תעודה · Grape Arts</title>
+<link rel="icon" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500&family=IBM+Plex+Mono:wght@400&family=IBM+Plex+Sans+Hebrew:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F3F3F2;--surface:#fff;--ink:#171717;--muted:#575755;--line:#DCDCDA}
+*{box-sizing:border-box}body{margin:0;background:#E8E8E6;color:var(--ink);font-family:"IBM Plex Sans Hebrew",Arial,sans-serif;line-height:1.55}
+.app{max-width:520px;margin:0 auto;min-height:100vh;background:var(--bg);padding:20px}
+a.brand{font-family:"Frank Ruhl Libre",serif;font-size:21px;color:var(--ink);text-decoration:none}
+h1{font-family:"Frank Ruhl Libre",serif;font-weight:500;font-size:30px;margin:22px 0 8px}
+.lead{color:var(--muted)}
+.fld{display:flex;gap:8px;margin:16px 0}.fld input{flex:1;border:1px solid var(--line);background:var(--surface);padding:12px;min-height:48px;font:inherit;font-family:"IBM Plex Mono",monospace;direction:ltr;text-align:center;letter-spacing:.1em}
+button{background:var(--ink);color:var(--bg);border:0;padding:0 18px;min-height:48px;font:inherit;cursor:pointer}
+.cert{background:var(--surface);border:1px solid var(--line);padding:22px 20px;margin-top:18px}
+.cert .no{font-family:"Frank Ruhl Libre",serif;font-size:44px;line-height:1}
+.kv{display:flex;justify-content:space-between;gap:12px;border-bottom:1px dashed var(--line);padding:6px 0}.kv:last-child{border:0}
+.ok{color:#2E5B36;font-weight:600}.bad{color:#8B2B2B;font-weight:600}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="app">
+  <a class="brand" href="shop.html">Grape Arts</a>
+  <h1>אימות תעודה</h1>
+  <p class="lead">כל בקבוק והדפס במהדורה ממוספרת מקבלים קוד אימות. המספר נרשם פעם אחת ולא חוזר.</p>
+  <form class="fld" id="f"><label for="c" style="position:absolute;left:-9999px">קוד אימות</label><input id="c" maxlength="12" placeholder="קוד מהתעודה" autocomplete="off"><button>לאמת</button></form>
+  <div id="out" aria-live="polite"></div>
+</div>
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const sb=supabase.createClient(window.SB_URL,window.SB_KEY,{auth:{persistSession:false}});
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function check(code){const out=document.getElementById('out');code=(code||'').trim();if(!code)return;
+  out.innerHTML='<p class="lead">בודק…</p>';
+  const r=await sb.rpc('verify_certificate',{p_code:code});
+  if(r.error){out.innerHTML='<p class="bad">אין חיבור לשרת. כדאי לנסות שוב</p>';return}
+  const x=r.data;if(!x){out.innerHTML='<div class="cert"><p class="bad">הקוד לא נמצא במרשם.</p><p class="lead">כדאי לבדוק שהקוד הוקלד בדיוק כמו בתעודה. אם הוא עדיין לא נמצא, התעודה אינה של Grape Arts.</p></div>';return}
+  out.innerHTML=`<div class="cert"><p class="ok">התעודה רשומה במרשם</p>
+  <div class="no">${x.no} <small style="font-size:18px">מתוך ${x.of}</small></div>
+  <p class="lead">${x.kind==='print'?'הדפס חתום וממוספר':'בקבוק במהדורה ממוספרת'}</p>
+  <div class="kv"><span>היצירה</span><b>${esc(x.work)}${x.year?', '+x.year:''}</b></div>
+  <div class="kv"><span>האמן</span><b>${esc(x.artist)}</b></div>
+  ${x.size?`<div class="kv"><span>מידות המקור</span><span>${esc(x.size)}</span></div>`:''}
+  ${x.technique?`<div class="kv"><span>טכניקת ההדפס</span><span>${esc(x.technique)}</span></div>`:''}
+  ${x.wine?`<div class="kv"><span>היין</span><span>${esc(x.wine)} ${x.vintage||''} · ${esc(x.winery||'')}</span></div>`:''}
+  ${x.drink_by?`<div class="kv"><span>מומלץ לשתות עד</span><span>${x.drink_by}</span></div>`:''}
+  <div class="kv"><span>חתימת האמן</span><span>${x.signed?'נחתמה':'עדיין לא נחתמה'}</span></div>
+  <div class="kv"><span>חותמת הגלריה</span><span>${x.stamped?'הוטבעה':'עדיין לא הוטבעה'}</span></div>
+  <div class="kv"><span>נרשמה ב־</span><span>${String(x.issued).split('-').reverse().join('.')}</span></div></div>`}
+document.getElementById('f').onsubmit=e=>{e.preventDefault();check(document.getElementById('c').value)};
+const c=new URLSearchParams(location.search).get('c');if(c){document.getElementById('c').value=c;check(c)}
+</script>
+</body>
+</html>

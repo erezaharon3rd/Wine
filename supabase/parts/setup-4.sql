@@ -1,4 +1,4 @@
--- סדנת התווית · התקנה בחלקים · חלק 4 מתוך 6
+-- Grape Arts · התקנה בחלקים · חלק 4 מתוך 8
 -- מריצים לפי הסדר: 1, 2, 3... כל חלק בנפרד. מותר להריץ שוב חלק שכבר רץ.
 
 -- =====================================================================
@@ -384,4 +384,4 @@ end $$;
 update works set status = 'live'
 where status = 'review' and px_w is not null and px_h is not null and label_dpi(px_w, px_h) >= 240;
 
-select 'חלק 4 מתוך 6 הסתיים בהצלחה' as result;
+select 'חלק 4 מתוך 8 הסתיים בהצלחה' as result;

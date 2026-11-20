@@ -1,4 +1,4 @@
-/* סדנת התווית · מסמכים וקבצים: קובץ דפוס לתווית, חוזה וחשבונית להורדה כ־PDF.
+/* Grape Arts · מסמכים וקבצים: קובץ דפוס לתווית, חוזה וחשבונית להורדה כ־PDF.
    עובד גם בהדגמה וגם במערכת המחוברת. */
 'use strict';
 (function(){
@@ -69,7 +69,7 @@ function loadPdfLib(){return _pdfLib||(_pdfLib=window.PDFLib?Promise.resolve(win
 async function printPdf(spec,name,label,W,H){
   const {PDFDocument,rgb,StandardFonts}=await loadPdfLib();
   const mm=v=>v*72/25.4,M=10,T={w:PRINT.w,h:PRINT.h},B=PRINT.bleed;
-  const doc=await PDFDocument.create();doc.setTitle(name);doc.setCreator('סדנת התווית');doc.setProducer('Sadnat Hatavit');
+  const doc=await PDFDocument.create();doc.setTitle(name);doc.setCreator('Grape Arts');doc.setProducer('Grape Arts');
   const font=await doc.embedFont(StandardFonts.Helvetica);
   const svg=await labelSvg(spec.type,spec.work,spec.o);
   const layers=[['ARTWORK',label]];

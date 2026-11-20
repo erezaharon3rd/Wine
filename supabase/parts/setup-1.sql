@@ -1,8 +1,8 @@
--- סדנת התווית · התקנה בחלקים · חלק 1 מתוך 6
+-- Grape Arts · התקנה בחלקים · חלק 1 מתוך 8
 -- מריצים לפי הסדר: 1, 2, 3... כל חלק בנפרד. מותר להריץ שוב חלק שכבר רץ.
 
 -- =====================================================================
---  סדנת התווית · קובץ הקמה למסד הנתונים (Supabase)
+--  Grape Arts · קובץ הקמה למסד הנתונים (Supabase)
 --  מדביקים את כל הקובץ ב-SQL Editor ולוחצים Run. אפשר להריץ שוב בבטחה.
 -- =====================================================================
 
@@ -580,4 +580,4 @@ grant execute on function advance_deal(bigint,text,int,text) to authenticated;
 revoke execute on function deal_price(deals) from public, anon;
 revoke execute on function notify_deal(bigint,text,app_role[]) from public, anon, authenticated;
 
-select 'חלק 1 מתוך 6 הסתיים בהצלחה' as result;
+select 'חלק 1 מתוך 8 הסתיים בהצלחה' as result;

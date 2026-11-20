@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#F3F3F2">
-<title>סדנת התווית · המערכת המלאה</title>
+<title>Grape Arts · המערכת המלאה</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Hebrew:wght@400;500;600&display=swap" rel="stylesheet">
@@ -428,7 +428,7 @@ function render(){
   if(!S.role){app.innerHTML=vLogin();return}
   const n=unread(S.role);
   const sc=screen();
-  app.innerHTML=`<header class="top"><button class="ib" data-a="account" aria-label="חשבון והחלפת תפקיד"><span class="av">${ROLES[S.role].u}</span></button><div><div class="brand">סדנת התווית<span class="demobadge">הדגמה</span></div><div class="rl">${ROLES[S.role].n} · ${ROLES[S.role].who}</div></div><span class="sp"></span>
+  app.innerHTML=`<header class="top"><button class="ib" data-a="account" aria-label="חשבון והחלפת תפקיד"><span class="av">${ROLES[S.role].u}</span></button><div><div class="brand">Grape Arts<span class="demobadge">הדגמה</span></div><div class="rl">${ROLES[S.role].n} · ${ROLES[S.role].who}</div></div><span class="sp"></span>
   <button class="ib" data-a="bell" aria-label="התראות${n?`, ${n} חדשות`:''}">${ICON.bell}${n?`<span class="dot">${n}</span>`:''}</button></header>
   <main id="m" class="${sc.bar?'withbar':''}">${sc.html}</main>
   ${sc.bar||''}
@@ -461,7 +461,7 @@ const empty=(t,s)=>`<div class="empty"><b>${t}</b>${s||''}</div>`;
 
 /* ── login ── */
 function vLogin(){
-  if(S.login===0) return `<div class="login"><span class="eyebrow">אמנות אמיתית על בקבוק</span><h1>סדנת התווית</h1><p class="lead">שוק אצור שבו יקבים בוחרים ציורים של אמנים, רואים את הבקבוק המוגמר וסוגרים רישיון במקום אחד.</p>
+  if(S.login===0) return `<div class="login"><span class="eyebrow">אמנות ישראלית על יין ישראלי</span><h1>Grape Arts</h1><p class="lead">בקבוקים ומארזים עם ציור מקורי של אמן ישראלי, במהדורות מוגבלות. לחברות, למסעדות, למלונות, לאספנים וליקבים.</p>
   <div class="fld" id="phf"><label for="ph">טלפון או דוא״ל</label><input id="ph" inputmode="email" autocomplete="username" placeholder="050-0000000" value="050-1234567"><span class="err" id="pherr" hidden>צריך מספר טלפון או כתובת דוא״ל</span></div>
   <button class="btn wide" style="margin-top:14px" data-a="login1">לקבל קוד כניסה</button><p class="note">בלי סיסמה. קוד חד־פעמי נשלח לטלפון או לדוא״ל.</p></div>`;
   if(S.login===1) return `<div class="login"><span class="eyebrow">כמעט שם</span><h1>הקוד שקיבלת</h1><p class="lead">שלחנו קוד בן ארבע ספרות ל־<span class="num">${esc(S.phone||'')}</span>. בהדגמה אפשר להקליד כל מספר.</p>
@@ -950,6 +950,6 @@ if(window.LIVE){}else if(S.role){S.view=null;S.tab=S.tab||TABS[S.role][0][0];loc
 <script src="customer.js?v=12"></script>
 <script src="docs.js?v=6"></script>
 <script src="motion.js?v=2"></script>
-<script>if(window.LIVE)document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script><script src="live.js?v=17"><\/script><script src="ops.js?v=9"><\/script><script src="label.js?v=1"><\/script><script src="tiers.js?v=1"><\/script>')</script>
+<script>if(window.LIVE)document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script><script src="live.js?v=17"><\/script><script src="ops.js?v=9"><\/script><script src="label.js?v=1"><\/script><script src="tiers.js?v=1"><\/script><script src="channels.js?v=1"><\/script>')</script>
 </body>
 </html>

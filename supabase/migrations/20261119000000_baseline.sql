@@ -1,5 +1,5 @@
 -- =====================================================================
---  סדנת התווית · קובץ הקמה למסד הנתונים (Supabase)
+--  Grape Arts · קובץ הקמה למסד הנתונים (Supabase)
 --  מדביקים את כל הקובץ ב-SQL Editor ולוחצים Run. אפשר להריץ שוב בבטחה.
 -- =====================================================================
 
@@ -609,7 +609,7 @@ create policy "private read" on storage.objects for select to authenticated
 --  ארגון הפלטפורמה. אחרי ההתחברות הראשונה מריצים את השורה שבסוף ההוראות.
 -- =====================================================================
 insert into organizations (kind, name)
-select 'admin', 'סדנת התווית'
+select 'admin', 'Grape Arts'
 where not exists (select 1 from organizations where kind = 'admin');
 
 

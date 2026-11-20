@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Grape Arts · אמנות ישראלית על יין ישראלי</title>
+<meta name="description" content="בקבוקים ומארזים עם ציור מקורי של אמן ישראלי, במהדורות מוגבלות. לחברות, למסעדות, למלונות ולאספנים.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Hebrew:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F3F3F2;--surface:#FFFFFF;--ink:#171717;--muted:#575755;--line:#DCDCDA;--soft:#6F6F6D;--wine:#5A2232;--gold:#8C6A24;
+--display:"Frank Ruhl Libre","David Libre","Times New Roman",serif;
+--body:"IBM Plex Sans Hebrew","Heebo","Arial Hebrew",Arial,sans-serif;
+--mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:#E8E8E6;color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.app{max-width:560px;margin:0 auto;min-height:100vh;background:var(--bg);display:flex;flex-direction:column}
+@media(min-width:900px){.app{max-width:980px}.grid{grid-template-columns:repeat(4,1fr)!important}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}}
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;min-height:56px;padding:0 16px;background:var(--bg);border-bottom:1px solid var(--line)}
+.brand{font-family:var(--display);font-size:21px;font-weight:500;text-decoration:none;color:var(--ink)}
+.top .sp{flex:1}
+.top a.lnk,.top button.lnk{display:inline-flex;align-items:center;background:none;border:0;color:var(--muted);font-size:15px;text-decoration:none;cursor:pointer;min-height:44px;padding:0 6px}
+main{flex:1;padding:18px 20px 140px}
+h1{font-family:var(--display);font-weight:500;font-size:34px;line-height:1.12;margin:6px 0 10px;text-wrap:balance}
+h2{font-family:var(--display);font-weight:500;font-size:24px;line-height:1.2;margin:26px 0 8px}
+h3{font-size:14px;font-weight:600;color:var(--muted);margin:22px 0 8px}
+.lead{color:var(--muted);margin:0 0 16px}
+.eyebrow{font-size:13px;color:var(--soft)}
+.note{font-size:13.5px;color:var(--muted)}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;white-space:nowrap}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.tile{display:block;text-align:right;background:var(--surface);border:1px solid var(--line);padding:0;cursor:pointer;border-radius:2px}
+.tile .ph{display:block;aspect-ratio:4/5;background:#E6E6E4 center/cover no-repeat}
+.tile .cap{display:block;padding:8px 10px 10px}
+.tile .cap b{display:block;font-weight:600;font-size:15px}
+.tile .cap small{color:var(--soft);font-size:13px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.chip{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 14px;min-height:40px;cursor:pointer;font-size:14.5px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--ink);color:var(--bg);border:1px solid var(--ink);border-radius:2px;padding:12px 18px;min-height:48px;font-weight:500;cursor:pointer;text-decoration:none}
+.btn.alt{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn.wide{display:flex;width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:10px;margin-top:14px}.row>*{flex:1}
+.opt{display:flex;gap:12px;align-items:flex-start;text-align:right;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:2px;padding:12px 14px;margin-bottom:8px;cursor:pointer}
+.opt[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.opt .t{flex:1}.opt .t b{display:block}.opt .t small{color:var(--muted);font-size:13.5px}
+.opt .p{font-family:var(--mono);white-space:nowrap}
+.lvl{display:inline-block;font-size:12px;border-radius:99px;padding:1px 9px;margin-inline-start:6px;vertical-align:2px;color:#fff;background:var(--soft)}
+.lvl.collector{background:var(--wine)}.lvl.patron{background:var(--gold)}
+.fld{margin:12px 0}.fld label{display:block;font-size:14px;color:var(--muted);margin-bottom:4px}
+.fld input,.fld select,.fld textarea{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:2px;padding:11px 12px;min-height:46px}
+.fld textarea{min-height:80px}
+.check{display:flex;gap:10px;align-items:flex-start;margin:12px 0;font-size:15px}.check input{width:22px;height:22px;margin-top:2px;flex:none}
+.steps{display:flex;gap:6px;margin:4px 0 18px}
+.steps span{flex:1;height:4px;background:var(--line);border-radius:2px}.steps span.on{background:var(--ink)}
+.stepname{font-size:13px;color:var(--soft);margin-bottom:2px}
+.bar{position:fixed;bottom:0;left:0;right:0;z-index:6;background:var(--bg);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
+.bar .in{max-width:560px;margin:0 auto;display:flex;gap:12px;align-items:center}
+@media(min-width:900px){.bar .in{max-width:980px}}
+.bar .sum{flex:1}.bar .sum b{font-family:var(--mono);font-size:19px}.bar .sum small{display:block;color:var(--soft);font-size:12.5px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:2px;padding:14px 16px;margin:10px 0}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dashed var(--line);font-size:15px}.kv:last-child{border:0}
+.kv b{font-weight:600}
+.tl{list-style:none;margin:8px 0 0;padding:0}.tl li{position:relative;padding:0 18px 10px 0;font-size:14px;color:var(--muted)}
+.tl li::before{content:"";position:absolute;right:3px;top:7px;width:8px;height:8px;border-radius:50%;background:var(--line)}
+.tl li.now{color:var(--ink);font-weight:600}.tl li.now::before{background:var(--ink)}.tl li.done::before{background:var(--soft)}
+.stage{display:grid;place-items:center;background:linear-gradient(#EFEEEA,#E2E0DA);border:1px solid var(--line);padding:18px 0 10px}
+.stage svg{width:200px;height:auto}
+.zone-hint{font-size:13px;color:var(--muted);text-align:center;margin-top:6px}
+.msg{padding:12px 14px;border:1px solid var(--line);background:var(--surface);margin:10px 0}
+.msg.err{border-color:#8B2B2B;color:#8B2B2B}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:2px;opacity:0;transition:.2s;z-index:9;max-width:90vw;font-size:15px}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.empty{padding:28px 10px;text-align:center;color:var(--muted)}
+.hero{padding:10px 0 6px}
+.hero .why{display:grid;gap:10px;margin:18px 0 8px}
+.hero .why div{border-top:1px solid var(--line);padding-top:10px;font-size:15px}
+.hero .why b{display:block;font-family:var(--display);font-size:19px;font-weight:500}
+@media(min-width:900px){.hero .why{grid-template-columns:repeat(3,1fr);gap:20px}}
+.badge{display:inline-block;border:1px solid var(--line);border-radius:99px;padding:0 8px;font-size:12.5px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <a class="brand" href="shop.html#home">Grape Arts</a>
+    <span class="sp"></span>
+    <a class="lnk" href="#orders" id="nav-orders">ההזמנות שלי</a>
+    <button class="lnk" id="nav-auth" type="button">כניסה</button>
+  </header>
+  <main id="main" aria-live="polite"><p class="note">טוען…</p></main>
+</div>
+<div class="bar" id="bar" hidden><div class="in" id="barin"></div></div>
+<div class="toast" id="toast" role="status"></div>
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+'use strict';
+const sb=supabase.createClient(window.SB_URL,window.SB_KEY,{auth:{persistSession:true,detectSessionInUrl:true}});
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const nis=n=>'₪'+Math.round(+n||0).toLocaleString('en-US');
+const heb=e=>{const m=String(e?.message||e||'');if(/[֐-׿]/.test(m))return m.replace(/^.*?ERROR:\s*/,'');if(/fetch|network/i.test(m))return 'אין חיבור לשרת. כדאי לבדוק את האינטרנט';if(/Invalid login/i.test(m))return 'המייל או הסיסמה לא נכונים';if(/already registered/i.test(m))return 'המייל הזה כבר רשום. אפשר להיכנס';return 'משהו השתבש. כדאי לנסות שוב'};
+let tt;function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>e.classList.remove('on'),2800)}
+const PREV=p=>p?`${window.SB_URL}/storage/v1/object/public/previews/${p.split('/').map(encodeURIComponent).join('/')}`:'';
+const LVL={case:'מארז',collector:'אספנים',patron:'פטרון'};
+const ZONE={band:'פס מתחת לציור',neck:'תווית צוואר',back:'התווית האחורית',card:'כרטיס במארז'};
+const ST={quote:'הצעת מחיר',approved:'ממתינה לתשלום',print:'בהפקה',done:'מוכנה למשלוח',cancel:'בוטלה'};
+const TYPE={red:'אדום',white:'לבן',rose:'רוזה',sparkling:'מבעבע',dessert:'קינוח',other:'אחר'};
+const KEY='ga-draft';
+const S={cat:null,user:null,card:null,role:null,draft:load(),quote:null,qErr:'',orders:null,ref:new URLSearchParams(location.search).get('ref')||''};
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return{}}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S.draft))}catch(e){}}
+const D=()=>S.draft;
+const art=id=>S.cat.artists.find(a=>a.id===id);
+const work=id=>S.cat.works.find(w=>w.id===+id);
+const pkg=id=>S.cat.packages.find(p=>p.id===+id);
+const wine=id=>S.cat.wines.find(w=>w.id===+id);
+const ser=id=>S.cat.series.find(s=>s.id===+id);
+const minDate=()=>{const d=new Date();d.setDate(d.getDate()+(S.cat?.lead_days||21));return d.toISOString().slice(0,10)};
+
+/* ── session ── */
+async function refreshUser(){
+  const {data}=await sb.auth.getSession();S.user=data.session?.user||null;S.card=null;S.role=null;
+  if(S.user){
+    const {data:p}=await sb.from('profiles').select('role,status,org_id').eq('id',S.user.id).maybeSingle();
+    S.role=p?.role||null;
+    if(!S.role&&p?.status==='pending'){const r=await sb.rpc('join_direct',{p_ref:S.ref||null});if(!r.error&&r.data)S.role='customer'}
+    const c=await sb.rpc('my_card');S.card=c.data||null;
+  }
+  $('#nav-auth').textContent=S.user?'יציאה':'כניסה';
+}
+$('#nav-auth').onclick=async()=>{if(S.user){await sb.auth.signOut();S.user=null;S.card=null;S.orders=null;toast('יצאת מהחשבון');route()}else{location.hash='login'}};
+
+/* ── routing ── */
+window.addEventListener('hashchange',route);
+async function route(){
+  const h=location.hash.replace('#','')||'home';
+  $('#bar').hidden=true;window.scrollTo(0,0);
+  try{
+    if(h==='home')return vHome();
+    if(h.startsWith('artist-'))return vArtist(h.slice(7));
+    if(h.startsWith('work-'))return vWork(+h.slice(5));
+    if(h==='make')return vMake();
+    if(h==='details')return vDetails();
+    if(h==='login')return vLogin();
+    if(h==='orders')return vOrders();
+    if(h.startsWith('d-'))return vDraft(h.slice(2));
+    if(h==='done')return vDone();
+    vHome();
+  }catch(e){console.error(e);$('#main').innerHTML=`<div class="msg err">${esc(heb(e))}</div>`}
+}
+function steps(n){const names=['ציור','מארז ויין','התאמה אישית','סיכום ופרטים'];
+  return `<div class="stepname">שלב ${n} מתוך 4 · ${names[n-1]}</div><div class="steps" aria-hidden="true">${names.map((_,i)=>`<span class="${i<n?'on':''}"></span>`).join('')}</div>`}
+
+/* ── 1. the catalog ── */
+function vHome(){
+  const C=S.cat;
+  if(!C.open)return $('#main').innerHTML=`<h1>ההזמנות סגורות כרגע</h1><p class="lead">נפתח שוב בקרוב. אפשר לכתוב לנו ונודיע לך.</p>`;
+  const f=S.f||'all';
+  const ws=C.works.filter(w=>{const a=art(w.artist);return a&&(f==='all'||a.levels.includes(f))});
+  $('#main').innerHTML=`<section class="hero">
+    <span class="eyebrow">אמנות ישראלית על יין ישראלי</span>
+    <h1>ציור מקורי של אמן ישראלי, על בקבוק שנבחר בשבילך</h1>
+    <p class="lead">בוחרים ציור, מארז ויין. אפשר להוסיף שם, הקדשה או לוגו של העסק, תמיד מחוץ לציור עצמו. מתאים למתנות לחגים, לאירועים, למסעדות ולמלונות.</p>
+    <div class="why"><div><b>אמנים ישראלים</b>כל ציור נבחר ואושר על ידי האמן והגלריה שלו.</div><div><b>מהדורות ממוספרות</b>בקבוקי אספנים עם תעודה חתומה ומספר שלא חוזר.</div><div><b>יין של יקב ישראלי</b>היין נמכר על ידי היקב, והאמנות, המארז והתעודה על ידינו.</div></div>
+  </section>
+  ${steps(1)}
+  <h2>בוחרים ציור</h2>
+  <div class="chips" role="group" aria-label="סינון לפי רמה">${[['all','הכל'],['case','מארזים'],['collector','אספנים'],['patron','פטרון']].map(([k,t])=>`<button class="chip" data-f="${k}" aria-pressed="${f===k}">${t}</button>`).join('')}</div>
+  ${ws.length?`<div class="grid" style="margin-top:12px">${ws.map(tile).join('')}</div>`:`<div class="empty">אין עדיין יצירות ברמה הזו.</div>`}
+  ${C.artists.length?`<h2>האמנים</h2>${C.artists.map(a=>`<button class="opt" data-go="artist-${a.id}"><span class="t"><b>${esc(a.name)}</b><small>${esc((a.bio||'').slice(0,110))}${(a.bio||'').length>110?'…':''}</small></span></button>`).join('')}`:''}
+  <p class="note" style="margin-top:24px">יש לך תעודה? <a href="verify.html">לאמת מספר מהדורה</a></p>`;
+  bind();
+}
+function tile(w){const a=art(w.artist);return `<button class="tile" data-go="work-${w.id}"><span class="ph" style="background-image:url('${PREV(w.preview)}')" role="img" aria-label="${esc(w.title)}"></span><span class="cap"><b>${esc(w.title)}</b><small>${esc(a?.name||'')}${w.year?' · '+w.year:''}</small></span></button>`}
+function vArtist(id){const a=art(id);if(!a)return vHome();
+  $('#main').innerHTML=`<a href="#home" class="note">→ לכל הציורים</a><h1>${esc(a.name)}</h1><p class="lead">${esc(a.bio||'')}</p>
+  <div>${a.levels.map(l=>`<span class="lvl ${l}">${LVL[l]}</span>`).join(' ')}</div>
+  <div class="grid" style="margin-top:14px">${S.cat.works.filter(w=>w.artist===id).map(tile).join('')}</div>`;bind()}
+
+/* ── 2. package and wine ── */
+function vWork(id){const w=work(id);if(!w)return vHome();const a=art(w.artist);
+  if(D().work!==id){S.draft={work:id,artist:w.artist,qty:1,shape:'rect',pos:50,zoom:100};save()}
+  const d=D();
+  const pks=S.cat.packages.filter(p=>a.levels.includes(p.level));
+  const sers=S.cat.series.filter(s=>s.work===id);
+  const p=pkg(d.package);
+  const needSer=p&&p.level!=='case';
+  const serOk=s=>p&&s.levels.includes(p.level)&&(s.kind==='open'||s.free>0);
+  const wines=S.cat.wines.filter(x=>!d.series||!ser(d.series)?.wine||ser(d.series).wine===x.id);
+  $('#main').innerHTML=`<a href="#home" class="note">→ לכל הציורים</a>
+  <div class="two-col"><div>
+    <div class="stage"><img src="${PREV(w.preview)}" alt="${esc(w.title)}" style="max-width:100%;max-height:360px"></div>
+    <h1 style="margin-top:14px">${esc(w.title)}</h1><p class="lead">${esc(a.name)}${w.year?' · '+w.year:''}${w.size?' · '+esc(w.size):''}</p>
+  </div><div>
+  ${steps(2)}
+  <h3>המארז</h3>
+  ${pks.map(x=>`<button class="opt" data-pk="${x.id}" aria-pressed="${d.package===x.id}"><span class="t"><b>${esc(x.name)}<span class="lvl ${x.level}">${LVL[x.level]}</span></b><small>${x.bottles} ${x.bottles>1?'בקבוקים':'בקבוק'} · ${esc(x.box||'')}${x.includes?.certificate?' · תעודה חתומה וממוספרת':''}${x.includes?.print?' · הדפס חתום וממוספר':''}</small></span></button>`).join('')}
+  ${needSer?`<h3>המהדורה</h3>${sers.filter(serOk).length?sers.filter(serOk).map(s=>`<button class="opt" data-sr="${s.id}" aria-pressed="${d.series===s.id}"><span class="t"><b>${esc(s.name||'מהדורה ממוספרת')}</b><small>${s.kind==='closed'?`נותרו ${s.free} מתוך ${s.size} בקבוקים`:'סדרה פתוחה'}${p.level==='patron'&&s.technique?` · ${esc(s.technique)}, ${s.print_free} מתוך ${s.print_size} הדפסים`:''}</small></span></button>`).join(''):`<div class="msg">אין כרגע מהדורה פתוחה לרמה הזו בציור הזה. אפשר לבחור מארז רגיל, או <a href="#home">ציור אחר</a>.</div>`}`:''}
+  <h3>היין</h3>
+  ${wines.length?wines.map(x=>`<button class="opt" data-wn="${x.id}" aria-pressed="${d.wine===x.id}"><span class="t"><b>${esc(x.name)}${x.vintage?' '+x.vintage:''}</b><small>${esc(x.winery)} · ${TYPE[x.type]||''}${x.kosher?' · כשר':''}${x.drink_by?' · מומלץ לשתות עד '+x.drink_by:''}</small></span><span class="p">${nis(x.price)}</span></button>`).join(''):`<div class="msg">אין כרגע יין זמין להזמנה.</div>`}
+  <div class="fld"><label for="qty">כמה ${p?esc(p.name):'מארזים'}</label><input id="qty" type="number" inputmode="numeric" min="1" max="500" value="${d.qty||1}"></div>
+  </div></div>`;
+  bind();
+  $('#qty').oninput=e=>{D().qty=Math.max(1,Math.min(500,+e.target.value||1));save();price()};
+  document.querySelectorAll('[data-pk]').forEach(b=>b.onclick=()=>{d.package=+b.dataset.pk;const pl=pkg(d.package).level;if(pl==='case'&&d.series&&!ser(d.series)?.levels.includes('case'))delete d.series;if(pl!=='case'&&d.series&&!ser(d.series)?.levels.includes(pl))delete d.series;save();vWork(id)});
+  document.querySelectorAll('[data-sr]').forEach(b=>b.onclick=()=>{d.series=+b.dataset.sr;const s=ser(d.series);if(s.wine)d.wine=s.wine;save();vWork(id)});
+  document.querySelectorAll('[data-wn]').forEach(b=>b.onclick=()=>{d.wine=+b.dataset.wn;save();vWork(id)});
+  const ready=d.package&&d.wine&&(!needSer||d.series);
+  bar(`<button class="btn" id="next" ${ready?'':'disabled'}>להתאמה אישית</button>`);
+  $('#next').onclick=()=>location.hash='make';
+  price();
+}
+
+/* ── 3. personal touch: always outside the painting ── */
+function vMake(){const d=D(),w=work(d.work);if(!w||!d.package||!d.wine)return location.hash='work-'+(d.work||'');
+  const zones=w.zones||[];
+  $('#main').innerHTML=`<a href="#work-${w.id}" class="note">→ חזרה למארז וליין</a>${steps(3)}
+  <div class="two-col"><div><div class="stage">${bottle(w,d)}</div><p class="zone-hint">${d.zone?'הטקסט והלוגו ב'+ZONE[d.zone]+'. הציור עצמו נשאר כמו שהוא.':'הציור נשאר כמו שהוא. אפשר להוסיף שם או לוגו מחוץ לו.'}</p></div><div>
+  <h1>התאמה אישית</h1>
+  <p class="lead">שם, הקדשה או לוגו נכנסים רק לאזורים שהאמן אישר, ואף פעם לא על הציור.</p>
+  ${zones.length?`<h3>איפה</h3><div class="chips">${[['','בלי תוספת'],...zones.map(z=>[z,ZONE[z]])].map(([k,t])=>`<button class="chip" data-z="${k}" aria-pressed="${(d.zone||'')===k}">${t}</button>`).join('')}</div>`
+    :`<div class="msg">לציור הזה עוד אין אזור מאושר לטקסט או ללוגו. הבקבוק יגיע עם הציור בלבד.</div>`}
+  ${d.zone?`<div class="fld"><label for="nm">שם או כותרת (עד 24 תווים)</label><input id="nm" maxlength="24" value="${esc(d.name||'')}" placeholder="למשל: משפחת לוי · ראש השנה"></div>
+  <div class="fld"><label for="ded">הקדשה (עד 40 תווים, לא חובה)</label><input id="ded" maxlength="40" value="${esc(d.ded||'')}"></div>
+  <div class="fld"><label for="logo">לוגו (PNG או SVG, עד 5MB, לא חובה)</label><input id="logo" type="file" accept="image/png,image/svg+xml,image/jpeg,image/webp"></div>
+  <p class="note" id="logoq">${d.logoName?'לוגו: '+esc(d.logoName):''}</p>`:''}
+  </div></div>`;
+  bind();
+  document.querySelectorAll('[data-z]').forEach(b=>b.onclick=()=>{d.zone=b.dataset.z||undefined;if(!d.zone){delete d.name;delete d.ded;delete d.logoData;delete d.logoName}save();vMake()});
+  const nm=$('#nm'),ded=$('#ded'),lg=$('#logo');
+  if(nm)nm.oninput=()=>{d.name=nm.value;save();$('.stage').innerHTML=bottle(w,d)};
+  if(ded)ded.oninput=()=>{d.ded=ded.value;save();$('.stage').innerHTML=bottle(w,d)};
+  if(lg)lg.onchange=()=>{const f=lg.files[0];if(!f)return;if(f.size>5*1024*1024){toast('הקובץ גדול מ־5MB');return}
+    const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const small=Math.min(im.naturalWidth,im.naturalHeight)<300&&f.type!=='image/svg+xml';
+      $('#logoq').textContent=small?'הלוגו קטן מדי להדפסה איכותית. כדאי להעלות קובץ של 300 פיקסלים לפחות, או קובץ SVG':'לוגו: '+f.name;
+      if(small)return;d.logoData=r.result;d.logoName=f.name;d.logoType=f.type;save();$('.stage').innerHTML=bottle(w,d)};im.src=r.result};r.readAsDataURL(f)};
+  bar(`<button class="btn alt" onclick="location.hash='work-${w.id}'">חזרה</button><button class="btn" id="next">לסיכום</button>`);
+  $('#next').onclick=()=>location.hash='details';
+  price();
+}
+function bottle(w,d){
+  const img=PREV(w.preview),t=esc(d.name||''),de=esc(d.ded||''),lg=d.logoData;
+  const band=d.zone==='band',neck=d.zone==='neck';
+  return `<svg viewBox="0 0 200 420" role="img" aria-label="תצוגה של הבקבוק"><defs><clipPath id="lab"><rect x="38" y="190" width="124" height="${band?120:160}" rx="2"/></clipPath><linearGradient id="gl" x1="0" x2="1"><stop offset="0" stop-color="#1d2a1f"/><stop offset=".45" stop-color="#2c3d2f"/><stop offset="1" stop-color="#141c15"/></linearGradient></defs>
+  <path d="M84 20h32v70c0 26 46 44 46 92v214c0 10-8 16-18 16H56c-10 0-18-6-18-16V182c0-48 46-66 46-92z" fill="url(#gl)"/>
+  <rect x="82" y="14" width="36" height="22" rx="3" fill="#3a2a22"/>
+  ${neck?`<rect x="80" y="104" width="40" height="34" rx="2" fill="#F4F1E8"/><text x="100" y="125" font-size="8" text-anchor="middle" fill="#171717">${t||'הטקסט שלך'}</text>`:''}
+  <rect x="36" y="188" width="128" height="${band?164:164}" fill="#F4F1E8"/>
+  <image href="${img}" x="38" y="190" width="124" height="${band?120:160}" preserveAspectRatio="xMidYMid slice" clip-path="url(#lab)"/>
+  ${band?`<rect x="38" y="312" width="124" height="38" fill="#F4F1E8"/>${lg?`<image href="${lg}" x="44" y="318" width="26" height="26" preserveAspectRatio="xMidYMid meet"/>`:''}<text x="${lg?110:100}" y="330" font-size="9" text-anchor="middle" fill="#171717" font-weight="600">${t||'הטקסט שלך'}</text>${de?`<text x="${lg?110:100}" y="343" font-size="7" text-anchor="middle" fill="#575755">${de}</text>`:''}`:''}
+  </svg>${d.zone==='card'?`<div class="card" style="margin:8px 0 0;width:220px;text-align:center">${lg?`<img src="${lg}" alt="" style="max-height:34px;display:block;margin:0 auto 6px">`:''}<b>${t||'הטקסט שלך'}</b><div class="note">${de}</div></div>`:''}${d.zone==='back'?`<p class="zone-hint">הטקסט יודפס על התווית האחורית.</p>`:''}`}
+
+/* ── live price ── */
+let pt;function price(){clearTimeout(pt);pt=setTimeout(async()=>{const d=D();if(!d.package||!d.wine){paint();return}
+  const r=await sb.rpc('direct_quote',{d:design()});S.quote=r.error?null:r.data;S.qErr=r.error?heb(r.error):'';paint()},250)}
+function paint(){const s=$('#barsum');if(!s)return;const q=S.quote,v=S.cat.vat||18;
+  s.innerHTML=q?`<b>${nis(q.total*(1+v/100))}</b><small>כולל מע״מ · ${q.bottles} בקבוקים${q.discount_pct?` · הנחת כמות ${q.discount_pct}% על האמנות והמארז`:''}</small>`:`<small>${esc(S.qErr||'בוחרים מארז ויין כדי לראות מחיר')}</small>`}
+function bar(btns){$('#barin').innerHTML=`<div class="sum" id="barsum"></div>${btns}`;$('#bar').hidden=false;paint()}
+function design(){const d=D(),o={wine:d.wine,work:d.work,artist:d.artist,shape:d.shape||'rect',qty:d.qty||1,pos:d.pos??50,zoom:d.zoom??100,package:d.package};
+  if(d.series)o.series=d.series;if(d.zone){o.zone=d.zone;if(d.name)o.name=d.name;if(d.ded)o.ded=d.ded;if(d.logoPath)o.logo=d.logoPath}return o}
+
+/* ── 4. summary and details ── */
+function vDetails(){const d=D(),w=work(d.work),p=pkg(d.package),wn=wine(d.wine);if(!w||!p||!wn)return location.hash='home';
+  const biz=!!d.biz,lv=p.level;
+  $('#main').innerHTML=`<a href="#make" class="note">→ חזרה להתאמה</a>${steps(4)}<h1>סיכום</h1>
+  <div class="card">
+    <div class="kv"><span>הציור</span><b>${esc(w.title)} · ${esc(art(w.artist)?.name||'')}</b></div>
+    <div class="kv"><span>המארז</span><b>${esc(p.name)} × ${d.qty||1}</b></div>
+    ${d.series?`<div class="kv"><span>המהדורה</span><b>${esc(ser(d.series)?.name||'ממוספרת')}</b></div>`:''}
+    <div class="kv"><span>היין</span><b>${esc(wn.name)} ${wn.vintage||''} · ${esc(wn.winery)}</b></div>
+    ${d.zone?`<div class="kv"><span>${ZONE[d.zone]}</span><b>${esc(d.name||'')}${d.logoName?' + לוגו':''}</b></div>`:''}
+    <div id="split"></div>
+  </div>
+  <div class="check"><input type="checkbox" id="biz" ${biz?'checked':''}><label for="biz">ההזמנה היא לעסק (חברה, מסעדה או מלון)</label></div>
+  ${biz?`<div class="fld"><label for="bn">שם העסק</label><input id="bn" value="${esc(d.bn||'')}"></div>
+  <div class="fld"><label for="bk">סוג העסק</label><select id="bk">${[['company','חברה'],['restaurant','מסעדה'],['hotel','מלון'],['other','אחר']].map(([k,t])=>`<option value="${k}" ${d.bk===k?'selected':''}>${t}</option>`).join('')}</select></div>
+  <div class="fld"><label for="bv">ח״פ או עוסק מורשה (לחשבונית)</label><input id="bv" inputmode="numeric" value="${esc(d.bv||'')}"></div>
+  <div class="check"><input type="checkbox" id="qt" ${d.quote!==false?'checked':''}><label for="qt">לקבל קודם הצעת מחיר, ולשלם רק אחרי אישור</label></div>`:''}
+  <div class="fld"><label for="cn">שם מלא</label><input id="cn" autocomplete="name" value="${esc(d.cn||'')}"></div>
+  <div class="fld"><label for="cp">טלפון</label><input id="cp" type="tel" autocomplete="tel" inputmode="tel" value="${esc(d.cp||'')}"></div>
+  <div class="fld"><label for="ce">מייל</label><input id="ce" type="email" autocomplete="email" dir="ltr" value="${esc(d.ce||S.user?.email||'')}"></div>
+  <div class="fld"><label for="ca">כתובת למשלוח</label><input id="ca" autocomplete="street-address" value="${esc(d.ca||'')}"></div>
+  <div class="fld"><label for="dd">תאריך אספקה</label><input id="dd" type="date" min="${minDate()}" value="${esc(d.dd||'')}"><p class="note">המוקדם ביותר: ${minDate().split('-').reverse().join('.')}${S.cat.cutoff?` · ההזמנות לחג נסגרות ב־${S.cat.cutoff.split('-').reverse().join('.')}`:''}</p></div>
+  <div class="fld"><label for="cnote">הערה (לא חובה)</label><textarea id="cnote" maxlength="500">${esc(d.cnote||'')}</textarea></div>
+  ${lv!=='case'?`<div class="check"><input type="checkbox" id="cons" ${d.cons?'checked':''}><label for="cons">אפשר למסור את הפרטים שלי לגלריה של האמן, כדי שתעדכן אותי על יצירות חדשות</label></div>`:''}
+  <p class="note">המחיר כולל את האמנות, המארז והיין. היקב מוכר את היין, ו־Grape Arts את האמנות, המארז והתעודה. פרטי התשלום נשלחים אחרי ${biz&&d.quote!==false?'אישור ההצעה':'שליחת ההזמנה'}.</p>
+  ${biz?`<button class="btn alt wide" id="share" style="margin-top:8px">לשלוח קישור לטיוטה למאשר בחברה</button>`:''}
+  <div id="err"></div>`;
+  const keep=()=>{['cn','cp','ce','ca','dd','cnote','bn','bv'].forEach(k=>{const e=$('#'+k);if(e)d[k]=e.value});const bk=$('#bk');if(bk)d.bk=bk.value;const qt=$('#qt');if(qt)d.quote=qt.checked;const c=$('#cons');if(c)d.cons=c.checked;save()};
+  document.querySelectorAll('#main input,#main select,#main textarea').forEach(e=>e.addEventListener('change',keep));
+  $('#biz').onchange=()=>{keep();d.biz=$('#biz').checked;save();vDetails()};
+  if($('#share'))$('#share').onclick=async()=>{keep();if(!S.user){d.after='share';save();return location.hash='login'}await shareDraft()};
+  const sendLabel=biz&&d.quote!==false?'לבקש הצעת מחיר':'לשלוח את ההזמנה';
+  bar(`<button class="btn" id="send">${sendLabel}</button>`);
+  $('#send').onclick=async()=>{keep();if(!S.user){d.after='send';save();return location.hash='login'}await send()};
+  price();
+  showSplit();
+}
+async function showSplit(){await new Promise(r=>setTimeout(r,400));const q=S.quote,el=$('#split');if(!q||!el)return;
+  el.innerHTML=`<div class="kv"><span>היין (נמכר על ידי ${esc(q.wine_seller_name)})</span><span class="num">${nis(q.wine_total)}</span></div><div class="kv"><span>אמנות, מארז ותעודה</span><span class="num">${nis(q.art_total)}</span></div><div class="kv"><span>לפני מע״מ</span><b class="num">${nis(q.total)}</b></div><div class="kv"><span>כולל מע״מ</span><b class="num">${nis(q.total*(1+(S.cat.vat||18)/100))}</b></div>`}
+async function uploadLogo(){const d=D();if(!d.logoData||d.logoPath)return;
+  const blob=await (await fetch(d.logoData)).blob();const ext=(d.logoType||'image/png').split('/')[1].replace('svg+xml','svg');
+  const path=`${S.user.id}/${Date.now()}.${ext}`;const r=await sb.storage.from('logos').upload(path,blob,{contentType:d.logoType||'image/png'});
+  if(r.error)throw r.error;d.logoPath=path;save()}
+async function send(){const d=D(),b=$('#send');if(b){b.disabled=true;b.textContent='שולח…'}$('#err').innerHTML='';
+  try{
+    if(S.card?.channel==='winery_customer')throw new Error(`החשבון שלך שייך ל${S.card.owner_name||'יקב'}. ההזמנות שלך נשלחות דרך היקב, באפליקציה`);
+    if(S.role&&S.role!=='customer')throw new Error('החשבון הזה הוא של צוות. להזמנה צריך להיכנס עם חשבון לקוח');
+    await uploadLogo();
+    const p={design:design(),cust:{n:d.cn,ph:d.cp,em:d.ce,addr:d.ca,note:d.cnote},delivery:d.dd,consent:!!d.cons};
+    if(d.biz){p.buyer_kind='business';p.buyer={name:d.bn,kind:d.bk||'company',vat:d.bv};p.quote=d.quote!==false}
+    const r=await sb.rpc('place_order',{p});if(r.error)throw r.error;
+    S.lastOrder=r.data;S.lastQuote=!!p.quote;S.draft={};save();S.orders=null;location.hash='done';
+  }catch(e){$('#err').innerHTML=`<div class="msg err">${esc(heb(e))}</div>`;if(b){b.disabled=false;b.textContent='לנסות שוב'}}}
+async function shareDraft(){try{await uploadLogo();const d={...D()};delete d.logoData;delete d.after;
+  const r=await sb.from('order_drafts').insert({data:d}).select('token').single();if(r.error)throw r.error;
+  const url=location.origin+location.pathname+'#d-'+r.data.token;
+  try{await navigator.clipboard.writeText(url);toast('הקישור הועתק. אפשר לשלוח אותו למאשר')}catch(e){prompt('הקישור לטיוטה',url)}}catch(e){toast(heb(e))}}
+function vDone(){const q=S.lastQuote;
+  $('#main').innerHTML=`<h1>${q?'בקשת הצעת המחיר התקבלה':'ההזמנה התקבלה'}</h1><p class="lead">מספר ${S.lastOrder?'<span class="num">#'+S.lastOrder+'</span>':''}. ${q?'ההצעה מחכה לאישור שלך במסך ההזמנות. אחרי האישור נשלח פרטי תשלום.':'נשלח אליך פרטי תשלום (העברה בנקאית או קישור תשלום) תוך יום עסקים. אחרי התשלום ההזמנה עוברת להפקה.'}</p>
+  <a class="btn wide" href="#orders">להזמנות שלי</a><p class="note" style="margin-top:14px"><a href="#home">להמשיך לגלוש</a></p>`}
+
+/* ── login: only when sending ── */
+function vLogin(){
+  $('#main').innerHTML=`<h1>כניסה</h1><p class="lead">כדי לשלוח הזמנה צריך חשבון. העיצוב שלך שמור.</p>
+  <div class="fld"><label for="le">מייל</label><input id="le" type="email" dir="ltr" autocomplete="email"></div>
+  <div class="fld"><label for="lp">סיסמה (8 תווים לפחות)</label><input id="lp" type="password" autocomplete="current-password"></div>
+  <div class="row"><button class="btn" id="lin">כניסה</button><button class="btn alt" id="lup">הרשמה</button></div>
+  <p class="note" style="margin-top:14px">אין סיסמה? <button class="lnk" id="lmagic" style="background:none;border:0;text-decoration:underline;cursor:pointer;color:inherit;padding:0">לקבל קישור כניסה למייל</button></p><div id="lerr"></div>`;
+  const c=()=>({email:$('#le').value.trim(),password:$('#lp').value});
+  const after=async()=>{await refreshUser();const d=D();const a=d.after;delete d.after;save();
+    if(a==='send')return location.hash='details';if(a==='share'){location.hash='details';return setTimeout(shareDraft,300)}location.hash='orders'};
+  const err=e=>$('#lerr').innerHTML=`<div class="msg err">${esc(heb(e))}</div>`;
+  $('#lin').onclick=async()=>{const r=await sb.auth.signInWithPassword(c());if(r.error)return err(r.error);after()};
+  $('#lup').onclick=async()=>{const x=c();if(x.password.length<8)return err('הסיסמה קצרה מ־8 תווים');
+    const r=await sb.auth.signUp({...x,options:{emailRedirectTo:location.origin+location.pathname+(S.ref?'?ref='+encodeURIComponent(S.ref):'')+'#details'}});
+    if(r.error)return err(r.error);if(!r.data.session){$('#lerr').innerHTML='<div class="msg">שלחנו מייל לאישור הכתובת. אחרי הלחיצה על הקישור במייל חוזרים לכאן, והעיצוב מחכה.</div>';return}after()};
+  $('#lmagic').onclick=async()=>{const em=$('#le').value.trim();if(!/^\S+@\S+\.\S+$/.test(em))return err('צריך מייל תקין');
+    const r=await sb.auth.signInWithOtp({email:em,options:{emailRedirectTo:location.origin+location.pathname+'#details',shouldCreateUser:true}});
+    if(r.error)return err(r.error);$('#lerr').innerHTML='<div class="msg">שלחנו קישור כניסה למייל. הלחיצה עליו מחזירה לכאן.</div>'};
+}
+
+/* ── my orders ── */
+async function vOrders(){
+  if(!S.user){$('#main').innerHTML=`<h1>ההזמנות שלי</h1><p class="lead">צריך להיכנס כדי לראות הזמנות.</p><a class="btn" href="#login">כניסה</a>`;return}
+  if(S.card?.channel==='winery_customer'){$('#main').innerHTML=`<h1>ההזמנות שלך דרך ${esc(S.card.owner_name||'היקב')}</h1><p class="lead">הלקוחות של יקב מזמינים דרך היקב שלהם.</p><a class="btn" href="./">לאפליקציה של היקב</a>`;return}
+  $('#main').innerHTML='<h1>ההזמנות שלי</h1><p class="note">טוען…</p>';
+  const [o,e,v]=await Promise.all([
+    sb.from('customer_orders').select('id,status,total,bottles,delivery_date,quote_until,paid_at,design,package_id,series_id,log,created_at,split').eq('channel','direct').order('id',{ascending:false}),
+    sb.from('edition_items').select('order_id,kind,no,verify,signed_at'),
+    sb.from('studio_visits').select('order_id,status,visit_at')]);
+  if(o.error){$('#main').innerHTML=`<div class="msg err">${esc(heb(o.error))}</div>`;return}
+  const os=o.data||[],ei=e.data||[],vs=v.data||[],vat=S.cat.vat||18;
+  const flow=x=>{const all=x.status==='quote'?['quote','approved','print','done']:['approved','print','done'];const i=all.indexOf(x.status);
+    return `<ul class="tl">${all.map((s,j)=>`<li class="${j<i?'done':j===i?'now':''}">${ST[s]}${j===i?nextStep(x):''}</li>`).join('')}</ul>`};
+  $('#main').innerHTML=`<h1>ההזמנות שלי</h1>${os.length?os.map(x=>{const w=work(x.design.work),p=pkg(x.package_id),items=ei.filter(i=>i.order_id===x.id),vi=vs.find(s=>s.order_id===x.id);
+    return `<div class="card"><div class="kv"><b>#${x.id} · ${esc(w?.title||'')}</b><span>${x.status==='cancel'?'בוטלה':''}</span></div>
+    <div class="kv"><span>${esc(p?.name||'')} · ${x.bottles} בקבוקים</span><span class="num">${nis(x.total*(1+vat/100))}</span></div>
+    ${x.delivery_date?`<div class="kv"><span>אספקה</span><span>${x.delivery_date.split('-').reverse().join('.')}</span></div>`:''}
+    ${x.status!=='cancel'?flow(x):''}
+    ${items.length?`<h3>תעודות</h3>${items.map(i=>`<div class="kv"><span>${i.kind==='print'?'הדפס':'בקבוק'} מספר ${i.no}${i.signed_at?' · חתום':''}</span><a href="verify.html?c=${i.verify}">לאימות</a></div>`).join('')}`:''}
+    <div class="row">${x.status==='quote'?`<button class="btn" data-acc="${x.id}">לאשר את ההצעה</button>`:''}${['quote','approved'].includes(x.status)&&!x.paid_at?`<button class="btn alt" data-can="${x.id}">לבטל</button>`:''}${p?.level==='patron'&&x.paid_at&&!vi?`<button class="btn alt" data-vis="${x.id}">לבקש ביקור בסטודיו</button>`:''}</div>
+    ${vi?`<p class="note">ביקור בסטודיו: ${vi.status==='accepted'?'נקבע ל־'+new Date(vi.visit_at).toLocaleString('he-IL',{dateStyle:'short',timeStyle:'short'}):vi.status==='declined'?'לא מתאפשר הפעם':'הבקשה נשלחה לאמן ולגלריה'}</p>`:''}
+    </div>`}).join(''):`<div class="empty">עוד אין הזמנות. <a href="#home">לבחור ציור</a></div>`}`;
+  const act=async(id,a,note)=>{const r=await sb.rpc('direct_action',{p_id:id,p_action:a,p_note:note||null});if(r.error)return toast(heb(r.error));toast(a==='qaccept'?'ההצעה אושרה. פרטי התשלום בדרך':'ההזמנה בוטלה');vOrders()};
+  document.querySelectorAll('[data-acc]').forEach(b=>b.onclick=()=>act(+b.dataset.acc,'qaccept'));
+  document.querySelectorAll('[data-can]').forEach(b=>b.onclick=()=>{if(confirm('לבטל את ההזמנה?'))act(+b.dataset.can,'cancel')});
+  document.querySelectorAll('[data-vis]').forEach(b=>b.onclick=async()=>{const n=prompt('מה חשוב לך לדעת לפני הביקור? (לא חובה)')||'';const r=await sb.rpc('visit_request',{p_order:+b.dataset.vis,p_note:n});if(r.error)return toast(heb(r.error));toast('הבקשה נשלחה לאמן ולגלריה');vOrders()});
+}
+function nextStep(x){if(x.status==='quote')return `<br><small>בתוקף עד ${String(x.quote_until||'').split('-').reverse().join('.')}. מחכה לאישור שלך</small>`;
+  if(x.status==='approved')return '<br><small>פרטי התשלום נשלחים אליך. אחרי התשלום ההזמנה עוברת להפקה</small>';
+  if(x.status==='print')return '<br><small>מדפיסים, מדביקים ואורזים. בדרך כלל עד שבועיים</small>';return ''}
+
+/* ── shared draft for the company approver ── */
+async function vDraft(tok){const r=await sb.rpc('get_draft',{p_token:tok});
+  if(r.error||!r.data){$('#main').innerHTML='<h1>הטיוטה לא נמצאה</h1><p class="lead">ייתכן שעברו יותר מ־60 יום.</p>';return}
+  S.draft=r.data;save();const d=D(),w=work(d.work),p=pkg(d.package),wn=wine(d.wine);
+  $('#main').innerHTML=`<span class="eyebrow">טיוטה לאישור</span><h1>${esc(d.bn||'הזמנה')}</h1>
+  ${w?`<div class="stage">${bottle(w,d)}</div>`:''}
+  <div class="card"><div class="kv"><span>הציור</span><b>${esc(w?.title||'')}</b></div><div class="kv"><span>המארז</span><b>${esc(p?.name||'')} × ${d.qty||1}</b></div><div class="kv"><span>היין</span><b>${esc(wn?.name||'')}</b></div><div id="split"></div></div>
+  <p class="note">אפשר להמשיך מכאן, לשנות ולשלוח בקשה להצעת מחיר.</p>`;
+  bar(`<button class="btn" onclick="location.hash='details'">להמשיך</button>`);price();showSplit()}
+
+function bind(){document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>location.hash=b.dataset.go);
+  document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{S.f=b.dataset.f;vHome()})}
+
+(async()=>{
+  try{const c=await sb.rpc('catalog');if(c.error)throw c.error;S.cat=c.data}catch(e){$('#main').innerHTML=`<div class="msg err">${esc(heb(e))}</div>`;return}
+  await refreshUser();
+  sb.auth.onAuthStateChange(async(ev)=>{if(ev==='SIGNED_IN'){await refreshUser();const a=D().after;if(a){delete D().after;save();location.hash=a==='share'?'details':'details'}}});
+  route();
+})();
+</script>
+</body>
+</html>
