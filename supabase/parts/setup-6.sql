@@ -424,4 +424,37 @@ end $$;
 drop trigger if exists works_rights_t on works;
 create trigger works_rights_t before insert or update on works for each row execute function works_rights_required();
 
+-- =====================================================================
+-- שלב 12: קישור הצטרפות אישי. נשמר למייל אחד ומשמש פעם אחת (אלא אם המנהל קבע אחרת)
+-- =====================================================================
+alter table org_invites add column if not exists email text;
+alter table org_invites add column if not exists max_uses int default 1;
+alter table org_invites drop constraint if exists org_invites_max_uses_chk;
+alter table org_invites add constraint org_invites_max_uses_chk check (max_uses is null or max_uses between 1 and 500);
+
+create or replace function join_org(p_token text) returns boolean
+language plpgsql security definer set search_path = public, auth as $$
+declare i org_invites; em text; ok_mail boolean;
+begin
+  select * into i from org_invites where token = p_token and not revoked and expires_at > now() for update;
+  if not found then return false; end if;
+  if i.max_uses is not null and i.uses >= i.max_uses then raise exception 'הקישור כבר נוצל. מבקשים קישור חדש ממנהל המערכת'; end if;
+  select lower(email), email_confirmed_at is not null into em, ok_mail from auth.users where id = auth.uid();
+  if not coalesce(ok_mail, false) then raise exception 'צריך לאשר את כתובת המייל לפני ההצטרפות'; end if;
+  if i.email is not null and lower(trim(i.email)) <> em then raise exception 'הקישור הזה אישי, ושייך לכתובת מייל אחרת'; end if;
+  perform set_config('app.bypass', '1', true);
+  update profiles set role = i.role, status = 'active', org_id = i.org_id
+  where id = auth.uid() and role is null and status = 'pending';
+  if not found then return false; end if;
+  update org_invites set uses = uses + 1 where token = p_token;
+  if i.role::text = 'artist' and not exists (select 1 from artists where user_id = auth.uid()) then
+    insert into artists (user_id, gallery_id, name)
+    values (auth.uid(), i.org_id, coalesce((select full_name from profiles where id = auth.uid()), 'אמן'));
+    perform set_config('app.bypass', '1', true);
+    update profiles set org_id = null where id = auth.uid();
+  end if;
+  return true;
+end $$;
+grant execute on function join_org(text) to authenticated;
+
 select 'ההקמה הסתיימה בהצלחה' as result;

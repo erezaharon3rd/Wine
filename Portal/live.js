@@ -104,7 +104,7 @@ function J(){try{return localStorage.getItem(JK)||''}catch(e){return ''}}
 async function loadMe(user){
   try{
     const p=await q(sb.from('profiles').select('*, org:organizations(id,name,kind)').eq('id',user.id).maybeSingle());
-    if(p&&!p.role&&p.status==='pending'&&J()){const ok=await q(sb.rpc('join_org',{p_token:J()}));try{localStorage.removeItem(JK)}catch(e){}if(ok)return loadMe(user)}
+    if(p&&!p.role&&p.status==='pending'&&J()){let ok=false;try{ok=await q(sb.rpc('join_org',{p_token:J()}))}catch(e){setTimeout(()=>toast(heb(e)),600)}try{localStorage.removeItem(JK)}catch(e){}if(ok)return loadMe(user)}
     if(p&&!p.role&&p.status==='pending'&&Y()){const ok=await q(sb.rpc('join_as_customer',{p_slug:Y()}));if(ok)return loadMe(user)}
     if(!p||p.status!=='active'||!p.role){window.ME={id:user.id,email:user.email,status:p?.status};LV.state='pending';render();return}
     const a=await q(sb.from('artists').select('*').eq('user_id',user.id).maybeSingle());

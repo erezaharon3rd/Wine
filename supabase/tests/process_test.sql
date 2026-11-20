@@ -14,7 +14,7 @@ declare rep text := ''; nfail int := 0; ntot int := 0; okv boolean; err text; n 
   w1 bigint; w2 bigint; w3 bigint; wine1 bigint; d1 bigint; d2 bigint; d3 bigint; d4 bigint; d5 bigint; co1 bigint; tok text; ph text; ph2 text; app1 bigint; app2 bigint; r1 bigint; old_prn uuid;
 begin
   perform set_config('app.bypass','',true);
-  insert into auth.users (id, email) select x, 'proc-test-' || substr(x::text,1,8) || '@test.local' from unnest(array[u_admin,u_gal,u_art,u_win,u_win2,u_prn,u_cust,u_cust2,u_cur,u_inv,u_app,u_app2]) x;
+  insert into auth.users (id, email, email_confirmed_at) select x, 'proc-test-' || substr(x::text,1,8) || '@test.local', now() from unnest(array[u_admin,u_gal,u_art,u_win,u_win2,u_prn,u_cust,u_cust2,u_cur,u_inv,u_app,u_app2]) x;
   insert into organizations (kind, name) values ('gallery','בדיקה: גלריה') returning id into o_gal;
   insert into organizations (kind, name, slug, pricing) values ('winery','בדיקה: יקב', slug, '{"prices":{}}') returning id into o_win;
   insert into organizations (kind, name) values ('winery','בדיקה: יקב אחר') returning id into o_win2;

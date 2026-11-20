@@ -69,21 +69,26 @@ const _as=V.admin_settings;
 V.admin_settings=()=>{let h=_as();h=h.replace(/<h3>תבניות חוזה<\/h3>[\s\S]*$/,'');
   const mv=needMove().length,act=(S._ct||[]).find(t=>t.active),orgs=(S.orgs||[]).filter(o=>o.kind!=='platform'||true);
   const on=id=>(S.orgs||[]).find(o=>o.id===id)?.name||'';
-  const live=(S._inv||[]).filter(i=>!i.revoked&&new Date(i.expires_at)>new Date());
+  const live=(S._inv||[]).filter(i=>!i.revoked&&!(i.max_uses&&i.uses>=i.max_uses)&&new Date(i.expires_at)>new Date());
   return h+`
   <h3>קובצי יצירות</h3><div class="panel"><p class="note" style="margin-top:0">${!(S.works||[]).filter(w=>w.st!=='hidden').length?'אין עדיין יצירות במערכת. אחרי שיצירות יועלו, אפשר יהיה להעביר אותן מכאן.':mv?`${mv} יצירות עדיין בלי הגנה. ההעברה שומרת את קובץ המקור באחסון פרטי ויוצרת תצוגה מקדימה עם סימן מים. יקבים ולקוחות רואים רק את התצוגה, ובית הדפוס מקבל את המקור אחרי אישור.`:`כל ${(S.works||[]).filter(w=>w.st!=='hidden').length} היצירות שמורות באחסון פרטי, עם תצוגה מקדימה מוגנת.`}</p>
     ${mv?`<button class="btn sm wide" data-a="migrate">להעביר ${mv} יצירות</button>`:''}</div>
   <h3>קישורי הצטרפות</h3><div class="panel"><p class="note" style="margin-top:0">שולחים קישור לאדם חדש. אחרי ההרשמה הוא משויך לארגון ולתפקיד, בלי לחכות לאישור. הקישור בתוקף 14 יום.</p>
     <div class="two"><div class="fld"><label for="ivo">ארגון</label><select id="ivo">${orgs.filter(o=>KIND_ROLE[o.kind]).map(o=>`<option value="${o.id}" data-k="${o.kind}">${esc(o.name)}</option>`).join('')}</select></div>
     <div class="fld"><label for="ivr">תפקיד</label><select id="ivr">${Object.entries(RN).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></div></div>
+    <div class="two" style="margin-top:10px"><div class="fld"><label for="ivm">מייל של מי שמוזמן</label><input id="ivm" type="email" dir="ltr" autocomplete="off" placeholder="name@gmail.com"></div>
+    <div class="fld"><label for="ivn">כמה אנשים יכולים להשתמש</label><select id="ivn"><option value="1">אדם אחד</option><option value="5">עד 5</option><option value="20">עד 20</option></select></div></div>
+    <p class="note">עם מייל: רק מי שנרשם בדיוק עם המייל הזה יכול להיכנס דרך הקישור, ורק פעם אחת. בלי מייל: כל מי שמחזיק את הקישור, עד המספר שבחרת.</p>
     <button class="btn sm wide" style="margin-top:10px" data-a="invmake">ליצור קישור</button></div>
-  ${live.length?`<div class="list">${live.map(i=>`<div class="li"><span class="mt"><b>${esc(on(i.org_id))} · ${RN[i.role]||i.role}</b><small>${i.uses?`שימש ${i.uses} פעמים · `:''}בתוקף עד ${new Date(i.expires_at).toLocaleDateString('he-IL')}</small></span><span class="end"><button class="btn sm alt" data-a="invcopy" data-v="${i.token}">להעתיק</button> <button class="btn sm alt" data-a="invoff" data-v="${i.token}">לבטל</button></span></div>`).join('')}</div>`:''}
+  ${live.length?`<div class="list">${live.map(i=>`<div class="li"><span class="mt"><b>${esc(on(i.org_id))} · ${RN[i.role]||i.role}</b><small>${i.email?`אישי ל־${esc(i.email)} · `:''}${i.max_uses?`נוצל ${i.uses||0} מתוך ${i.max_uses} · `:(i.uses?`שימש ${i.uses} פעמים · `:'')}בתוקף עד ${new Date(i.expires_at).toLocaleDateString('he-IL')}</small></span><span class="end"><button class="btn sm alt" data-a="invcopy" data-v="${i.token}">להעתיק</button> <button class="btn sm alt" data-a="invoff" data-v="${i.token}">לבטל</button></span></div>`).join('')}</div>`:''}
   <h3>תבנית חוזה הרישוי</h3><div class="list"><button class="li" data-a="ctedit"><span class="mt"><b>חוזה רישוי · גרסה ${act?.version||1}</b><small>פעילה. חוזים חתומים שומרים את הנוסח שהיה בתוקף כשנחתמו</small></span><span class="end">←</span></button>
     ${(S._ct||[]).filter(t=>!t.active).slice(0,3).map(t=>`<div class="li"><span class="mt"><b>גרסה ${t.version}</b><small>מ־${new Date(t.created_at).toLocaleDateString('he-IL')}, לא פעילה</small></span></div>`).join('')}</div>`};
 
 A.invmake=function(){const o=document.getElementById('ivo'),r=document.getElementById('ivr').value,k=o?.selectedOptions[0]?.dataset.k;if(!o?.value){toast('צריך לבחור ארגון');return}
   if(!(KIND_ROLE[k]||[]).includes(r)){toast(`לארגון מסוג זה אפשר להזמין רק ${(KIND_ROLE[k]||[]).map(x=>RN[x]).join(' או ')}`);return}
-  run(async()=>{const i=await q(sb.from('org_invites').insert({org_id:o.value,role:r}).select('token').single());try{await navigator.clipboard.writeText(link(i.token))}catch(e){}},'הקישור נוצר והועתק')};
+  const em=(document.getElementById('ivm')?.value||'').trim().toLowerCase();if(em&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){toast('כתובת המייל לא תקינה');return}
+  const mx=em?1:+(document.getElementById('ivn')?.value||1);
+  run(async()=>{const i=await q(sb.from('org_invites').insert({org_id:o.value,role:r,email:em||null,max_uses:mx}).select('token').single());try{await navigator.clipboard.writeText(link(i.token))}catch(e){}},'הקישור נוצר והועתק')};
 A.invcopy=t=>{navigator.clipboard?.writeText(link(t)).then(()=>toast('הקישור הועתק'),()=>toast(link(t)))};
 A.invoff=t=>run(()=>q(sb.from('org_invites').update({revoked:true}).eq('token',t)),'הקישור בוטל');
 

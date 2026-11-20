@@ -54,7 +54,22 @@ update org_invites set token='tok1';
 select t_as('00000000-0000-0000-0000-0000000000f2');
 select t_eq(join_org('tok1'), true, 'הצטרפות לארגון בקישור');
 select t_eq((select role::text||':'||org_id from profiles where id=auth.uid()), 'winery:10000000-0000-0000-0000-0000000000b1', 'שויך ליקב א');
-select t_eq(join_org('tok1'), false, 'קישור לא משנה תפקיד למי שכבר משויך');
+select t_fail($$select join_org('tok1')$$, 'קישור חד־פעמי לא עובד פעמיים');
+-- קישור אישי: רק למייל שנרשם, ורק אחרי אישור המייל
+reset role;
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000f5','p1@t'), ('00000000-0000-0000-0000-0000000000f6','p2@t');
+insert into auth.users (id, email, email_confirmed_at) values ('00000000-0000-0000-0000-0000000000f7','p3@t', null);
+insert into org_invites (token, org_id, role, email) values ('tok2','10000000-0000-0000-0000-0000000000b1','winery','P1@t');
+insert into org_invites (token, org_id, role, max_uses) values ('tok3','10000000-0000-0000-0000-0000000000b1','winery', null);
+set role authenticated;
+select t_as('00000000-0000-0000-0000-0000000000f6');
+select t_fail($$select join_org('tok2')$$, 'קישור אישי לא עובד למייל אחר');
+select t_as('00000000-0000-0000-0000-0000000000f5');
+select t_eq(join_org('tok2'), true, 'קישור אישי עובד למייל שלו (בלי תלות באותיות גדולות)');
+select t_as('00000000-0000-0000-0000-0000000000f7');
+select t_fail($$select join_org('tok3')$$, 'בלי אישור מייל אין הצטרפות');
+select t_as('00000000-0000-0000-0000-0000000000f6');
+select t_eq(join_org('tok3'), true, 'קישור פתוח (ללא הגבלה) עובד');
 
 -- ---------- יצירות ----------
 select t_as('00000000-0000-0000-0000-0000000000b1');
