@@ -6,7 +6,7 @@
 'use strict';
 if(!window.LX)return;
 const {sb,q,run}=window.LX;
-const LVL={case:'מארז',collector:'אספנים',patron:'פטרון'};
+const LVL={case:'בקבוק ומארז',collector:'מהדורה ממוספרת',patron:'מהדורה + הדפס'};
 const ZONE={band:'פס מתחת לציור',neck:'תווית צוואר',back:'תווית אחורית',card:'כרטיס במארז'};
 const DST={quote:'הצעת מחיר',approved:'ממתינה לתשלום',print:'בהפקה',done:'מוכנה',cancel:'בוטלה'};
 const CH={direct:'חיצוני',winery_customer:'לקוח של יקב',winery:'יקב'};
@@ -118,12 +118,12 @@ function seriesForm(works){if(!works.length)return '';
   <div class="fld"><label for="sn">שם (לא חובה)</label><input id="sn" maxlength="60"></div>
   <div class="fld"><label for="ss">כמה בקבוקים במהדורה סגורה</label><input id="ss" type="number" min="1" max="5000" value="300"></div>
   <div class="hscroll">${Object.entries(LVL).map(([k,t])=>`<label class="chip" style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" id="sl-${k}" ${k==='case'?'checked':''}> ${t}</label>`).join('')}</div>
-  <div class="fld"><label for="spt">טכניקת ההדפס לרמת פטרון (בדיוק כמו שיופיע בתעודה)</label><input id="spt" placeholder="הדפס ג'יקלה על נייר כותנה"></div>
+  <div class="fld"><label for="spt">טכניקת ההדפס למהדורה + הדפס (בדיוק כמו שיופיע בתעודה)</label><input id="spt" placeholder="הדפס ג'יקלה על נייר כותנה"></div>
   <div class="two"><div class="fld"><label for="sps">כמה הדפסים</label><input id="sps" type="number" min="1" max="500"></div><div class="fld"><label for="spp">מחיר ההדפס, לפני מע״מ</label><input id="spp" type="number" min="0"></div></div>
   <p class="note">מהדורה סגורה: אחרי שהוקצה המספר הראשון הגודל לא משתנה, ומהדורה שנסגרה לא נפתחת שוב.</p>
   <button class="btn sm" data-a="sernew">לפתוח מהדורה</button></details>`}
 A.sernew=()=>{const kind=val('sk'),lv=Object.keys(LVL).filter(k=>document.getElementById('sl-'+k)?.checked);
-  if(kind==='open'&&lv.some(l=>l!=='case')){toast('אספנים ופטרון רק במהדורה סגורה');return}
+  if(kind==='open'&&lv.some(l=>l!=='case')){toast('מהדורה ממוספרת אפשרית רק במהדורה סגורה');return}
   const p={work:+val('sw'),kind,name:val('sn'),size:+val('ss'),levels:lv,print_technique:val('spt'),print_size:val('sps'),print_price:val('spp')};
   if(!confirm(kind==='closed'?`לפתוח מהדורה של ${p.size} בקבוקים? אחרי ההקצאה הראשונה אי אפשר לשנות את הגודל`:'לפתוח סדרה פתוחה?'))return;
   run(()=>q(sb.rpc('series_create',{p})),'המהדורה נפתחה')};

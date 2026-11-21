@@ -112,7 +112,8 @@ const nis=n=>'₪'+Math.round(+n||0).toLocaleString('en-US');
 const heb=e=>{const m=String(e?.message||e||'');if(/[֐-׿]/.test(m))return m.replace(/^.*?ERROR:\s*/,'');if(/fetch|network/i.test(m))return 'אין חיבור לשרת. כדאי לבדוק את האינטרנט';if(/Invalid login/i.test(m))return 'המייל או הסיסמה לא נכונים';if(/already registered/i.test(m))return 'המייל הזה כבר רשום. אפשר להיכנס';return 'משהו השתבש. כדאי לנסות שוב'};
 let tt;function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>e.classList.remove('on'),2800)}
 const PREV=p=>p?`${window.SB_URL}/storage/v1/object/public/previews/${p.split('/').map(encodeURIComponent).join('/')}`:'';
-const LVL={case:'מארז',collector:'אספנים',patron:'פטרון'};
+const LVL={case:'בקבוק ומארז',collector:'מהדורה ממוספרת',patron:'מהדורה + הדפס'};
+const LVLD={all:'כל הציורים שאפשר להזמין.',case:'בקבוק אחד עד ארגז, עם הציור על התווית. מתאים למתנות, לאירועים ולעסקים.',collector:'בקבוק ממהדורה סגורה וממוספרת, עם תעודה חתומה בידי האמן.',patron:'בקבוק ממוספר ותעודה, ועוד הדפס ג׳יקלה חתום וממוספר של הציור.'};
 const ZONE={band:'פס מתחת לציור',neck:'תווית צוואר',back:'התווית האחורית',card:'כרטיס במארז'};
 const TERMS_V='2026-11';
 const ST={quote:'הצעת מחיר',approved:'ממתינה לתשלום',print:'בהפקה',done:'מוכנה למשלוח',cancel:'בוטלה'};
@@ -173,12 +174,13 @@ function vHome(){
     <span class="eyebrow">אמנות ישראלית על יין ישראלי</span>
     <h1>ציור מקורי של אמן ישראלי, על בקבוק שנבחר בשבילך</h1>
     <p class="lead">בוחרים ציור, מארז ויין. אפשר להוסיף שם, הקדשה או לוגו של העסק, תמיד מחוץ לציור עצמו. מתאים למתנות לחגים, לאירועים, למסעדות ולמלונות.</p>
-    <div class="why"><div><b>אמנים ישראלים</b>כל ציור נבחר ואושר על ידי האמן והגלריה שלו.</div><div><b>מהדורות ממוספרות</b>בקבוקי אספנים עם תעודה חתומה ומספר שלא חוזר.</div><div><b>יין של יקב ישראלי</b>היין נמכר על ידי היקב, והאמנות, המארז והתעודה על ידינו.</div></div>
+    <div class="why"><div><b>אמנים ישראלים</b>כל ציור נבחר ואושר על ידי האמן והגלריה שלו.</div><div><b>מהדורות ממוספרות</b>בקבוקים ממוספרים עם תעודה חתומה ומספר שלא חוזר.</div><div><b>יין של יקב ישראלי</b>היין נמכר על ידי היקב, והאמנות, המארז והתעודה על ידינו.</div></div>
   </section>
   ${steps(1)}
   <h2>בוחרים ציור</h2>
-  <div class="chips" role="group" aria-label="סינון לפי רמה">${[['all','הכל'],['case','מארזים'],['collector','אספנים'],['patron','פטרון']].map(([k,t])=>`<button class="chip" data-f="${k}" aria-pressed="${f===k}">${t}</button>`).join('')}</div>
-  ${ws.length?`<div class="grid" style="margin-top:12px">${ws.map(tile).join('')}</div>`:`<div class="empty">אין עדיין יצירות ברמה הזו.</div>`}
+  <div class="chips" role="group" aria-label="סינון לפי מוצר">${[['all','הכל'],['case',LVL.case],['collector',LVL.collector],['patron',LVL.patron]].map(([k,t])=>`<button class="chip" data-f="${k}" aria-pressed="${f===k}">${t}</button>`).join('')}</div>
+  <p class="note" id="lvd">${LVLD[f]||''}</p>
+  ${ws.length?`<div class="grid" style="margin-top:12px">${ws.map(tile).join('')}</div>`:`<div class="empty">אין עדיין ציורים למוצר הזה.</div>`}
   ${C.artists.length?`<h2>האמנים</h2>${C.artists.map(a=>`<button class="opt" data-go="artist-${a.id}"><span class="t"><b>${esc(a.name)}</b><small>${esc((a.bio||'').slice(0,110))}${(a.bio||'').length>110?'…':''}</small></span></button>`).join('')}`:''}
   <p class="note" style="margin-top:24px">יש לך תעודה? <a href="verify.html">לאמת מספר מהדורה</a></p>`;
   bind();

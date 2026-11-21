@@ -2616,8 +2616,8 @@ insert into packages (code, name, level, bottles, box, price, includes, sort) va
   ('duo',       'זוג בקבוקים',          'case',      2, 'קופסה זוגית',            55,  '{"card":true}', 2),
   ('trio',      'שלישייה',              'case',      3, 'ארגז עץ קטן',            75,  '{"card":true}', 3),
   ('case6',     'ארגז שישה',            'case',      6, 'ארגז קרטון מודפס',       60,  '{"card":true}', 4),
-  ('collector', 'מהדורת אספנים',        'collector', 1, 'קופסה קשיחה ממוספרת',    95,  '{"card":true,"certificate":true}', 5),
-  ('patron',    'פטרון',                'patron',    1, 'קופסת אספנים',           180, '{"card":true,"certificate":true,"print":true}', 6)
+  ('collector', 'בקבוק ממוספר',        'collector', 1, 'קופסה קשיחה ממוספרת',    95,  '{"card":true,"certificate":true}', 5),
+  ('patron',    'בקבוק ממוספר + הדפס חתום', 'patron',    1, 'קופסת אספנים',           180, '{"card":true,"certificate":true,"print":true}', 6)
 on conflict (code) do nothing;
 
 -- ---------- 13.5 השתתפות אמן ברמות והסכמת הגלריה ----------
