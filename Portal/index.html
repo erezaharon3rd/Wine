@@ -429,6 +429,7 @@ function render(){
   const n=unread(S.role);
   const sc=screen();
   app.innerHTML=`<header class="top"><button class="ib" data-a="account" aria-label="חשבון והחלפת תפקיד"><span class="av">${ROLES[S.role].u}</span></button><div><div class="brand">Grape Arts<span class="demobadge">הדגמה</span></div><div class="rl">${ROLES[S.role].n} · ${ROLES[S.role].who}</div></div><span class="sp"></span>
+  <button class="ib" data-a="introshow" aria-label="הדרכה">${window.GAGuideIcon||'?'}</button>
   <button class="ib" data-a="bell" aria-label="התראות${n?`, ${n} חדשות`:''}">${ICON.bell}${n?`<span class="dot">${n}</span>`:''}</button></header>
   <main id="m" class="${sc.bar?'withbar':''}">${sc.html}</main>
   ${sc.bar||''}
@@ -950,6 +951,7 @@ if(window.LIVE){}else if(S.role){S.view=null;S.tab=S.tab||TABS[S.role][0][0];loc
 <script src="customer.js?v=12"></script>
 <script src="docs.js?v=6"></script>
 <script src="motion.js?v=2"></script>
+<script src="guide.js?v=1"></script>
 <script>if(window.LIVE)document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script><script src="live.js?v=17"><\/script><script src="ops.js?v=9"><\/script><script src="label.js?v=1"><\/script><script src="tiers.js?v=1"><\/script><script src="channels.js?v=1"><\/script>')</script>
 </body>
 </html>
