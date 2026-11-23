@@ -17,7 +17,7 @@ with sync_playwright() as p:
     pg.click('.gd-next');pg.wait_for_timeout(200);assert pg.locator('.gd-dots [aria-current]').get_attribute('data-i')=='1'
     pg.keyboard.press('Escape');pg.wait_for_timeout(200);assert not pg.is_visible('.gd')
     pg.reload();pg.wait_for_timeout(1500);assert not pg.is_visible('.gd'),'should not reopen by itself'
-    pg.click('#nav-guide');pg.wait_for_timeout(300);assert pg.is_visible('.gd');pg.click('.gd-skip');assert not pg.is_visible('.gd')
+    pg.click('#nav-guide');pg.wait_for_timeout(300);assert pg.is_visible('.gd');pg.click('button.gd-skip');assert not pg.is_visible('.gd')
     for role,org in [('artist',''),('admin','o-adm')]:
         c=ctx(MOCK);c.add_init_script('if(!localStorage.mockdb)window.MOCK_INIT='+json.dumps(init(role,org))+';')
         q=c.new_page();q.on('pageerror',lambda e:errs.append(str(e)));q.goto('http://localhost:8777/');q.wait_for_timeout(2400)
