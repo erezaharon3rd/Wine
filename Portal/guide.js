@@ -227,7 +227,7 @@ function open(role){
   document.addEventListener('keydown',key2);draw(1);el.tabIndex=-1;setTimeout(()=>el.focus(),60);
 }
 const roleNow=()=>{try{return (typeof S!=='undefined'&&S&&S.role)||null}catch(e){return null}};
-window.GAGuide={open,close,seen,roles:Object.keys(G)};
+window.GAGuide={open,close,seen,roles:Object.keys(G),data:{G,CH,scene,css,who}};
 
 /* ───────── חיבור לאתר ───────── */
 const ICO=`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M9.5 9.3a2.6 2.6 0 1 1 3.6 2.4c-.8.4-1.1.9-1.1 1.8"/><circle cx="12" cy="16.8" r=".6" fill="currentColor"/></svg>`;
