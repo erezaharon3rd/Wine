@@ -205,7 +205,7 @@ function draw(dir){
   el.querySelector('.gd-cap').innerHTML=`<h2 id="gd-t">${sc.t}</h2><p>${sc.d}</p>`;
   el.querySelector('.gd-prev').disabled=st.i===0;
   el.querySelector('.gd-next').textContent=last?'יאללה, מתחילים':'הבא';
-  el.querySelector('.gd-skip').hidden=last;
+  el.querySelector('button.gd-skip').hidden=last;
   el.querySelector('.gd-dots').innerHTML=g.s.map((_,i)=>`<button type="button" data-i="${i}" aria-label="שלב ${i+1} מתוך ${n}" ${i===st.i?'aria-current="step"':''}><i></i></button>`).join('');
 }
 function go(d){const n=G[st.role].s.length,i=st.i+d;if(i<0)return;if(i>=n)return close();st.i=i;draw(d)}
@@ -214,12 +214,12 @@ function key2(e){if(!st)return;if(e.key==='Escape')close();else if(e.key==='Arro
 function open(role){
   role=G[role]?role:'buyer';css();if(st)close();
   const el=document.createElement('div');el.className='gd';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-labelledby','gd-t');
-  el.innerHTML=`<div class="gd-top"><b>${G[role].t}</b><span class="gd-sp"></span><button type="button" class="gd-skip">דלג</button><button type="button" class="gd-x" aria-label="לסגור את ההדרכה">×</button></div>
+  el.innerHTML=`<div class="gd-top"><b>${G[role].t}</b><span class="gd-sp"></span><a class="gd-skip" href="${base()}booklet.html" target="_blank" rel="noopener" style="display:inline-flex;align-items:center">להדפסה</a><button type="button" class="gd-skip">דלג</button><button type="button" class="gd-x" aria-label="לסגור את ההדרכה">×</button></div>
    <div class="gd-bar" aria-hidden="true"><i></i></div><div class="gd-stage"></div><div class="gd-cap" aria-live="polite"></div>
    <div class="gd-nav"><button type="button" class="gd-prev" aria-label="הקודם">›</button><button type="button" class="gd-next">הבא</button></div><div class="gd-dots"></div>`;
   document.body.appendChild(el);
   st={role,i:0,el,ov:document.documentElement.style.overflow,focus:document.activeElement};document.documentElement.style.overflow='hidden';
-  el.querySelector('.gd-x').onclick=close;el.querySelector('.gd-skip').onclick=close;
+  el.querySelector('.gd-x').onclick=close;el.querySelector('button.gd-skip').onclick=close;
   el.querySelector('.gd-next').onclick=()=>go(1);el.querySelector('.gd-prev').onclick=()=>go(-1);
   el.querySelector('.gd-dots').onclick=e=>{const b=e.target.closest('[data-i]');if(b){const i=+b.dataset.i,d=i>st.i?1:-1;st.i=i;draw(d)}};
   let x0=null;el.addEventListener('touchstart',e=>{x0=e.touches[0].clientX},{passive:true});
