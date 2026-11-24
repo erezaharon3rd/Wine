@@ -21,4 +21,11 @@ with sync_playwright() as p:
     pg.click('[data-a=lsms]');pg.wait_for_timeout(300)
     pg.fill('#lotp','123456');pg.wait_for_timeout(2000)
     assert pg.evaluate("window.LIVE&&ME&&ME.role")=='winery','signed in'
+    # חיבור נייד לחשבון קיים, מתוך הפרופיל
+    pg.evaluate("accountSheet()");pg.wait_for_timeout(300)
+    pg.click('[data-a=phadd]');pg.fill('#phin','052-765-4321');pg.click('[data-a=phsend]');pg.wait_for_timeout(500)
+    assert pg.evaluate("JSON.parse(localStorage.mockdb).lastUpd.phone")=='+972527654321'
+    pg.fill('#phcode','000000');pg.click('[data-a=phok]');pg.wait_for_timeout(400);assert pg.is_visible('#phcerr')
+    pg.fill('#phcode','123456');pg.wait_for_timeout(800)
+    t=pg.inner_text('.sheet');assert 'מחובר' in t and '052-765-4321' in t,t[:300]
     print('ERR',errs);assert not errs;b.close()

@@ -348,9 +348,44 @@ A.lblock=id=>{const p=S.profiles.find(x=>x.id===id);const to=p.status==='blocked
 A.lorg=()=>sheet(`<h2>ארגון חדש</h2><p class="note">למשל יקב שמצטרף לפיילוט. אחרי שיוצרים אותו, משייכים אליו את האנשים שלו במסך המשתמשים.</p><div class="fld"><label for="onm">שם</label><input id="onm" placeholder="למשל: יקב הגליל"></div><div class="fld"><label for="okd">סוג</label><select id="okd" class="lv-sel">${['winery','gallery','printer'].map(k=>`<option value="${k}">${ORG_N[k]}</option>`).join('')}</select></div><div class="row"><button class="btn alt" data-a="close">ביטול</button><button class="btn" data-a="lorg2">להוסיף</button></div>`);
 A.lorg2=()=>{const n=document.getElementById('onm').value.trim();if(!n){document.getElementById('onm').focus();return}const k=document.getElementById('okd').value;closeSheet();run(async()=>{await q(sb.from('organizations').insert({name:n,kind:k}));log(`ארגון חדש: ${n}`,'admin')},'הארגון נוסף')};
 
+/* ── חיבור מספר נייד לחשבון קיים: אחרי זה נכנסים גם עם קוד ב־SMS ── */
+const PH={step:0,phone:'',cool:0};
+function phoneBox(){
+  if(ME.phone&&!PH.step)return `<div class="panel" style="margin-top:14px"><div class="sw"><span>מספר נייד<small dir="ltr" style="text-align:right">${esc(pph(ME.phone))}</small></span><span class="pill on">מחובר</span></div><p class="note" style="margin:6px 0 0">אפשר להיכנס עם המספר הזה וקוד ב־SMS, בלי סיסמה.</p></div>`;
+  if(!PH.step)return `<button class="btn alt wide" style="margin-top:14px" data-a="phadd">לחבר מספר נייד, לכניסה בלי סיסמה</button>`;
+  if(PH.step===1)return `<div class="panel" style="margin-top:14px"><div class="fld" id="phf"><label for="phin">מספר נייד</label><input id="phin" type="tel" inputmode="tel" autocomplete="tel" dir="ltr" placeholder="050-0000000" value="${esc(PH.phone?pph(PH.phone):'')}"><span class="err" id="pherr" hidden>צריך מספר נייד תקין</span></div>
+    <div class="row" style="margin-top:10px"><button class="btn alt" data-a="phcancel">ביטול</button><button class="btn" data-a="phsend">לשלוח קוד ב־SMS</button></div></div>`;
+  return `<div class="panel" style="margin-top:14px"><p class="note" style="margin-top:0">שלחנו קוד ל־<span class="num" dir="ltr">${esc(pph(PH.phone))}</span></p><div class="fld" id="phcf"><label for="phcode">הקוד</label><input id="phcode" inputmode="numeric" autocomplete="one-time-code" dir="ltr" maxlength="6" placeholder="••••••" style="font-size:22px;letter-spacing:.4em;text-align:center"><span class="err" id="phcerr" hidden></span></div>
+    <div class="row" style="margin-top:10px"><button class="btn alt" data-a="phcancel">ביטול</button><button class="btn" data-a="phok">לאשר</button></div><button class="link" style="margin-top:8px" data-a="phsend">לשלוח קוד חדש</button></div>`;
+}
+Object.assign(A,{
+  phadd(){PH.step=1;accountSheet();setTimeout(()=>document.getElementById('phin')?.focus(),50)},
+  phcancel(){PH.step=0;accountSheet()},
+  async phsend(){
+    const i=document.getElementById('phin');const ph=pnorm(i?i.value:PH.phone);
+    if(!ph){document.getElementById('phf')?.classList.add('bad');const e=document.getElementById('pherr');if(e)e.hidden=false;i?.focus();return}
+    if(Date.now()<PH.cool&&ph===PH.phone){toast('אפשר לבקש קוד חדש בעוד דקה');return}
+    const {error}=await sb.auth.updateUser({phone:ph});
+    if(error){toast(/already|registered|exists/i.test(error.message)?'המספר הזה כבר מחובר לחשבון אחר':heb(error));return}
+    PH.phone=ph;PH.cool=Date.now()+60000;PH.step=2;accountSheet();setTimeout(()=>document.getElementById('phcode')?.focus(),50);
+  },
+  async phok(){
+    const i=document.getElementById('phcode');const t=(i?.value||'').replace(/\D/g,'');const e=document.getElementById('phcerr');
+    if(t.length!==6){if(e){e.textContent='הקוד הוא 6 ספרות';e.hidden=false}i?.focus();return}
+    const {data,error}=await sb.auth.verifyOtp({phone:PH.phone,token:t,type:'phone_change'});
+    if(error){if(e){e.textContent='הקוד לא נכון, או שעבר זמנו. אפשר לנסות שוב או לבקש קוד חדש';e.hidden=false}return}
+    ME.phone=(data&&data.user&&data.user.phone)||PH.phone;PH.step=0;
+    try{await q(sb.from('profiles').update({phone:PH.phone}).eq('id',ME.id))}catch(x){}
+    accountSheet();toast('הנייד חובר. מעכשיו אפשר להיכנס גם איתו');
+  }
+});
+document.addEventListener('keydown',e=>{if(e.key!=='Enter')return;if(e.target.id==='phin'){e.preventDefault();A.phsend()}else if(e.target.id==='phcode'){e.preventDefault();A.phok()}});
+document.addEventListener('input',e=>{if(e.target.id==='phcode'&&e.target.value.replace(/\D/g,'').length===6)A.phok()});
+
 /* ── account sheet ── */
 accountSheet=function(){const adm=ME.role==='admin';
-  sheet(`<div style="display:flex;gap:12px;align-items:center"><span class="av" style="width:46px;height:46px">${ROLES[ME.role].u}</span><div><b style="font-weight:500">${esc(ME.name)}</b><div style="font-size:14px;color:var(--muted)">${ROLE_N[ME.role]}${ME.orgName?' · '+esc(ME.orgName):''}</div><div class="num" style="font-size:13px;color:var(--soft)">${esc(ME.email)}</div></div></div>
+  sheet(`<div style="display:flex;gap:12px;align-items:center"><span class="av" style="width:46px;height:46px">${ROLES[ME.role].u}</span><div><b style="font-weight:500">${esc(ME.name)}</b><div style="font-size:14px;color:var(--muted)">${ROLE_N[ME.role]}${ME.orgName?' · '+esc(ME.orgName):''}</div><div class="num" style="font-size:13px;color:var(--soft)" dir="ltr">${esc(ME.email||'')}${ME.email&&ME.phone?'  ':''}${ME.phone?esc(pph(ME.phone)):''}</div></div></div>
+  ${phoneBox()}
   ${adm?`<h3>לצפות כ…</h3><p class="note" style="margin-top:0">מנהל רואה את כל הנתונים. פעולות של יקב, כמו חתימה, נעשות רק מחשבון של יקב.</p><div class="roles">${Object.entries(ROLES).map(([k,r])=>`<button class="role ${k===S.role?'cur':''}" data-a="role" data-v="${k}" style="padding:10px 14px"><b style="font-size:17px">${r.n}${k===S.role?' · כאן עכשיו':''}</b></button>`).join('')}</div>`:''}
   <div class="row" style="margin-top:16px"><button class="btn alt" data-a="introshow">איך זה עובד</button><button class="btn alt" data-a="logout">להתנתק</button></div>`)};
 
