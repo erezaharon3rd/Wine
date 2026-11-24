@@ -51,6 +51,34 @@ body{font-family:'Heebo','IBM Plex Sans Hebrew',Arial,sans-serif;color:#1F1B2D;-
 .toc .gd-ch{--s:14mm}.toc .gd-ch figcaption{display:none}
 .how{background:#1F1B2D;color:#fff;border-radius:5mm;padding:4mm 6mm;font-size:11pt;text-align:right;display:flex;gap:5mm;align-items:center}
 .how b{color:#F5B83D}
+/* מפת המערכת */
+.map{position:relative;flex:1;min-height:0}
+.map>svg{position:absolute;inset:0;width:100%;height:100%}
+.hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:44mm;height:44mm;border-radius:50%;background:#FFFDF9;border:2px solid #1F1B2D;box-shadow:1.2mm 1.2mm 0 #1F1B2D;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.hub svg{width:22mm;height:22mm}.hub b{font-size:11pt;letter-spacing:.06em}.hub span{font-size:8pt;color:#5A5268;line-height:1.2;padding:0 4mm}
+.act{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;width:40mm;text-align:center}
+.act .gd-ch{--s:20mm}.act .gd-ch figcaption{font-size:10pt;border:1.5px solid #1F1B2D;box-shadow:none}
+.act p{margin:1mm 0 0;font-size:8.5pt;line-height:1.25;color:#3E3650}
+.lt{display:inline-flex;gap:1mm;margin-top:1mm}
+.lt i{font-style:normal;width:5mm;height:5mm;border-radius:50%;color:#fff;font-size:7.5pt;font-weight:800;display:grid;place-items:center}
+.l1{background:#7B4BC4}.l2{background:#19A7A8}.l3{background:#E0892B}
+.key{display:flex;gap:5mm;justify-content:center;flex-wrap:wrap;font-size:9.5pt;font-weight:700;margin-top:2mm}
+.key span{display:inline-flex;align-items:center;gap:1.5mm}
+/* מסלולים */
+.lane{flex:none;border:2px solid #1F1B2D;border-radius:5mm;background:#fff;box-shadow:1.2mm 1.2mm 0 #1F1B2D;padding:2.5mm 3mm 3mm;margin-bottom:4mm}
+.lane:last-of-type{margin-bottom:0}
+.lane h2{margin:0 0 2mm;font-size:13pt;display:flex;align-items:center;gap:2mm}
+.lane h2 small{font-size:9pt;font-weight:400;color:#5A5268}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:3.5mm 7mm}
+.stp{position:relative;border-radius:3.5mm;padding:2mm 1.5mm 2.5mm;text-align:center;background:var(--bg)}
+.stp .hd{display:flex;justify-content:center;align-items:flex-end;gap:.5mm;height:15mm}
+.stp .hd .gd-ch{--s:14.5mm}.stp .hd .gd-ch figcaption{display:none}
+.stp .it{position:absolute;top:1mm;inset-inline-start:1mm;width:6.5mm;height:6.5mm}
+.stp .no{position:absolute;top:1mm;inset-inline-end:1mm;width:5mm;height:5mm;border-radius:50%;color:#fff;background:var(--c);font-size:7.5pt;font-weight:800;display:grid;place-items:center}
+.stp b{display:block;font-size:10.5pt;line-height:1.15;margin-top:.8mm}
+.stp em{display:block;font-style:normal;font-size:8.6pt;color:#5A5268;line-height:1.25}
+.stp:not(:last-child):not(:nth-child(4n))::after{content:'';position:absolute;top:50%;inset-inline-end:-6mm;width:5mm;height:5mm;transform:translateY(-50%);background:no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M17 10H4m5-5-5 5 5 5' fill='none' stroke='%231F1B2D' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+.stp:nth-child(4n):not(:last-child)::after{content:'↓';position:absolute;bottom:-3.6mm;left:50%;transform:translateX(-50%);font-size:10pt;font-weight:800;line-height:1}
 @media screen and (max-width:820px){.wrap{gap:10px}.page{box-shadow:0 3px 10px #0002}}
 @media print{html,body{background:none}.bar{display:none}.wrap{display:block;padding:0}.page{box-shadow:none;margin:0;zoom:1!important}}
 </style>
@@ -69,6 +97,61 @@ pages.push(`<section class="page cover"><div><h1>Grape Arts</h1><p class="sub">�
  <div class="gd-cast">${['buyer','artist','gallery','winery','ga'].map(k=>who(k)).join('')}</div>
  <div><div class="toc">${ORDER.map(([k,n])=>`<div>${who(k==='customer'?'customer':k)}${n}</div>`).join('')}</div></div>
  <div class="how"><div>${who('ga')}</div><div><b>גם באתר, עם הנפשה:</b> בכל מסך יש כפתור <b>?</b> שפותח את ההדרכה של התפקיד שלך. בחנות: הקישור "הדרכה" למעלה.<br>grapearts.com</div></div></section>`);
+
+/* ─── מפת המערכת: כל השחקנים ─── */
+const {IT,EMB}=GAGuide.data;
+const ACT=[
+ ['buyer',0,'מזמין מארז או מהדורה בחנות ומשלם',[1]],
+ ['artist',45,'מעלה ציורים, מאשר שימושים, חותם על תעודות',[1,2,3]],
+ ['gallery',90,'מאשרת ציורים, פותחת מהדורות, מתמחרת רישיון',[1,3]],
+ ['curator',135,'ממליץ על ציורים, בודק הדמיות, מאשר הצטרפות',[1]],
+ ['admin',180,'מזמין משתתפים, מסמן תשלום, מגדיר את החנות',[1]],
+ ['printer',225,'מקבל קובץ מוכן, מדפיס, מסמן שההזמנה מוכנה',[1,2,3]],
+ ['winery',270,'מספק יין ובקבוקים, שולח קישור ללקוחות, מבקש רישיון',[1,2,3]],
+ ['customer',315,'מעצב בקבוק אישי דרך קישור מהיקב',[2]]];
+const RX=37,RY=39;
+const pos=ACT.map(([k,a])=>{const r=a*Math.PI/180;return [50+RX*Math.sin(r),50-RY*Math.cos(r)]});
+const lines=pos.map(([x,y])=>`<line x1="50" y1="50" x2="${50+(x-50)*.72}" y2="${50+(y-50)*.72}" stroke="#1F1B2D" stroke-width=".35" stroke-dasharray="1.2 1" vector-effect="non-scaling-stroke" style="stroke-width:1.4px"/>`).join('');
+const ring=`<ellipse cx="50" cy="50" rx="${RX}" ry="${RY}" fill="none" stroke="#E3D3C0" stroke-width="1" style="stroke-width:3px" vector-effect="non-scaling-stroke"/>`;
+const lt=a=>`<div class="lt">${a.map(n=>`<i class="l${n}">${n}</i>`).join('')}</div>`;
+pages.push(`<section class="page"><div class="ph"><div><h1>מי עושה מה</h1><p>כל השחקנים סביב Grape Arts. המספרים הצבעוניים = באיזה מסלול כל אחד משתתף (פירוט בעמוד הבא)</p></div><span class="no">2</span></div>
+ <div class="map"><svg viewBox="0 0 100 100" preserveAspectRatio="none">${ring}${lines}</svg>
+  <div class="hub"><svg viewBox="0 0 120 120">${EMB}</svg><b>GRAPE ARTS</b><span>הזמנות, תשלומים, אישורים והודעות במקום אחד</span></div>
+  ${ACT.map(([k,a,t,l],i)=>`<div class="act" style="left:${pos[i][0]}%;top:${pos[i][1]}%">${who(k)}<p>${esc(t)}</p>${lt(l)}</div>`).join('')}
+ </div>
+ <div class="key"><span><i class="lt"><i class="l1">1</i></i>הזמנה מהחנות</span><span><i class="lt"><i class="l2">2</i></i>לקוח של יקב</span><span><i class="lt"><i class="l3">3</i></i>רישיון לתווית של יקב</span></div>
+ <div class="foot"><span>Grape Arts · מפת המערכת</span><span>grapearts.com</span></div></section>`);
+
+/* ─── שלושה מסלולים מקצה לקצה ─── */
+const LANES=[
+ [1,'#7B4BC4','#F3ECFC','הזמנה מהחנות','מהציור ועד המארז בבית',[
+  [['artist'],'painting','מעלים ציור','האמן, עם מסגרת ללוגו'],
+  [['gallery','curator'],'check','מאשרים','גלריה ואוצר, ציור ומוצרים'],
+  [['buyer'],'coin','בוחרים ומשלמים','מוצר, ציור, יין והקדשה'],
+  [['admin'],'key','תשלום מסומן','רק אז נכנסים להפקה'],
+  [['winery'],'bottle','יין ובקבוקים','מיקב שותף, בלי תווית'],
+  [['printer'],'file','מדפיסים','מקובץ מוכן עם קווי חיתוך'],
+  [['artist','gallery'],'cert','תעודה חתומה','מספר במהדורה שלא חוזר'],
+  [['buyer'],'box','המארז בבית','ומעקב ב"ההזמנות שלי"']]],
+ [2,'#19A7A8','#E3F6F6','לקוח של יקב','בקבוק אישי דרך היקב',[
+  [['winery'],'link','קישור ללקוח','מהיקב, אישי'],
+  [['customer'],'painting','בוחרים ציור','מקבלים הצעה מוכנה'],
+  [['customer'],'bottle','שולחים ליקב','שם, הקדשה, צורה וכמות'],
+  [['winery'],'check','היקב מאשר','או מציע שינוי'],
+  [['artist'],'check','האמן מאשר','רק אז מדפיסים'],
+  [['printer'],'file','מדפיסים','תוויות לבקבוקים'],
+  [['customer'],'box','משלמים ליקב','והבקבוקים בדרך']]],
+ [3,'#E0892B','#FDF0E1','רישיון לתווית של יקב','ציור על היין של היקב',[
+  [['winery'],'painting','בוחרים ציור','לתווית של יין שלכם'],
+  [['gallery'],'coin','מחיר לרישיון','מחושב, עד 15% התאמה'],
+  [['artist'],'check','האמן מאשר','או מבקש שינוי'],
+  [['winery','gallery'],'cert','חתימה','הכל בתוך המערכת'],
+  [['printer'],'file','מדפיסים','לפי הקובץ המאושר'],
+  [['winery'],'box','תוויות מוכנות','ישר מבית הדפוס']]]];
+pages.push(`<section class="page"><div class="ph"><div><h1>שלושה מסלולים, מקצה לקצה</h1><p>מי עושה כל שלב ומה עובר הלאה. בכל שלב כולם מקבלים עדכון</p></div><span class="no">3</span></div>
+ ${LANES.map(([n,c,bg,t,sub,st])=>`<div class="lane" style="--c:${c};--bg:${bg}"><h2><span class="lt"><i class="l${n}">${n}</i></span>${esc(t)} <small>${esc(sub)}</small></h2><div class="steps">${st.map(([ws,it,b,e],j)=>`<div class="stp"><span class="no">${j+1}</span><span class="it">${IT[it]}</span><div class="hd">${ws.map(w=>who(w)).join('')}</div><b>${esc(b)}</b><em>${esc(e)}</em></div>`).join('')}</div></div>`).join('')}
+ <div class="foot"><span>Grape Arts · המסלולים</span><span>grapearts.com</span></div></section>`);
+no=3;
 for(const [k,n] of ORDER){
   const g=G[k],sc=g.s;
   const per=sc.length>8?Math.ceil(sc.length/2):8;
