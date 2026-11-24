@@ -3503,3 +3503,102 @@ alter table webauthn_challenges enable row level security;   -- רק פונקצ�
 alter table artist_signatures add column if not exists webauthn_cred  text;
 alter table artist_signatures add column if not exists webauthn_proof jsonb;   -- כל מה שצריך כדי לבדוק את האישור שוב, גם בעתיד
 alter table artist_signatures add column if not exists webauthn_at    timestamptz;
+
+-- ---------- הזמנה לפי מספר נייד, מאנשי הקשר ובווטסאפ ----------
+-- יקב מזמין את הצוות שלו, גלריה מזמינה אמנים וצוות, והמנהל מזמין לכל ארגון. כל קישור אישי, לאדם אחד.
+alter table org_invites add column if not exists phone text;
+alter table org_invites add column if not exists name  text;
+
+create or replace function phone_norm(p text) returns text
+language plpgsql immutable as $$
+declare d text := regexp_replace(coalesce(p, ''), '\D', '', 'g');
+begin
+  if d = '' then return null; end if;
+  if d like '00%' then d := substr(d, 3); end if;
+  if d like '0%' then d := '972' || substr(d, 2); end if;
+  if d !~ '^[1-9][0-9]{7,14}$' then return null; end if;
+  if d like '972%' and d !~ '^9725[0-9]{8}$' then return null; end if;   -- בישראל: רק נייד
+  return '+' || d;
+end $$;
+
+create or replace function create_invite(p_role app_role, p_phone text, p_name text default null, p_org uuid default null)
+returns text language plpgsql security definer set search_path = public as $$
+declare r text := coalesce(my_role()::text, ''); o uuid; k text; ph text; t text;
+begin
+  if r = 'admin' then o := p_org;
+  elsif r in ('winery', 'gallery') then o := my_org();
+  else raise exception 'אין הרשאה להזמין משתמשים'; end if;
+  if o is null then raise exception 'צריך לבחור ארגון'; end if;
+  select kind::text into k from organizations where id = o;
+  if not found then raise exception 'הארגון לא נמצא'; end if;
+  if not ((k = 'winery' and p_role = 'winery') or (k = 'gallery' and p_role in ('gallery', 'artist'))
+       or (k = 'printer' and p_role = 'printer') or (k = 'curator' and p_role = 'curator')) then
+    raise exception 'התפקיד הזה לא מתאים לארגון';
+  end if;
+  ph := phone_norm(p_phone);
+  if ph is null then raise exception 'מספר הנייד לא תקין'; end if;
+  if (select count(*) from org_invites where created_by = auth.uid() and created_at > now() - interval '1 day') >= 60 then
+    raise exception 'הגעת למספר ההזמנות המרבי ליום. נסו מחר';
+  end if;
+  insert into org_invites (org_id, role, phone, name, max_uses, created_by)
+  values (o, p_role, ph, nullif(left(btrim(coalesce(p_name, '')), 80), ''), 1, auth.uid())
+  returning token into t;
+  return t;
+end $$;
+revoke all on function create_invite(app_role, text, text, uuid) from public, anon;
+grant execute on function create_invite(app_role, text, text, uuid) to authenticated;
+
+create or replace function my_invites()
+returns table (token text, org_id uuid, role app_role, name text, phone text, email text, uses int, max_uses int, expires_at timestamptz, revoked boolean, created_at timestamptz)
+language sql stable security definer set search_path = public as $$
+  select i.token, i.org_id, i.role, i.name, i.phone, i.email, i.uses, i.max_uses, i.expires_at, i.revoked, i.created_at
+  from org_invites i
+  where (is_admin() or (my_role()::text in ('winery', 'gallery') and i.org_id = my_org()))
+    and i.created_at > now() - interval '60 days'
+  order by i.created_at desc limit 100;
+$$;
+revoke all on function my_invites() from public, anon;
+grant execute on function my_invites() to authenticated;
+
+create or replace function revoke_invite(p_token text) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  update org_invites set revoked = true
+   where token = p_token and (is_admin() or (my_role()::text in ('winery', 'gallery') and org_id = my_org()));
+  if not found then raise exception 'הקישור לא נמצא'; end if;
+end $$;
+revoke all on function revoke_invite(text) from public, anon;
+grant execute on function revoke_invite(text) to authenticated;
+
+create or replace function join_org(p_token text) returns boolean
+language plpgsql security definer set search_path = public, auth as $$
+declare i org_invites; em text; ok_mail boolean; uph text;
+begin
+  select * into i from org_invites where token = p_token and not revoked and expires_at > now() for update;
+  if not found then return false; end if;
+  if i.max_uses is not null and i.uses >= i.max_uses then raise exception 'הקישור כבר נוצל. מבקשים קישור חדש ממי ששלח אותו'; end if;
+  select lower(email), (email_confirmed_at is not null or phone_confirmed_at is not null), phone
+    into em, ok_mail, uph from auth.users where id = auth.uid();
+  if not coalesce(ok_mail, false) then raise exception 'צריך לאשר את כתובת המייל לפני ההצטרפות'; end if;
+  if i.email is not null and lower(trim(i.email)) <> coalesce(em, '') then raise exception 'הקישור הזה אישי, ושייך לכתובת מייל אחרת'; end if;
+  -- מי שנכנס עם מספר נייד: המספר חייב להתאים להזמנה
+  if i.phone is not null and coalesce(uph, '') <> '' and phone_norm(uph) is distinct from i.phone then
+    raise exception 'הקישור הזה אישי, ושייך למספר נייד אחר';
+  end if;
+  perform set_config('app.bypass', '1', true);
+  update profiles set role = i.role, status = 'active', org_id = i.org_id,
+         phone = coalesce(nullif(phone, ''), i.phone),
+         full_name = coalesce(nullif(full_name, ''), i.name),
+         acq_channel = coalesce(acq_channel, 'invite'), acq_ref = coalesce(acq_ref, left(p_token, 8)), acq_at = coalesce(acq_at, now())
+  where id = auth.uid() and role is null and status = 'pending';
+  if not found then return false; end if;
+  update org_invites set uses = uses + 1 where token = p_token;
+  if i.role::text = 'artist' and not exists (select 1 from artists where user_id = auth.uid()) then
+    insert into artists (user_id, gallery_id, name)
+    values (auth.uid(), i.org_id, coalesce((select full_name from profiles where id = auth.uid()), i.name, 'אמן'));
+    perform set_config('app.bypass', '1', true);
+    update profiles set org_id = null where id = auth.uid();
+  end if;
+  return true;
+end $$;
+grant execute on function join_org(text) to authenticated;

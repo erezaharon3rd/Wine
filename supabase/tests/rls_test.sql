@@ -494,4 +494,38 @@ reset role;
 select t_eq((select status::text from works where title='של הגלריה בלי חתימה'), 'live', 'אחרי החתימה הגלריה מפרסמת');
 reset role;
 
+
+-- ---------- הזמנה לפי נייד ----------
+set role authenticated; select t_as('00000000-0000-0000-0000-0000000000b1');
+select t_eq(phone_norm('054-123 4567'), '+972541234567', 'נייד ישראלי מנורמל');
+select t_eq(phone_norm('02-6234567'), null::text, 'קווי נדחה');
+select t_fail($$select create_invite('artist', '0541234567', 'x')$$, 'יקב לא מזמין אמן');
+select t_fail($$select create_invite('winery', '12', 'x')$$, 'מספר לא תקין נדחה');
+select create_invite('winery', '0541234567', 'נוי') is not null;
+select t_eq((select count(*)::int from my_invites() where name = 'נוי'), 1, 'היקב רואה את ההזמנות שלו');
+reset role;
+select t_eq((select org_id::text || '|' || phone || '|' || name || '|' || max_uses from org_invites where name = 'נוי'), '10000000-0000-0000-0000-0000000000b1|+972541234567|נוי|1', 'ההזמנה שייכת ליקב של המזמין, אישית ולפעם אחת');
+set role authenticated; select t_as('00000000-0000-0000-0000-0000000000b2');
+select t_eq((select count(*)::int from my_invites() where name = 'נוי'), 0, 'יקב אחר לא רואה');
+reset role;
+select token as tok_noy from org_invites where name = 'נוי' \gset
+set role authenticated; select t_as('00000000-0000-0000-0000-0000000000b2');
+select t_fail(format('select revoke_invite(%L)', :'tok_noy'), 'יקב אחר לא מבטל הזמנה של יקב אחר');
+reset role;
+set role authenticated; select t_as('00000000-0000-0000-0000-0000000000c1');
+select create_invite('artist', '+972 52 765 4321', 'אמנית חדשה') is not null;
+reset role;
+set role authenticated; select t_as('00000000-0000-0000-0000-0000000000d1');
+select t_fail($$select create_invite('artist', '0527654321', 'x')$$, 'אמן לא מזמין');
+reset role;
+insert into auth.users (id, email, phone, email_confirmed_at, phone_confirmed_at) values ('00000000-0000-0000-0000-0000000000a7', null, '972501112222', null, now()), ('00000000-0000-0000-0000-0000000000a8', null, '972541234567', null, now());
+insert into profiles (id, phone) values ('00000000-0000-0000-0000-0000000000a7', '972501112222'), ('00000000-0000-0000-0000-0000000000a8', '972541234567') on conflict (id) do nothing;
+set role authenticated; select t_as('00000000-0000-0000-0000-0000000000a7');
+select t_fail(format('select join_org(%L)', :'tok_noy'), 'מספר אחר לא נכנס בקישור אישי');
+reset role;
+set role authenticated; select t_as('00000000-0000-0000-0000-0000000000a8');
+select t_eq(join_org(:'tok_noy'), true, 'בעל המספר נכנס, בלי מייל');
+reset role;
+select t_eq((select role::text || '|' || org_id::text || '|' || full_name from profiles where id = '00000000-0000-0000-0000-0000000000a8'), 'winery|10000000-0000-0000-0000-0000000000b1|נוי', 'הצטרף ליקב הנכון עם השם מההזמנה');
+
 select 'כל הבדיקות עברו' as result;
