@@ -188,6 +188,34 @@ function outline(s,dec){
   return `M${r(Lp[0][0])} ${r(Lp[0][1])}${P(Lp)}L${r(R[0][0])} ${r(R[0][1])}${P(R)}Z`;
 }
 
+/* ══════════ אישור בטביעת אצבע (passkey) ══════════
+   הטביעה נשארת בטלפון. הטלפון חותם בכתב סתרים על אתגר שנגזר מהמסמך, מהחתימה ומהשם,
+   והשרת בודק את החתימה מול המפתח שנשמר בחיבור הראשון. */
+const u2b=s=>{s=String(s).replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return Uint8Array.from(atob(s),c=>c.charCodeAt(0)).buffer};
+const b2u=b=>{const a=new Uint8Array(b);let t='';for(let i=0;i<a.length;i++)t+=String.fromCharCode(a[i]);return btoa(t).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')};
+async function api(body){
+  if(window.GA_WEBAUTHN_API)return window.GA_WEBAUTHN_API(body);
+  const {data,error}=await sb.functions.invoke('webauthn',{body});
+  if(error){let m='';try{m=(await error.context.json()).error}catch(e){}throw new Error(m||'אין חיבור לשרת האימות. נסו שוב')}
+  if(data&&data.error)throw new Error(data.error);return data;
+}
+async function bioOK(){try{return !!((LIVE()||window.GA_WEBAUTHN_API)&&window.PublicKeyCredential&&PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable&&await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())}catch(e){return false}}
+async function bioRegister(){
+  const o=await api({a:'reg-options'});
+  const c=await navigator.credentials.create({publicKey:{...o,challenge:u2b(o.challenge),user:{...o.user,id:u2b(o.user.id)},excludeCredentials:(o.excludeCredentials||[]).map(x=>({...x,id:u2b(x.id)}))}});
+  if(!c)throw new Error('החיבור בוטל');
+  await api({a:'reg',cred:{id:c.id,rawId:b2u(c.rawId),type:c.type,transports:c.response.getTransports?c.response.getTransports():[],response:{clientDataJSON:b2u(c.response.clientDataJSON),attestationObject:b2u(c.response.attestationObject)}}});
+}
+async function bioSign(p){
+  const s=await api({a:'status'});if(!s.has)await bioRegister();
+  const o=await api({a:'sign-options',body:p.body,sig:p.sig,name:p.name});
+  const c=await navigator.credentials.get({publicKey:{challenge:u2b(o.challenge),rpId:o.rpId,allowCredentials:(o.allowCredentials||[]).map(x=>({...x,id:u2b(x.id)})),userVerification:'required',timeout:o.timeout}});
+  if(!c)throw new Error('האישור בוטל');
+  const r=c.response;
+  return api({a:'sign',...p,cred:{id:c.id,rawId:b2u(c.rawId),type:c.type,response:{clientDataJSON:b2u(r.clientDataJSON),authenticatorData:b2u(r.authenticatorData),signature:b2u(r.signature),userHandle:r.userHandle?b2u(r.userHandle):null}}});
+}
+const bioErr=e=>e&&(e.name==='NotAllowedError'||e.name==='AbortError')?'האישור בוטל או שהזמן עבר. אפשר לנסות שוב, או לחתום בלי טביעת אצבע':(e&&e.name==='InvalidStateError'?'המכשיר הזה כבר מחובר. נסו שוב':(e&&e.message)||'האישור לא הצליח');
+
 /* ══════════ ההסכם במסך ══════════ */
 function doc(){return `<ul class="ag-sum">${AG.summary.map(x=>`<li>${E(x)}</li>`).join('')}</ul>
 <div class="ag-why"><b>למה בלעדיות?</b>${E(AG.why)}</div>
@@ -211,7 +239,10 @@ function open(from){
   ${AG.checks.map((t,i)=>`<label class="ag-chk"><input type="checkbox" id="ag${i}" ${st.c[i]?'checked':''}> <span>${E(t)}</span></label>`).join('')}
   <div class="fld" style="margin-top:14px"><label for="agn">השם המלא שלך, כפי שיופיע על הבקבוק</label><input id="agn" value="${E(st.n)}" autocomplete="name"></div>
   ${st.sig?`<h3>החתימה שלך</h3><div class="ag-sigbox">${sigSvg(st.sig)}</div>${labels(st.sig,st.n)}
-  <div class="row" style="margin-top:12px;gap:8px;display:flex"><button class="btn alt" data-a="agpad">לחתום שוב</button><button class="btn" style="flex:1" data-a="agsubmit">לאשר ולחתום על ההסכם</button></div>`
+  ${st.bio?`<button class="btn wide" style="margin-top:12px" data-a="agsubmit" data-v="bio">לאשר בטביעת אצבע ולחתום</button>
+  <p class="note">הטלפון יבקש טביעת אצבע או זיהוי פנים. הטביעה נשארת בטלפון ולא נשלחת אלינו. בפעם הראשונה הטלפון יתחבר לחשבון שלך, ואז יאשר את החתימה.</p>
+  <div class="row" style="margin-top:6px;gap:8px;display:flex"><button class="btn alt" data-a="agpad">לחתום שוב</button><button class="btn alt" style="flex:1" data-a="agsubmit" data-v="plain">לחתום בלי טביעת אצבע</button></div>`
+  :`<div class="row" style="margin-top:12px;gap:8px;display:flex"><button class="btn alt" data-a="agpad">לחתום שוב</button><button class="btn" style="flex:1" data-a="agsubmit">לאשר ולחתום על ההסכם</button></div>`}`
   :`<button class="btn wide" style="margin-top:14px" data-a="agpad">להמשיך לחתימה</button><p class="note">המסך יעבור לרוחב, ותוכלו לחתום באצבע. אפשר לבטל צעד או להתחיל מחדש.</p>`}
   <p class="note" id="agerr" role="alert" style="color:#9B2C2C"></p>
   <p class="ag-meta">גרסת ההסכם ${E(AG.v)}. <a href="agreement.html" target="_blank" rel="noopener">לקרוא את ההסכם בדף נפרד</a></p>`);
@@ -221,20 +252,26 @@ function err(t){const e=document.getElementById('agerr');if(e)e.textContent=t;T(
 function validate(st){if(st.c.some(x=>!x)){err('צריך לסמן את שלושת האישורים');return false}if(st.n.length<2||!/\p{L}/u.test(st.n)){err('צריך שם מלא');document.getElementById('agn')?.focus();return false}return true}
 
 async function padFlow(){const st=readForm();if(!st||!validate(st))return;
-  const sig=await pad({title:'החתימה שלך',tip:st.n});if(sig){st.sig=sig}open(st.from)}
-async function submit(){const st=readForm();if(!st||!validate(st))return;if(!st.sig){padFlow();return}
-  const btn=document.querySelector('[data-a="agsubmit"]');if(btn){btn.disabled=true;btn.textContent='חותמים…'}
+  const sig=await pad({title:'החתימה שלך',tip:st.n});if(sig){st.sig=sig}st.bio=await bioOK();open(st.from)}
+async function submit(mode){const st=readForm();if(!st||!validate(st))return;if(!st.sig){padFlow();return}
+  const bio=mode==='bio';const btns=[...document.querySelectorAll('[data-a="agsubmit"]')],btn=document.querySelector(`[data-a="agsubmit"]${mode?`[data-v="${mode}"]`:''}`),lbl=btn&&btn.textContent;btns.forEach(b=>b.disabled=true);if(btn)btn.textContent=bio?'ממתינים לאישור בטלפון…':'חותמים…'
   const h=await sha(BODY);
+  let viaBio=false;
   try{
-    if(LIVE()){
+    if(bio){
+      const r=await bioSign({version:AG.v,body:BODY,name:st.n,sig:JSON.stringify(st.sig),ua:navigator.userAgent.slice(0,300)});viaBio=true;
+      if(LIVE()){Object.assign(ME.artist||(ME.artist={}),{agreement_version:AG.v,agreement_at:r&&r.at||new Date().toISOString(),agreement_name:st.n,agreement_hash:r&&r.hash||h,signature_svg:JSON.stringify(st.sig)});if(S._artists&&ME.artist.id)S._artists[ME.artist.id]=ME.artist}
+      else{S.agree={v:AG.v,at:new Date().toISOString(),name:st.n,hash:h,sig:st.sig,bio:true};S.sig=st.sig;keep()}
+    }else if(LIVE()){
       const r=await q(sb.rpc('sign_artist_agreement',{p_version:AG.v,p_body:BODY,p_name:st.n,p_sig:JSON.stringify(st.sig),p_ua:navigator.userAgent.slice(0,300)}));
       Object.assign(ME.artist||(ME.artist={}),{agreement_version:AG.v,agreement_at:r&&r.at||new Date().toISOString(),agreement_name:st.n,agreement_hash:r&&r.hash||h,signature_svg:JSON.stringify(st.sig)});
       if(S._artists&&ME.artist.id)S._artists[ME.artist.id]=ME.artist;
     }else{S.agree={v:AG.v,at:new Date().toISOString(),name:st.n,hash:h,sig:st.sig};S.sig=st.sig;keep()}
-  }catch(e){if(btn){btn.disabled=false;btn.textContent='לאשר ולחתום על ההסכם'}err(typeof heb==='function'?heb(e):(e.message||'החתימה לא נשמרה. נסו שוב'));return}
+  }catch(e){btns.forEach(b=>b.disabled=false);if(btn)btn.textContent=lbl;err(bio?bioErr(e):(typeof heb==='function'?heb(e):(e.message||'החתימה לא נשמרה. נסו שוב')));return}
   const from=st.from;S._ag=null;
   sheet(`<span class="eyebrow">נחתם</span><h2>תודה, ההסכם חתום</h2>
   <div class="ag-sigbox">${sigSvg(st.sig)}</div>
+  ${viaBio?'<p class="note" style="color:#2E5A3A;font-weight:600;margin-top:10px">✓ אושר בטביעת אצבע במכשיר שלך</p>':''}
   <p class="lead" style="margin-top:12px">${LIVE()?'עותק של ההסכם החתום נשלח למייל שלך. ':''}תמיד אפשר לראות אותו בפרופיל, תחת "חוזים".</p>
   ${from==='upload'?'<button class="btn wide" data-a="agup">להעלות יצירה</button>':'<button class="btn wide" data-a="close">סגירה</button>'}`);
   try{render()}catch(e){}
@@ -242,11 +279,12 @@ async function submit(){const st=readForm();if(!st||!validate(st))return;if(!st.
 async function copy(){
   const m=mine();if(!m)return open();
   let row=null;
-  if(LIVE()&&ME.artist&&ME.artist.id){try{row=await q(sb.from('artist_signatures').select('signed_at,full_name,body_hash,signature').eq('artist_id',ME.artist.id).eq('agreement_version',AG.v).order('signed_at',{ascending:false}).limit(1).maybeSingle())}catch(e){}}
+  if(LIVE()&&ME.artist&&ME.artist.id){try{row=await q(sb.from('artist_signatures').select('signed_at,full_name,body_hash,signature,webauthn_at').eq('artist_id',ME.artist.id).eq('agreement_version',AG.v).order('signed_at',{ascending:false}).limit(1).maybeSingle())}catch(e){}}
   const at=row?row.signed_at:m.at,name=row?row.full_name:m.name,hash=row?row.body_hash:m.hash,sig=parse(row&&row.signature)||m.sig;
   sheet(`<span class="eyebrow">העותק החתום</span><h2>${E(AG.title)}</h2>
   ${doc()}
   <h3>חתימה</h3><div class="ag-sigbox">${sigSvg(sig)}</div>
+  ${(row?row.webauthn_at:m.bio)?'<p class="note" style="color:#2E5A3A;font-weight:600">✓ אושר בטביעת אצבע במכשיר של האמן</p>':''}
   <p class="ag-meta">נחתם בידי <b>${E(name||'')}</b>, ${E(fmt(at))}<br>גרסה ${E(AG.v)} · מזהה מסמך ${E(String(hash||'').slice(0,16))}</p>`);
 }
 async function resign(){ // עדכון החתימה שמופיעה על הבקבוק בלבד
@@ -272,10 +310,10 @@ function workBadge(w){const ok=artistOk(w.artist);return `<small style="color:${
 /* ── פעולות ── */
 A.agree=()=>open(null);
 A.agpad=()=>padFlow();
-A.agsubmit=()=>submit();
+A.agsubmit=v=>submit(v);
 A.agcopy=()=>copy();
 A.agresign=()=>resign();
 A.agup=()=>{S.upload=null;uploadSheet()};
 
-window.GAAgree={AG,BODY,need,mine,artistOk,open,todo,panel,workBadge,pad,sigSvg,doc,outline};
+window.GAAgree={AG,BODY,need,mine,artistOk,open,todo,panel,workBadge,pad,sigSvg,doc,outline,_t:{u2b,b2u,api,bioSign,bioOK}};
 })();

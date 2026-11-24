@@ -3468,3 +3468,38 @@ end $$;
 drop trigger if exists works_agreement_gate_t on works;
 drop trigger if exists works_zz_agreement_gate on works;
 create trigger works_zz_agreement_gate before insert or update on works for each row execute function works_agreement_gate();
+
+-- ---------- אישור בטביעת אצבע (passkey) לחתימת האמן ----------
+-- הטביעה לא נשמרת אצלנו: רק המפתח הציבורי של המכשיר. פונקציית הענן webauthn בודקת ורושמת.
+create table if not exists webauthn_credentials (
+  id           text primary key,                 -- מזהה המפתח במכשיר
+  user_id      uuid not null references profiles(id) on delete cascade,
+  rp_id        text not null,                    -- האתר שהמפתח שייך לו
+  alg          int  not null,
+  public_key   jsonb not null,
+  counter      bigint not null default 0,
+  transports   text[] not null default '{}',
+  created_at   timestamptz not null default now(),
+  last_used_at timestamptz
+);
+create index if not exists webauthn_credentials_user on webauthn_credentials (user_id, rp_id);
+alter table webauthn_credentials enable row level security;
+drop policy if exists wac_read on webauthn_credentials;
+create policy wac_read on webauthn_credentials for select to authenticated using (user_id = auth.uid() or is_admin());
+
+create table if not exists webauthn_challenges (
+  id         bigint generated always as identity primary key,
+  user_id    uuid not null references profiles(id) on delete cascade,
+  rp_id      text not null,
+  purpose    text not null check (purpose in ('reg', 'sign')),
+  challenge  text not null,
+  bind       text,                               -- טביעה של המסמך, החתימה והשם שאושרו
+  created_at timestamptz not null default now(),
+  used_at    timestamptz
+);
+create index if not exists webauthn_challenges_user on webauthn_challenges (user_id, purpose, id desc);
+alter table webauthn_challenges enable row level security;   -- רק פונקציית הענן ניגשת
+
+alter table artist_signatures add column if not exists webauthn_cred  text;
+alter table artist_signatures add column if not exists webauthn_proof jsonb;   -- כל מה שצריך כדי לבדוק את האישור שוב, גם בעתיד
+alter table artist_signatures add column if not exists webauthn_at    timestamptz;
