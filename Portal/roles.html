@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grape Arts · דף תפקיד</title>
+<meta name="robots" content="noindex">
+<style>
+@page{size:A3;margin:0}
+html,body{margin:0;background:#E9E2D8}
+body{font-family:'Heebo','IBM Plex Sans Hebrew',Arial,sans-serif;color:#1F1B2D;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.bar{position:sticky;top:0;z-index:5;display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 12px;background:#1F1B2D;color:#fff;font-size:14px}
+.bar select,.bar button{font:inherit;min-height:44px;border-radius:12px;border:0;padding:0 14px}
+.bar button{font-weight:700;background:#F5B83D;color:#1F1B2D;cursor:pointer}
+.wrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding:16px 0 40px}
+.sheet{width:297mm;height:420mm;box-sizing:border-box;padding:16mm 16mm 12mm;background:radial-gradient(130% 55% at 50% 0%,#fff 0%,#FFF8EE 55%,#FCEBD9 100%);display:flex;flex-direction:column;gap:9mm;overflow:hidden;box-shadow:0 6px 20px #0002;break-after:page;page-break-after:always}
+.sheet:last-child{break-after:auto;page-break-after:auto}
+/* כותרת */
+.hd{display:flex;align-items:center;gap:10mm}
+.hd .gd-ch{--s:62mm}.hd .gd-ch figcaption{display:none}
+.hd .k{font-size:15pt;font-weight:700;color:#9A8FA8;letter-spacing:.02em}
+.hd h1{margin:1mm 0 0;font-size:48pt;line-height:1;font-weight:900}
+.hd p{margin:3mm 0 0;font-size:19pt;line-height:1.3;color:#4A4358;max-width:150mm}
+.brand{margin-inline-start:auto;align-self:flex-start;display:flex;flex-direction:column;align-items:center;gap:1mm;font-family:'Frank Ruhl Libre','David Libre',Georgia,serif;font-size:12pt;letter-spacing:.18em;color:#1F1B2D}
+.brand svg{width:22mm;height:22mm}
+/* מה אפשר */
+h2{margin:0;font-size:22pt;font-weight:800;display:flex;align-items:center;gap:4mm}
+h2 i{display:inline-block;width:10mm;height:3mm;border-radius:9px;background:#E0457B}
+.can{flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:minmax(44mm,60mm);align-content:center;gap:7mm}
+.t{background:#fff;border:2.4px solid #1F1B2D;border-radius:7mm;box-shadow:1.6mm 1.6mm 0 #1F1B2D;padding:6mm;display:flex;gap:5mm;align-items:center}
+.t .ic{flex:none;width:28mm;height:28mm;border-radius:50%;display:grid;place-items:center}
+.t .ic svg{width:17mm;height:17mm}
+.t b{display:block;font-size:18pt;line-height:1.15;font-weight:800}
+.t span{display:block;font-size:13pt;line-height:1.3;color:#5A5268;margin-top:1mm}
+/* איך */
+.how{display:flex;align-items:stretch;gap:0}
+.st{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:2mm;position:relative}
+.st .ic{width:36mm;height:36mm;border-radius:50%;background:#fff;border:2.4px solid #1F1B2D;display:grid;place-items:center;position:relative}
+.st .ic svg{width:20mm;height:20mm}
+.st .n{position:absolute;top:-2mm;inset-inline-start:-2mm;width:9mm;height:9mm;border-radius:50%;background:#E0457B;color:#fff;font-weight:800;font-size:12pt;display:grid;place-items:center}
+.st b{font-size:16pt;font-weight:800;line-height:1.15}
+.st span{font-size:12pt;color:#5A5268;line-height:1.25;max-width:44mm}
+.ar{flex:none;width:12mm;display:flex;align-items:flex-start;padding-top:14mm}
+.ar svg{width:12mm;height:8mm}
+/* איפה */
+.where{display:flex;gap:6mm;align-items:center;background:#1F1B2D;color:#fff;border-radius:7mm;padding:5mm 7mm}
+.where .q{flex:none;width:16mm;height:16mm;border-radius:50%;background:#F5B83D;color:#1F1B2D;display:grid;place-items:center;font-size:22pt;font-weight:900}
+.where p{margin:0;font-size:13.5pt;line-height:1.35}
+.where b{color:#F5B83D}
+.where .url{margin-inline-start:auto;font-size:13pt;letter-spacing:.04em;white-space:nowrap;opacity:.85}
+.gold{color:#F5B83D}
+@media print{html,body{background:none}.bar{display:none}.wrap{display:block;padding:0}.sheet{box-shadow:none;zoom:1!important}}
+</style>
+</head>
+<body>
+<div class="bar"><label for="rl">תפקיד</label><select id="rl"></select><button type="button" id="pr">להדפסה (A3)</button></div>
+<div class="wrap" id="w"></div>
+<script src="guide.js?v=4"></script>
+<script>
+(function(){
+const {who,EMB}=GAGuide.data;GAGuide.data.css();
+const K='#1F1B2D';
+/* אייקונים בקו, צבע רקע עדין לכל אחד */
+const L=(d,w=2.4)=>`<svg viewBox="0 0 48 48" fill="none" stroke="${K}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const I={
+ box:L('<rect x="8" y="18" width="32" height="22" rx="2"/><path d="M6 12h36v6H6zM24 12v28M24 12c-4-8-12-6-8-1M24 12c4-8 12-6 8-1"/>'),
+ painting:L('<rect x="7" y="9" width="34" height="30" rx="1.5"/><rect x="11" y="13" width="26" height="22"/><path d="M11 31l8-8 6 5 5-4 7 7"/><circle cx="30" cy="19" r="2.5"/>'),
+ bottle:L('<path d="M21 5h6v9c0 3 6 5 6 11v17q0 2-2 2H17q-2 0-2-2V25c0-6 6-8 6-11z"/><rect x="18" y="26" width="12" height="11"/>'),
+ pen:L('<path d="M31 8l9 9-21 21H10v-9z"/><path d="M27 12l9 9"/><path d="M8 42h32" stroke-width="1.8"/>'),
+ shekel:L('<circle cx="24" cy="24" r="17"/><path d="M17 31V16h8a5 5 0 0 1 5 5v5M31 17v15h-8a5 5 0 0 1-5-5v-5"/>'),
+ check:L('<rect x="7" y="7" width="34" height="34" rx="9"/><path d="M15 24l6 6 12-13"/>'),
+ coin:L('<ellipse cx="24" cy="16" rx="14" ry="6"/><path d="M10 16v8c0 3 6 6 14 6s14-3 14-6v-8M10 24v8c0 3 6 6 14 6s14-3 14-6v-8"/>'),
+ cert:L('<rect x="9" y="6" width="26" height="34" rx="2"/><path d="M14 14h16M14 20h12M14 26h14"/><circle cx="34" cy="34" r="6"/><path d="M31 39l-1 6 4-2 4 2-1-6"/>'),
+ list:L('<rect x="9" y="6" width="30" height="36" rx="3"/><path d="M16 16h16M16 24h16M16 32h10"/><circle cx="13" cy="16" r=".6"/><circle cx="13" cy="24" r=".6"/>'),
+ star:L('<path d="M24 6l5.5 11.4 12.5 1.6-9.2 8.6 2.4 12.4L24 34l-11.2 6 2.4-12.4L6 19l12.5-1.6z"/>'),
+ link:L('<path d="M20 28l8-8"/><path d="M22 14l3-3a7 7 0 0 1 10 10l-3 3M26 34l-3 3a7 7 0 0 1-10-10l3-3"/>'),
+ swap:L('<path d="M10 16h26l-6-6M38 32H12l6 6"/>'),
+ upload:L('<path d="M24 32V8M15 17l9-9 9 9"/><path d="M8 30v8h32v-8"/>'),
+ frame:L('<rect x="6" y="6" width="36" height="36" rx="2" stroke-dasharray="4 4"/><rect x="14" y="12" width="20" height="18"/><path d="M14 36h20" stroke-width="3.2"/>'),
+ sign:L('<path d="M6 34c6-14 9-14 10-6s5 6 9-4 6 4 9 4 5-3 8-4"/><path d="M6 41h36" stroke-width="1.8"/>'),
+ stamp:L('<path d="M18 22V12a6 6 0 0 1 12 0v10"/><rect x="10" y="22" width="28" height="10" rx="2"/><path d="M8 40h32M12 32v4h24v-4"/>'),
+ house:L('<path d="M8 22L24 9l16 13"/><path d="M12 19v20h24V19"/><rect x="20" y="28" width="8" height="11"/>'),
+ edition:L('<rect x="6" y="14" width="10" height="26" rx="2"/><rect x="19" y="10" width="10" height="30" rx="2"/><rect x="32" y="6" width="10" height="34" rx="2"/><path d="M9 20h4M22 16h4M35 12h4"/>'),
+ tag:L('<path d="M24 6h16v16L22 40 8 26z"/><circle cx="33" cy="13" r="2.5"/>'),
+ people:L('<circle cx="17" cy="16" r="6"/><circle cx="33" cy="18" r="5"/><path d="M6 38c1-8 6-12 11-12s10 4 11 12M28 38c1-6 3-10 7-10s7 3 8 10"/>'),
+ eye:L('<path d="M4 24s7-12 20-12 20 12 20 12-7 12-20 12S4 24 4 24z"/><circle cx="24" cy="24" r="5"/>'),
+ gear:L('<circle cx="24" cy="24" r="6"/><path d="M24 5v6M24 37v6M5 24h6M37 24h6M10.6 10.6l4.2 4.2M33.2 33.2l4.2 4.2M10.6 37.4l4.2-4.2M33.2 14.8l4.2-4.2"/>'),
+ printer:L('<rect x="12" y="6" width="24" height="10"/><rect x="6" y="16" width="36" height="16" rx="3"/><rect x="12" y="26" width="24" height="16"/><path d="M17 32h14M17 37h10"/>'),
+ file:L('<path d="M12 5h17l9 9v29H12z"/><path d="M29 5v9h9M17 26h14M17 33h10"/>'),
+ chat:L('<path d="M7 10h34v22H22l-9 8v-8H7z"/><path d="M15 19h18M15 25h12"/>'),
+ truck:L('<rect x="4" y="12" width="24" height="20" rx="2"/><path d="M28 18h9l6 7v7H28z"/><circle cx="13" cy="35" r="4"/><circle cx="35" cy="35" r="4"/>'),
+ search:L('<circle cx="21" cy="21" r="12"/><path d="M30 30l11 11"/><path d="M16 21h10M21 16v10"/>'),
+ log:L('<rect x="8" y="5" width="32" height="38" rx="3"/><path d="M15 14h18M15 21h18M15 28h12"/><circle cx="31" cy="35" r="5"/><path d="M31 32.5V35l1.8 1.2"/>'),
+ tier:L('<path d="M8 40V30h9v10M20 40V20h9v20M32 40V10h9v30"/>'),
+ heart:L('<path d="M24 40S7 30 7 18a8.5 8.5 0 0 1 17-2 8.5 8.5 0 0 1 17 2c0 12-17 22-17 22z"/>'),
+ wine:L('<path d="M15 6h18q1 14-9 17Q14 20 15 6z"/><path d="M24 23v14M16 42h16"/>')
+};
+const BG=['#FDE2EC','#E6DEFA','#FFF0CF','#DDF3E8','#DCEBFF','#FFE4D3','#DDF2F2','#F1E9DF','#FDE2EC'];
+const R=[
+ {k:'buyer',n:'קונה',t:'הקונה בחנות',d:'מזמינים בקבוק או מארז עם ציור מקורי של אמן ישראלי. למתנה, לאירוע או לעסק.',
+  can:[['painting','בוחרים ציור','ואמן ישראלי'],['box','בוחרים מארז','בקבוק, זוג, שלישייה או ארגז'],['bottle','בוחרים יין','מיקב ישראלי שותף'],['pen','שם, הקדשה, לוגו','תמיד מחוץ לציור'],['edition','מהדורה ממוספרת','מספר שלא חוזר'],['cert','תעודה חתומה','עם קוד אימות'],['shekel','מחיר שקוף','מתעדכן בכל בחירה'],['list','ההזמנות שלי','איפה כל הזמנה עומדת'],['star','ביקור בסטודיו','במהדורה + הדפס']],
+  how:[['painting','בוחרים','ציור ומוצר'],['box','מעצבים','מארז, יין וטקסט'],['check','מאשרים','פרטים, גיל ותנאים'],['coin','משלמים','ומקבלים מספר'],['truck','מקבלים','מארז ותעודה']],
+  where:'בחנות: קישור <b>"הדרכה"</b> למעלה, ו<b>"ההזמנות שלי"</b> לכל הזמנה.'},
+ {k:'customer',n:'לקוח של יקב',t:'לקוח של יקב',d:'מעצבים בקבוק אישי עם היקב שלכם. הקישור מהיקב משאיר אתכם אצלו, תמיד.',
+  can:[['link','נכנסים מקישור','שהיקב שלח'],['painting','בוחרים אמן וציור','ומקבלים עיצוב מוכן'],['pen','מעצבים','שם, צורה, כמות'],['shekel','רואים מחיר','לבקבוק ולארגז'],['swap','משווים שינויים','שלכם מול היקב'],['check','מאשרים','לפני הדפסה'],['list','עוקבים','אחרי ההזמנה'],['chat','כותבים ליקב','בתוך ההזמנה'],['wine','מקבלים בקבוקים','מהיקב שלכם']],
+  how:[['link','קישור','מהיקב'],['painting','בוחרים','אמן וציור'],['pen','מעצבים','ושולחים'],['check','מאשרים','יחד עם היקב'],['wine','מקבלים','את הבקבוקים']],
+  where:'כפתור <b>?</b> בראש המסך פותח את ההדרכה. ההזמנות בלשונית <b>"ההזמנות שלי"</b>.'},
+ {k:'winery',n:'יקב',t:'היקב',d:'שלוש דרכים לעבוד איתנו: יקב שותף לחנות, עיצוב עם הלקוחות שלכם, ורישיון לתווית.',
+  can:[['bottle','יקב שותף','מספקים יין לחנות'],['house','בקבוקים בלי תווית','מעדכנים כמה יש'],['shekel','מחירון','אחד לכל הערוצים'],['link','קישור ללקוחות','הם נשארים שלכם'],['check','מאשרים עיצוב','או מציעים שינוי'],['painting','רישיון לתווית','ציור לבקבוקים שלכם'],['sign','חותמים','חוזה דיגיטלי'],['list','לקוחות','הזמנות מהחנות על היין שלכם'],['printer','הדפסה','ישר לבית הדפוס']],
+  how:[['link','מזמינים','לקוחות או רישיון'],['check','מאשרים','עיצוב ותווית'],['sign','חותמים','ומשלמים'],['printer','מדפיסים','בבית הדפוס'],['wine','מוכרים','את היין']],
+  where:'כפתור <b>?</b> בראש המסך. הזמנות לקוחות בלשונית <b>"לקוחות"</b>, רישיונות ב<b>"עסקאות"</b>.'},
+ {k:'artist',n:'אמן',t:'האמן',d:'הציורים שלכם, בשליטה שלכם. שום שימוש לא קורה בלי האישור שלכם.',
+  can:[['upload','מעלים ציור','קובץ לא מתאים נחסם לבד'],['check','מאשרים מוצרים','יחד עם הגלריה'],['frame','מסגרת ללוגו','איפה מותר לכתוב'],['painting','מאשרים תווית','בכל סבב שינויים'],['sign','חותמים','על כל תעודה'],['edition','מהדורות','גודל קבוע, לא גדל'],['star','ביקורי סטודיו','כמה שתחליטו בשנה'],['coin','תמורה','לכל בקבוק ורישיון'],['tier','דרגה','קובעת את המחיר']],
+  how:[['upload','מעלים','ציור'],['check','מאשרים','מוצרים ומסגרת'],['painting','מאשרים','כל תווית'],['sign','חותמים','על תעודות'],['coin','מקבלים','תמורה']],
+  where:'כפתור <b>?</b> בראש המסך. מוצרים ומסגרת ב<b>"מהדורות"</b>, אישורים ב<b>"בקשות"</b>.'},
+ {k:'gallery',n:'גלריה',t:'הגלריה',d:'מייצגים את האמנים: מאשרים, מתמחרים, פותחים מהדורות ושומרים על הערך.',
+  can:[['painting','מאשרים ציורים','או מחזירים עם הערה'],['check','מסכימים למוצרים','יחד עם האמן'],['edition','פותחים מהדורה','והדפסים חתומים'],['shekel','מתמחרים רישיון','עד 15% התאמה'],['coin','מאשרים תשלום','של רישיון'],['stamp','חותמת','על כל תעודה'],['heart','אספנים','רק מי שהסכים'],['tier','ממליצים על דרגה','המנהל מאשר'],['star','ביקורי סטודיו','קובעים מועד']],
+  how:[['painting','מאשרים','ציור'],['check','מסכימים','למוצרים'],['edition','פותחים','מהדורה'],['stamp','מטביעים','חותמת'],['heart','שומרים קשר','עם אספנים']],
+  where:'כפתור <b>?</b> בראש המסך. מוצרים ומהדורות בלשונית <b>"מהדורות"</b>.'},
+ {k:'curator',n:'אוצר',t:'האוצר',d:'שומרים על האיכות: ממליצים, בודקים התאמה ומאשרים מצטרפים.',
+  can:[['star','בחירות האוצר','ציורים מומלצים קודם'],['eye','בודקים הדמיות','שהצילום תואם לציור'],['people','בקשות הצטרפות','מאשרים או דוחים'],['search','מחפשים במאגר','לפי צבע ונושא'],['chat','מסבירים','סיבה לכל החלטה'],['check','הקבצים נבדקים לבד','בהעלאה']],
+  how:[['search','סוקרים','את המאגר'],['star','ממליצים','על ציורים'],['eye','בודקים','הדמיות'],['people','מאשרים','מצטרפים']],
+  where:'כפתור <b>?</b> בראש המסך. בקשות בלשונית <b>"קבלה"</b>, המלצות ב<b>"קידום"</b>, הדמיות ב<b>"הדמיות"</b>.'},
+ {k:'printer',n:'בית דפוס',t:'בית הדפוס',d:'מכאן הבקבוקים יוצאים: קובץ מוכן, הדפסה, ועדכון לכולם.',
+  can:[['file','הזמנה עם קובץ','מידות, גלישה וחיתוך'],['printer','מדפיסים','תוויות, מארזים, תעודות'],['chat','מבקשים תיקון','אם חסר משהו בקובץ'],['list','מדווחים כמות','כמה הודפס'],['check','מסמנים מוכן','כולם מקבלים עדכון'],['truck','משלוח','ליקב או לקונה']],
+  how:[['file','מקבלים','קובץ'],['printer','מדפיסים','תוויות'],['list','מדווחים','כמות'],['check','מסמנים','מוכן']],
+  where:'כפתור <b>?</b> בראש המסך. כל העבודות בלשונית <b>"הזמנות"</b>.'},
+ {k:'admin',n:'מנהל',t:'מנהל המערכת',d:'כל המערכת מול העיניים: אנשים, יינות, מחירים, תשלומים והגדרות.',
+  can:[['link','קישור הזמנה אישי','מייל אחד, שימוש מוגבל'],['eye','צפייה בתור','כל מסך, כל תפקיד'],['bottle','יקבים ויינות','שותפים, מחיר, מלאי'],['box','מארזים ומחירים','לכל מוצר'],['coin','סימון תשלום','ואז הפקה ומספר'],['gear','הגדרות החנות','זמן הכנה, חגים, הנחות'],['swap','העברת לקוח','רק עם סיבה'],['tier','דרגות אמנים','מאשרים המלצות'],['log','יומן','כל פעולה נרשמת']],
+  how:[['link','מצרפים','אנשים'],['bottle','מגדירים','יינות ומארזים'],['coin','מאשרים','תשלומים'],['gear','מכוונים','את החנות'],['log','עוקבים','ביומן']],
+  where:'כפתור <b>?</b> בראש המסך. החנות כולה בלשונית <b>"ערוץ חיצוני"</b>.'}
+];
+const AR=`<svg viewBox="0 0 48 32" aria-hidden="true"><path d="M44 16H8M18 6L6 16l12 10" fill="none" stroke="${K}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 0"/></svg>`;
+function sheet(r){
+  return `<section class="sheet" id="s-${r.k}">
+   <div class="hd">${who(r.k)}<div><div class="k">דף תפקיד</div><h1>${r.t}</h1><p>${r.d}</p></div>
+    <div class="brand"><svg viewBox="0 0 120 120">${EMB}</svg>GRAPE ARTS</div></div>
+   <h2><i></i>מה אפשר לעשות</h2>
+   <div class="can">${r.can.map(([ic,b,s],i)=>`<div class="t"><div class="ic" style="background:${BG[i%BG.length]}">${I[ic]}</div><div><b>${b}</b><span>${s}</span></div></div>`).join('')}</div>
+   <h2><i style="background:#F5B83D"></i>איך זה זורם</h2>
+   <div class="how">${r.how.map(([ic,b,s],i)=>`${i?`<div class="ar">${AR}</div>`:''}<div class="st"><div class="ic">${I[ic]}<span class="n">${i+1}</span></div><b>${b}</b><span>${s}</span></div>`).join('')}</div>
+   <div class="where"><div class="q">?</div><p>${r.where}<br>בכל רגע אפשר לפתוח שוב את ההדרכה המונפשת.</p><span class="url">grapearts.com</span></div>
+  </section>`;
+}
+const sel=document.getElementById('rl'),w=document.getElementById('w');
+const only=new URLSearchParams(location.search).get('r');
+sel.innerHTML=`<option value="">כל התפקידים</option>`+R.map(r=>`<option value="${r.k}">${r.n}</option>`).join('');
+function show(k){sel.value=k||'';w.innerHTML=R.filter(r=>!k||r.k===k).map(sheet).join('');fit()}
+function fit(){const z=matchMedia('print').matches?1:Math.min(1,(innerWidth-16)/1123);document.querySelectorAll('.sheet').forEach(p=>p.style.zoom=z)}
+sel.onchange=()=>{const k=sel.value;history.replaceState(null,'',k?'?r='+k:location.pathname);show(k)};
+document.getElementById('pr').onclick=()=>{document.querySelectorAll('.sheet').forEach(p=>p.style.zoom=1);print();setTimeout(fit,500)};
+addEventListener('resize',fit);addEventListener('afterprint',fit);
+show(R.some(r=>r.k===only)?only:'');
+})();
+</script>
+</body>
+</html>

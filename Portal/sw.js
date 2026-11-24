@@ -1,5 +1,5 @@
 /* מטמון של קובצי האפליקציה בלבד. נתונים תמיד מהשרת. */
-const V='wl-14',SHELL=['./','index.html','tiers.js','channels.js','shop.html','guide.js','verify.html','quality.js','customer.js','docs.js','motion.js','live.js','ops.js','label.js','config.js','manifest.json'];
+const V='wl-15',SHELL=['./','index.html','tiers.js','channels.js','shop.html','guide.js','verify.html','quality.js','customer.js','docs.js','motion.js','live.js','ops.js','label.js','config.js','manifest.json'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>c.addAll(SHELL)).catch(()=>{}));self.skipWaiting()});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==V).map(k=>caches.delete(k)))));self.clients.claim()});
 self.addEventListener('fetch',e=>{const u=new URL(e.request.url);

@@ -8,6 +8,9 @@ const C={grape:'#7B4BC4',berry:'#E0457B',gold:'#F5B83D',leaf:'#2FB67C',sky:'#3B8
 const SKIN=['#F6C9A4','#E8B48C','#C98E62','#8D5A3B'];
 
 /* ───────── דמויות ───────── */
+/* הסמל: בקבוק בקו דק, והתווית שלו היא מסגרת של יצירה. מונוכרום, נקי */
+const EMB=`<g fill="none" stroke="${'#1F1B2D'}" stroke-linecap="round" stroke-linejoin="round"><path d="M55 8h10v22c0 6 15 11 15 26v52q0 4-4 4H44q-4 0-4-4V56c0-15 15-20 15-26z" stroke-width="2.4" fill="#FFFDF9"/><path d="M55 15h10" stroke-width="1.4"/><rect x="45" y="62" width="30" height="34" stroke-width="1.5"/><rect x="48.5" y="65.5" width="23" height="27" stroke-width=".8"/><path d="M51 86c5-9 9-12 12-7s6 2 8-6" stroke-width="1.7"/><circle cx="66" cy="72" r="2.2" stroke-width="1.1"/></g>`;
+
 function face(cx,cy,r,skin){return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${skin}"/><circle cx="${cx-r*.36}" cy="${cy-r*.05}" r="${r*.1}" fill="${C.ink}"/><circle cx="${cx+r*.36}" cy="${cy-r*.05}" r="${r*.1}" fill="${C.ink}"/><path d="M${cx-r*.32} ${cy+r*.32} Q${cx} ${cy+r*.62} ${cx+r*.32} ${cy+r*.32}" stroke="${C.ink}" stroke-width="${r*.09}" fill="none" stroke-linecap="round"/><circle cx="${cx-r*.6}" cy="${cy+r*.28}" r="${r*.13}" fill="${C.berry}" opacity=".35"/><circle cx="${cx+r*.6}" cy="${cy+r*.28}" r="${r*.13}" fill="${C.berry}" opacity=".35"/>`}
 function body(col){return `<path d="M22 118 Q22 76 60 76 Q98 76 98 118 Z" fill="${col}"/>`}
 const CH={
@@ -19,7 +22,7 @@ const CH={
   curator:{n:'אוצר',c:C.teal,svg:()=>body(C.teal)+face(60,50,24,SKIN[3])+`<path d="M38 38 Q40 20 60 20 Q80 20 82 38 Q74 30 60 30 Q46 30 38 38Z" fill="#1E1E1E"/><circle cx="92" cy="90" r="11" fill="#fff" fill-opacity=".6" stroke="${C.ink}" stroke-width="3"/><path d="M84 98 l-10 12" stroke="${C.ink}" stroke-width="5" stroke-linecap="round"/>`},
   printer:{n:'בית דפוס',c:C.sky,svg:()=>body('#4A5BD0')+face(60,50,24,SKIN[2])+`<path d="M36 34 Q38 16 60 16 Q82 16 84 34Z" fill="${C.sky}"/><rect x="52" y="30" width="40" height="6" rx="3" fill="${C.sky}"/><rect x="36" y="84" width="48" height="34" rx="6" fill="#fff" opacity=".9"/><rect x="74" y="88" width="26" height="10" rx="5" fill="${C.orange}"/><rect x="86" y="98" width="3" height="12" fill="${C.ink}"/>`},
   admin:{n:'מנהל המערכת',c:C.ink,svg:()=>body('#3B3355')+face(60,50,24,SKIN[1])+`<path d="M36 40 Q36 18 60 18 Q84 18 84 40" fill="none" stroke="${C.ink}" stroke-width="5"/><rect x="31" y="40" width="9" height="16" rx="4" fill="${C.gold}"/><rect x="80" y="40" width="9" height="16" rx="4" fill="${C.gold}"/><path d="M84 56 q-4 12 -16 12" stroke="${C.ink}" stroke-width="2.5" fill="none"/><g transform="translate(90 96)"><circle r="9" fill="${C.gold}"/><circle r="3.5" fill="#3B3355"/></g>`},
-  ga:{n:'Grape Arts',c:C.grape,svg:()=>`<g>${[[60,40],[46,52],[74,52],[60,64],[46,76],[74,76],[60,88],[60,104]].map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="14" fill="${i%2?C.grape:'#9468D9'}"/>`).join('')}<path d="M60 26 q2 -14 14 -16" stroke="${C.leaf}" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M66 18 q14 -8 20 4 q-12 6 -20 -4z" fill="${C.leaf}"/><circle cx="54" cy="60" r="2.6" fill="#fff"/><circle cx="66" cy="60" r="2.6" fill="#fff"/><path d="M53 69 q7 6 14 0" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/></g>`}
+  ga:{n:'Grape Arts',c:C.ink,svg:()=>EMB}
 };
 function who(k,cls=''){const c=CH[k];return `<figure class="gd-ch ${cls}"><svg viewBox="0 0 120 120" aria-hidden="true">${c.svg()}</svg><figcaption>${c.n}</figcaption></figure>`}
 
@@ -227,7 +230,7 @@ function open(role){
   document.addEventListener('keydown',key2);draw(1);el.tabIndex=-1;setTimeout(()=>el.focus(),60);
 }
 const roleNow=()=>{try{return (typeof S!=='undefined'&&S&&S.role)||null}catch(e){return null}};
-window.GAGuide={open,close,seen,roles:Object.keys(G),data:{G,CH,scene,css,who}};
+window.GAGuide={open,close,seen,roles:Object.keys(G),data:{G,CH,scene,css,who,IT,EMB}};
 
 /* ───────── חיבור לאתר ───────── */
 const ICO=`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M9.5 9.3a2.6 2.6 0 1 1 3.6 2.4c-.8.4-1.1.9-1.1 1.8"/><circle cx="12" cy="16.8" r=".6" fill="currentColor"/></svg>`;
