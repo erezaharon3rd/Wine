@@ -5,7 +5,7 @@
 (function(){
 const sb=supabase.createClient(window.SB_URL,window.SB_KEY,{auth:{detectSessionInUrl:false,persistSession:true,autoRefreshToken:true}});
 window.SB=sb;window.liveHydrate=()=>hydrate();
-const LV={state:'boot',email:'',err:'',cool:0};
+const LV={state:'boot',email:'',phone:'',err:'',cool:0,pcool:0};
 const one=x=>Array.isArray(x)?x[0]:x;
 const tm=t=>t?new Date(t).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}):'';
 const dt=t=>t?String(t).slice(0,10):'';
@@ -46,15 +46,22 @@ function vLive(){
   if(LV.state==='login')return `<div class="login"><span class="eyebrow">אמנות ישראלית על יין ישראלי</span><h1>Grape Arts</h1><p class="lead">בקבוקים ומארזים עם ציור מקורי של אמן ישראלי, במהדורות מוגבלות. לחברות, למסעדות, למלונות, לאספנים וליקבים.</p>
     ${LV.err?`<div class="panel" style="margin-top:8px;font-size:14.5px">${esc(LV.err)}</div>`:''}
     ${Y()?`<div class="panel" style="margin-top:8px;font-size:14.5px">נכנסים כדי לעצב בקבוק אישי מהיקב.</div>`:''}
+    <div class="fld" id="lphf"><label for="lph">מספר נייד</label><input id="lph" type="tel" inputmode="tel" autocomplete="tel" dir="ltr" placeholder="050-0000000" value="${esc(LV.phone?pph(LV.phone):'')}"><span class="err" id="lpherr" hidden>צריך מספר נייד תקין</span></div>
+    <button class="btn wide" style="margin-top:10px" data-a="lsms">לקבל קוד ב־SMS</button>
+    <p class="note" style="text-align:center;margin:18px 0 6px">או עם מייל וסיסמה</p>
     <div class="fld" id="lemf"><label for="lem">דוא״ל</label><input id="lem" type="email" inputmode="email" autocomplete="email" dir="ltr" placeholder="name@example.com" value="${esc(LV.email)}"><span class="err" id="lemerr" hidden>צריך כתובת דוא״ל תקינה</span></div>
     <div class="fld" id="lpwf"><label for="lpw">סיסמה</label><input id="lpw" type="password" autocomplete="current-password" dir="ltr" placeholder="לפחות 8 תווים"><span class="err" id="lpwerr" hidden>צריך סיסמה של 8 תווים לפחות</span></div>
-    <div class="row" style="margin-top:14px"><button class="btn alt" data-a="lup">חשבון חדש</button><button class="btn" data-a="lin">להיכנס</button></div>
+    <div class="row" style="margin-top:14px"><button class="btn alt" data-a="lup">חשבון חדש</button><button class="btn alt" data-a="lin">להיכנס</button></div>
     <p class="note" style="text-align:center;margin-top:18px">פתיחת חשבון היא הסכמה <a href="privacy.html" style="color:inherit">לתנאי השימוש ולמדיניות הפרטיות</a> · <a href="accessibility.html" style="color:inherit">נגישות</a></p>
-    <p class="note">בפעם הראשונה בוחרים "חשבון חדש" עם סיסמה שבוחרים עכשיו. בפעמים הבאות נכנסים עם אותה סיסמה.</p>
+    <p class="note">עם נייד: מקלידים את המספר ומקבלים קוד, בלי סיסמה. עם מייל: בפעם הראשונה בוחרים "חשבון חדש" עם סיסמה, ובפעמים הבאות נכנסים איתה.</p>
     <button class="link" data-a="lsend">לקבל קישור כניסה במייל במקום סיסמה</button></div>`;
   if(LV.state==='sent')return `<div class="login"><span class="eyebrow">כמעט שם</span><h1>בדוק את המייל</h1><p class="lead">שלחנו קישור כניסה ל־<span class="num">${esc(LV.email)}</span>. כדאי לפתוח אותו בטלפון הזה וללחוץ על הקישור. אם המייל לא מגיע תוך דקה, כדאי לבדוק גם בתיקיית הספאם.</p>
     <div class="row" style="justify-content:space-between;margin-top:18px"><button class="link" data-a="lchange">לשנות כתובת</button><button class="link" data-a="lsend">לשלוח שוב</button></div></div>`;
-  if(LV.state==='pending')return `<div class="login"><span class="eyebrow">החשבון נוצר</span><h1>ממתין לאישור</h1><p class="lead">נכנסת בהצלחה עם <span class="num">${esc(ME?.email||'')}</span>. ${ME?.status==='blocked'?'החשבון הזה מושהה. לבירור אפשר לפנות למנהל המערכת.':'מנהל המערכת צריך לשייך את החשבון לתפקיד ולארגון. אחרי זה המערכת תיפתח כאן.'}</p>
+  if(LV.state==='code')return `<div class="login"><span class="eyebrow">כמעט שם</span><h1>הקוד בדרך</h1><p class="lead">שלחנו קוד של 6 ספרות ב־SMS ל־<span class="num" dir="ltr">${esc(pph(LV.phone))}</span>.</p>
+    <div class="fld" id="lotpf"><label for="lotp">הקוד</label><input id="lotp" inputmode="numeric" autocomplete="one-time-code" dir="ltr" maxlength="6" placeholder="••••••" style="font-size:24px;letter-spacing:.4em;text-align:center"><span class="err" id="lotperr" hidden>הקוד לא נכון. אפשר לבדוק ולנסות שוב</span></div>
+    <button class="btn wide" style="margin-top:12px" data-a="lotpok">להיכנס</button>
+    <div class="row" style="justify-content:space-between;margin-top:18px"><button class="link" data-a="lchange">לשנות מספר</button><button class="link" data-a="lsms">לשלוח קוד חדש</button></div></div>`;
+  if(LV.state==='pending')return `<div class="login"><span class="eyebrow">החשבון נוצר</span><h1>ממתין לאישור</h1><p class="lead">נכנסת בהצלחה עם <span class="num" dir="ltr">${esc(ME?.email||pph(ME?.phone||''))}</span>. ${ME?.status==='blocked'?'החשבון הזה מושהה. לבירור אפשר לפנות למנהל המערכת.':'מנהל המערכת צריך לשייך את החשבון לתפקיד ולארגון. אחרי זה המערכת תיפתח כאן.'}</p>
     <div class="row" style="margin-top:18px"><button class="btn alt" data-a="lrecheck">לבדוק שוב</button><button class="btn alt" data-a="logout">להתנתק</button></div></div>`;
   return `<div class="login"><h1>משהו לא הצליח</h1><p class="lead">${esc(LV.err)}</p><button class="btn wide" data-a="lrecheck">לנסות שוב</button></div>`;
 }
@@ -62,6 +69,24 @@ const _render=render;
 render=function(){if(LV.state!=='ready'){document.getElementById('app').innerHTML=vLive();document.body.classList.remove('hasbar');return}_render()};
 
 Object.assign(A,{
+  async lsms(){
+    const i=document.getElementById('lph');const ph=pnorm(i?i.value:LV.phone);
+    if(!ph){document.getElementById('lphf')?.classList.add('bad');const er=document.getElementById('lpherr');if(er)er.hidden=false;i?.focus();return}
+    if(Date.now()<LV.pcool&&ph===LV.phone){toast('אפשר לבקש קוד חדש בעוד דקה');return}
+    if(window.TURNSTILE_SITEKEY&&!window.__cap){toast('רגע, בודקים שאת או אתה לא רובוט');return}
+    LV.phone=ph;LV.err='';
+    const {error}=await sb.auth.signInWithOtp({phone:ph,options:{shouldCreateUser:true,channel:'sms',...(window.__cap?{captchaToken:window.__cap}:{})}});window.capReset&&capReset();
+    if(error){toast(/rate|too many|seconds/i.test(error.message)?'נשלחו כבר כמה קודים. אפשר לנסות שוב בעוד דקה':heb(error));return}
+    LV.pcool=Date.now()+60000;LV.state='code';render();setTimeout(()=>document.getElementById('lotp')?.focus(),50);
+  },
+  async lotpok(){
+    const i=document.getElementById('lotp');const t=(i?.value||'').replace(/\D/g,'');
+    if(t.length!==6){document.getElementById('lotpf')?.classList.add('bad');const er=document.getElementById('lotperr');if(er){er.textContent='הקוד הוא 6 ספרות';er.hidden=false}i?.focus();return}
+    const b=document.querySelector('[data-a="lotpok"]');if(b){b.disabled=true;b.textContent='בודקים…'}
+    const {data,error}=await sb.auth.verifyOtp({phone:LV.phone,token:t,type:'sms'});
+    if(error||!data?.user){if(b){b.disabled=false;b.textContent='להיכנס'}document.getElementById('lotpf')?.classList.add('bad');const er=document.getElementById('lotperr');if(er){er.textContent='הקוד לא נכון, או שעבר זמנו. אפשר לבדוק ולנסות שוב, או לבקש קוד חדש';er.hidden=false}return}
+    LV.state='boot';render();await loadMe(data.user);
+  },
   async lsend(){
     const i=document.getElementById('lem');const em=(i?i.value:LV.email).trim().toLowerCase();
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){document.getElementById('lemf')?.classList.add('bad');const er=document.getElementById('lemerr');if(er)er.hidden=false;i?.focus();return}
@@ -82,7 +107,7 @@ Object.assign(A,{
     if(error){toast(/already registered/i.test(error.message)?'כבר יש חשבון עם המייל הזה. אפשר להיכנס':heb(error));return}
     if(!data.session){LV.email=c.email;LV.state='sent';render();return}
     LV.state='boot';render();await loadMe(data.user)},
-  lchange(){LV.state='login';render();setTimeout(()=>document.getElementById('lem')?.focus(),50)},
+  lchange(){const w=LV.state==='code'?'lph':'lem';LV.state='login';render();setTimeout(()=>document.getElementById(w)?.focus(),50)},
   async lrecheck(){LV.state='boot';render();const {data:{session}}=await sb.auth.getSession();if(!session){LV.state='login';render();return}await loadMe(session.user)},
   async logout(){await sb.auth.signOut();window.ME=null;S.role=null;S.view=null;closeSheet();LV.state='login';history.replaceState(null,'',location.pathname);render()},
   role(v){if(ME?.role!=='admin'&&v!==ME?.role)return;S.role=v;S.view=null;S.tab=TABS[v][0][0];if(S.sheetOpen){S.pending='tab-'+S.tab;closeSheet()}else go('tab-'+S.tab);afterRole()},
@@ -92,7 +117,12 @@ function creds(){const em=(document.getElementById('lem')?.value||'').trim().toL
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){document.getElementById('lemf')?.classList.add('bad');document.getElementById('lemerr').hidden=false;ok=false}
   if(pw.length<8){document.getElementById('lpwf')?.classList.add('bad');document.getElementById('lpwerr').hidden=false;ok=false}
   if(!ok)return null;LV.email=em;return {email:em,password:pw}}
-document.addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.target.id==='lem'||e.target.id==='lpw'))A.lin()});
+document.addEventListener('keydown',e=>{if(e.key!=='Enter')return;if(e.target.id==='lem'||e.target.id==='lpw')A.lin();else if(e.target.id==='lph'){e.preventDefault();A.lsms()}else if(e.target.id==='lotp'){e.preventDefault();A.lotpok()}});
+/* קוד של 6 ספרות שהודבק או מולא אוטומטית: נכנסים מיד */
+document.addEventListener('input',e=>{if(e.target.id==='lotp'&&e.target.value.replace(/\D/g,'').length===6)A.lotpok()});
+/* נייד: אותו כלל כמו במסד (phone_norm) */
+function pnorm(p){let d=String(p||'').replace(/\D/g,'');if(!d)return null;if(d.startsWith('00'))d=d.slice(2);if(d.startsWith('0'))d='972'+d.slice(1);if(!/^[1-9]\d{7,14}$/.test(d))return null;if(d.startsWith('972')&&!/^9725\d{8}$/.test(d))return null;return '+'+d}
+function pph(p){p=String(p||'');if(!p.startsWith('+'))p='+'+p.replace(/\D/g,'');return /^\+9725\d{8}$/.test(p)?'0'+p.slice(4,6)+'-'+p.slice(6,9)+'-'+p.slice(9):p.replace(/^\+$/,'')}
 /* the winery's customer link: ?y=<slug> */
 const YK='wl-y';try{const y=new URLSearchParams(location.search).get('y');if(y)localStorage.setItem(YK,y)}catch(e){}
 function Y(){try{return localStorage.getItem(YK)||''}catch(e){return ''}}
@@ -106,9 +136,9 @@ async function loadMe(user){
     const p=await q(sb.from('profiles').select('*, org:organizations(id,name,kind)').eq('id',user.id).maybeSingle());
     if(p&&!p.role&&p.status==='pending'&&J()){let ok=false;try{ok=await q(sb.rpc('join_org',{p_token:J()}))}catch(e){setTimeout(()=>toast(heb(e)),600)}try{localStorage.removeItem(JK)}catch(e){}if(ok)return loadMe(user)}
     if(p&&!p.role&&p.status==='pending'&&Y()){const ok=await q(sb.rpc('join_as_customer',{p_slug:Y()}));if(ok)return loadMe(user)}
-    if(!p||p.status!=='active'||!p.role){window.ME={id:user.id,email:user.email,status:p?.status};LV.state='pending';render();return}
+    if(!p||p.status!=='active'||!p.role){window.ME={id:user.id,email:user.email,phone:user.phone,status:p?.status};LV.state='pending';render();return}
     const a=await q(sb.from('artists').select('*').eq('user_id',user.id).maybeSingle());
-    window.ME={id:user.id,email:user.email,role:p.role,name:p.full_name||user.email.split('@')[0],orgId:p.org_id,orgName:p.org?.name||'',artist:a};
+    window.ME={id:user.id,email:user.email,phone:user.phone,role:p.role,name:p.full_name||(user.email?user.email.split('@')[0]:pph(user.phone)),orgId:p.org_id,orgName:p.org?.name||'',artist:a};
     const first=ME.name.split(' ')[0];
     const r=ROLES[ME.role];r.p=ME.name;r.who=ME.role==='artist'?(a?.name||ME.name):(ME.orgName||r.who);r.hi='שלום, '+first;r.u=ME.name.replace(/[^\p{L} ]/gu,'').split(' ').map(x=>x[0]).join('').slice(0,2)||'?';
     if(a){ROLES.artist.who=a.name;ROLES.artist.p=a.name}
@@ -180,7 +210,7 @@ async function hydrate(){
   if(adm){
     const [pr,og,lg]=await Promise.all([q(sb.from('profiles').select('*').order('created_at')),q(sb.from('organizations').select('*').order('created_at')),q(sb.from('audit_log').select('*').order('id',{ascending:false}).limit(200))]);
     S.profiles=pr;S.orgs=og;
-    const PN={};pr.forEach(p=>PN[p.id]=p.full_name||p.email);
+    const PN={};pr.forEach(p=>PN[p.id]=p.full_name||p.email||pph(p.phone||''));
     const AN={price:'הגלריה תמחרה',approve:'האמן הסכים',sign:'היקב חתם',paid:'התשלום אושר',reject:'בקשה נדחתה',change:'האמן ביקש שינוי',order:'הוזמן דפוס',cancel:'בקשה בוטלה',request:'בקשת רישיון חדשה'};
     const EN={works:'יצירה',organizations:'ארגון',profiles:'משתמש',settings:'הגדרות',artists:'אמן',wines:'יין'},OP={insert:'נוסף',update:'עודכן',delete:'נמחק'},FN={status:'מצב',role:'תפקיד',title:'שם',comm_pct:'עמלה',pricing:'מחירון',pre_consent:'הסכמה מראש',floor_price:'מחיר רצפה',image_path:'קובץ',preview_path:'תצוגה',available:'זמינות',name:'שם',org_id:'ארגון'};
     const say=l=>{if(AN[l.action])return `${AN[l.action]} · עסקה ${l.entity_id}`;const m=/^(insert|update|delete):(\w+)$/.exec(l.action||'');if(!m)return l.action;
@@ -289,7 +319,7 @@ V.artist_profile=()=>_ap().replace('<dd>ארז אהרון</dd>',`<dd>${esc(ME.ar
 V.admin_users=()=>{const P=S.profiles||[],O=S.orgs||[];const on=id=>O.find(o=>o.id===id)?.name||'';const qq=(S.uq||'').trim();
   const pend=P.filter(p=>p.status==='pending'||!p.role);
   const L=P.filter(p=>!qq||[p.email,p.full_name,on(p.org_id)].join(' ').includes(qq));
-  const li=p=>`<button class="li ${p.status==='pending'?'unread':''}" data-a="luser" data-v="${p.id}"><span class="mt"><b>${esc(p.full_name||p.email)}</b><small><span class="num">${esc(p.email||'')}</span></small><small>${p.role?ROLE_N[p.role]:'ללא תפקיד'}${on(p.org_id)?' · '+esc(on(p.org_id)):''}</small></span>${p.status==='active'?'':`<span class="pill solid">${p.status==='blocked'?'מושהה':'ממתין'}</span>`}</button>`;
+  const li=p=>`<button class="li ${p.status==='pending'?'unread':''}" data-a="luser" data-v="${p.id}"><span class="mt"><b>${esc(p.full_name||p.email||pph(p.phone||''))}</b><small><span class="num">${esc(p.email||'')}</span></small><small>${p.role?ROLE_N[p.role]:'ללא תפקיד'}${on(p.org_id)?' · '+esc(on(p.org_id)):''}</small></span>${p.status==='active'?'':`<span class="pill solid">${p.status==='blocked'?'מושהה':'ממתין'}</span>`}</button>`;
   return `<h1>משתמשים וארגונים</h1><p class="lead">כל מי שנכנס עם מייל מופיע כאן. כדי שהמערכת תיפתח לו, צריך לקבוע לו תפקיד, ולרוב גם ארגון.</p>
   ${pend.length?`<h3>ממתינים לשיוך</h3><p class="note" style="margin-top:0">נכנסו לאתר ורואים מסך המתנה. לוחצים על שם כדי לקבוע תפקיד וארגון.</p><div class="list">${pend.map(li).join('')}</div>`:''}
   <h3>כל המשתמשים</h3><label class="search">${ICON.search}<input placeholder="לחפש לפי שם, מייל או ארגון" data-in="uq" value="${esc(S.uq||'')}" aria-label="חיפוש משתמש"></label>
@@ -298,7 +328,7 @@ V.admin_users=()=>{const P=S.profiles||[],O=S.orgs||[];const on=id=>O.find(o=>o.
   <div class="list">${O.map(o=>`<div class="li"><span class="mt"><b>${esc(o.name)}</b><small>${ORG_N[o.kind]||o.kind} · ${P.filter(p=>p.org_id===o.id).length} משתמשים</small></span></div>`).join('')}</div>
   <button class="btn alt wide" style="margin-top:14px" data-a="lorg">להוסיף ארגון</button>`};
 A.luser=id=>{const p=(S.profiles||[]).find(x=>x.id===id);const O=S.orgs||[];
-  sheet(`<span class="eyebrow num">${esc(p.email||'')}</span><h2>${esc(p.full_name||'משתמש חדש')}</h2>
+  sheet(`<span class="eyebrow num" dir="ltr">${esc(p.email||pph(p.phone||''))}</span><h2>${esc(p.full_name||'משתמש חדש')}</h2>
   <div class="fld"><label for="un">שם מלא</label><input id="un" value="${esc(p.full_name||'')}"></div>
   <div class="fld"><label for="ur">תפקיד</label><select id="ur" class="lv-sel"><option value="">ללא תפקיד</option>${Object.entries(ROLE_N).map(([k,n])=>`<option value="${k}" ${p.role===k?'selected':''}>${n}</option>`).join('')}</select></div>
   <div class="fld"><label for="uo">ארגון</label><select id="uo" class="lv-sel"><option value="">ללא ארגון</option>${O.map(o=>`<option value="${o.id}" ${p.org_id===o.id?'selected':''}>${esc(o.name)} · ${ORG_N[o.kind]||''}</option>`).join('')}</select></div>
