@@ -514,9 +514,9 @@ V.winery_more=()=>`<h1>היקב</h1>
 
 /* artist */
 V.artist_home=()=>{const act=S.deals.filter(d=>d.st==='active');return `<span class="eyebrow">${ROLES.artist.hi}</span><h1>הסטודיו</h1>
-  <h3>ממתין לך</h3>${todoCards('artist')}
+  <h3>ממתין לך</h3>${window.GAAgree?GAAgree.todo():''}${todoCards('artist')}
   <h3>במבט מהיר</h3><div class="kpis"><button class="kpi" data-a="go" data-v="tab-works"><b>${S.works.filter(w=>w.st==='live'&&w.av).length}</b><span>יצירות זמינות במאגר</span></button><button class="kpi" data-a="go" data-v="tab-requests"><b>${act.length}</b><span>רישיונות פעילים</span></button><button class="kpi" data-a="go" data-v="tab-income"><b>${nis(act.reduce((a,d)=>a+price(d).artist,0))}</b><span>שולם לך השנה</span></button></div>
-  <h3>הסכמות</h3><div class="panel"><div class="sw"><span>חוזה האמן<small>כולל הסכמה לעיבוד בהדמיה בלבד</small></span><span class="pill on">חתום</span></div></div>`};
+  <h3>הסכמות</h3>${window.GAAgree?GAAgree.panel(false):''}`};
 const WST={live:'במאגר',review:'בבדיקת איכות',pending:'ממתינה לגלריה'};
 const wst=w=>w.rej?'הוחזרה לתיקון':WST[w.st];
 V.artist_works=()=>`<h1>היצירות שלי</h1><p class="lead">יצירה חדשה עוברת לאישור הגלריה, ואחר כך לבדיקת קובץ. נגיעה ביצירה פותחת את הפרטים שלה.</p>
@@ -544,7 +544,7 @@ V.artist_profile=()=>`<h1>הפרופיל</h1>
   <div class="fld"><label for="bio">ביוגרפיה קצרה, כפי שהיקבים רואים</label><textarea id="bio">${esc(S.bio||'ציור שמן ריאליסטי, טבע דומם ונוף מקומי.')}</textarea></div><button class="btn sm wide" style="margin-top:10px" data-a="savebio">לשמור ביוגרפיה</button></div>
   <h3>שימושים שאינם מותרים ביצירות שלי</h3><p class="note" style="margin-top:0">היקב רואה את ההגבלות לפני שהוא מבקש. בקשה שחורגת מהן לא נשלחת.</p><div class="chips">${[['merch','מוצרי משנה'],['color','שינוי צבע'],['crop','חיתוך מעבר לאזור המסומן']].map(([k,l])=>`<button class="chip" data-a="restrict" data-v="${k}" aria-pressed="${!!(S.restrict||{})[k]}">${l}</button>`).join('')}</div>
   <h3>הסכמה מראש</h3><div class="panel"><div class="sw"><span>בציר אחד, עד 3,000 בקבוקים<small>${S.pre?'פעיל: בקשות כאלה עוברות לחתימה בלי לחכות לך':'כבוי: כל בקשה ממתינה לאישור שלך'}</small></span><button class="tg" data-a="pre" role="switch" aria-checked="${!!S.pre}" aria-label="הסכמה מראש"></button></div></div>
-  <h3>חוזים</h3><div class="panel"><div class="sw"><span>חוזה האמן<small>היצירות נשלחות רק לספק שאינו מאמן על התוכן</small></span><span class="pill on">חתום</span></div></div>`;
+  <h3>חוזים</h3>${window.GAAgree?GAAgree.panel(true):''}<p class="note">היצירות נשלחות לעיבוד הדמיה רק לספק שאינו מאמן על התוכן.</p>`;
 
 /* gallery */
 V.gallery_home=()=>{
@@ -564,7 +564,7 @@ V.gallery_artists=()=>`<h1>אמנים</h1>
   <button class="btn alt wide" style="margin-top:14px" data-a="invite">להזמין אמן</button>`;
 V.gallery_works=()=>{
   const p=S.works.filter(w=>w.st==='pending'&&!w.rej);
-  return `<h1>יצירות</h1><button class="btn alt wide" data-a="upload">להעלות יצירה של אמן</button><h3>לאישור לפני פרסום (${p.length})</h3>${p.length?`<div class="list">${p.map(w=>`<div class="li"><span class="th" style="background-image:url(${img(w.id)})" data-a="zoomimg" data-v="${w.id}" role="button" aria-label="להגדיל"></span><span class="mt"><b>${esc(w.t)}</b><small>${esc(w.artistN||'ארז אהרון')} · ${esc(w.tech||'')} · ${w.y||''}${w.sz?' · '+esc(w.sz)+' ס״מ':''}</small><small style="color:${w.rights?'#2E5A3A':'#9B2C2C'};font-weight:600">${w.rights?'✓ האמן הצהיר שהזכויות לשכפול אצלו':'אין הצהרת זכויות. כדאי לברר עם האמן לפני אישור'}</small><span class="row" style="margin-top:6px"><button class="btn sm" data-a="gapprove" data-v="${w.id}">לאשר</button><button class="btn sm alt" data-a="greturn" data-v="${w.id}">להחזיר עם הערה</button></span></span></div>`).join('')}</div>`:empty('אין יצירות שממתינות','')}
+  return `<h1>יצירות</h1><button class="btn alt wide" data-a="upload">להעלות יצירה של אמן</button><h3>לאישור לפני פרסום (${p.length})</h3>${p.length?`<div class="list">${p.map(w=>`<div class="li"><span class="th" style="background-image:url(${img(w.id)})" data-a="zoomimg" data-v="${w.id}" role="button" aria-label="להגדיל"></span><span class="mt"><b>${esc(w.t)}</b><small>${esc(w.artistN||'ארז אהרון')} · ${esc(w.tech||'')} · ${w.y||''}${w.sz?' · '+esc(w.sz)+' ס״מ':''}</small><small style="color:${w.rights?'#2E5A3A':'#9B2C2C'};font-weight:600">${w.rights?'✓ האמן הצהיר שהזכויות לשכפול אצלו':'אין הצהרת זכויות. כדאי לברר עם האמן לפני אישור'}</small>${window.GAAgree?GAAgree.workBadge(w):''}<span class="row" style="margin-top:6px"><button class="btn sm" data-a="gapprove" data-v="${w.id}" ${window.GAAgree&&!GAAgree.artistOk(w.artist)?'disabled':''}>לאשר</button><button class="btn sm alt" data-a="greturn" data-v="${w.id}">להחזיר עם הערה</button></span></span></div>`).join('')}</div>`:empty('אין יצירות שממתינות','')}
   <h3>בסגל</h3><div class="grid">${S.works.filter(w=>w.st!=='pending').map(w=>`<button class="tile" data-a="go" data-v="work-${w.id}"><span class="ph" style="background-image:url(${img(w.id)})"></span>${w.st!=='live'?`<span class="tag dk">${wst(w)}</span>`:''}<span class="cp">${esc(w.t)}<small>${w.tag}${activeLic(w.id).length?' · '+lic(activeLic(w.id).length):''}</small></span></button>`).join('')}</div>`;
 };
 V.gallery_more=()=>{
@@ -897,7 +897,7 @@ const A={
   okconfirm(){const f=S._ok;S._ok=null;closeSheet();if(f)f();render()},
   addwine(){sheet(`<h2>להוסיף יין</h2><div class="fld"><label for="wn">שם היין</label><input id="wn" placeholder="למשל: אדום הגבעה"></div><div class="two"><div class="fld"><label for="wy">בציר</label><input id="wy" inputmode="numeric" value="${new Date().getFullYear()-1}"></div><div class="fld"><label for="wq">כמות בקבוקים</label><input id="wq" inputmode="numeric" placeholder="3,000"></div></div><div class="fld"><label for="wt">סוג</label><select id="wt"><option value="red">אדום</option><option value="white">לבן</option><option value="rose">רוזה</option></select></div><div class="row"><button class="btn alt" data-a="close">ביטול</button><button class="btn" data-a="addwine2">להוסיף</button></div>`)},
   addwine2(){const n=$('#wn').value.trim(),y=+$('#wy').value,q=+$('#wq').value.replace(/\D/g,'');if(!n||!y||!q){toast('צריך שם, בציר וכמות');return}S.wines.push({id:Math.max(...S.wines.map(w=>w.id))+1,n,y,type:$('#wt').value,q});closeSheet();toast('היין נוסף');render()},
-  upload(){S.upload=null;uploadSheet()},
+  upload(){if(window.GAAgree&&GAAgree.need()){GAAgree.open('upload');return}S.upload=null;uploadSheet()},
   doupload(){const u=readUpload();if(!u)return;
     const id=Math.max(...S.works.map(w=>w.id))+1;S.works.push({id,t:u.t,tag:u.g,tone:u.tn,tech:u.tc,orig:u.o,st:'pending',av:true,src:u.src,y:u.y?+u.y:'',sz:u.s,cells:{...u.cells},artist:u.a,artistN:u.an});if(u.st){S.stories=S.stories||{};S.stories[id]=u.st}log(`האמן העלה את "${u.t}"`,'work');S.upload=null;closeSheet();toast('היצירה נשלחה לאישור הגלריה');render()}
 };
@@ -952,6 +952,7 @@ if(window.LIVE){}else if(S.role){S.view=null;S.tab=S.tab||TABS[S.role][0][0];loc
 <script src="docs.js?v=6"></script>
 <script src="motion.js?v=2"></script>
 <script src="guide.js?v=4"></script>
+<script src="agreement.js?v=1"></script>
 <script>if(window.LIVE)document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script><script src="live.js?v=17"><\/script><script src="ops.js?v=9"><\/script><script src="label.js?v=1"><\/script><script src="tiers.js?v=1"><\/script><script src="channels.js?v=1"><\/script>')</script>
 </body>
 </html>

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grape Arts · הסכם אמן ובלעדיות</title>
+<meta name="robots" content="noindex">
+<style>
+:root{--bg:#F3F3F2;--surface:#FFFFFF;--ink:#171717;--muted:#575755;--line:#DCDCDA}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Heebo','IBM Plex Sans Hebrew',Arial,sans-serif;font-size:16px;line-height:1.6}
+main{max-width:680px;margin:0 auto;padding:28px 20px 60px}
+h1{font-size:28px;line-height:1.2;margin:0 0 6px}
+h3{font-size:18px;margin:22px 0 6px}
+.note{color:var(--muted);font-size:15px}
+.lead{font-size:17px;color:#3A3A38}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
+.top a{color:var(--ink)}
+button{font:inherit;font-weight:600;border:0;border-radius:12px;background:var(--ink);color:#fff;min-height:44px;padding:0 18px;cursor:pointer}
+@media print{.top button{display:none}body{background:#fff}}
+</style>
+</head>
+<body>
+<main>
+<div class="top"><a href="./">Grape Arts</a><button type="button" id="pr">להדפסה או PDF</button></div>
+<h1 id="t"></h1>
+<p class="note" id="v"></p>
+<div id="d"></div>
+<h3>מה צריך כדי לחתום</h3>
+<ul id="c" class="lead"></ul>
+<p class="note">חותמים באפליקציה, בפרופיל של האמן. עותק של ההסכם החתום נשלח למייל.</p>
+</main>
+<script>
+/* מציגים את אותו נוסח בדיוק כמו באפליקציה, בלי לטעון את האפליקציה עצמה */
+window.S={};window.A={};window.toast=function(){};
+</script>
+<script src="agreement.js?v=1"></script>
+<script>
+(function(){const G=GAAgree,AG=G.AG;
+document.getElementById('t').textContent=AG.title;
+document.getElementById('v').textContent='גרסה '+AG.v;
+document.getElementById('d').innerHTML=G.doc().replace('<h3 style="margin-bottom:2px">','<h3>');
+document.getElementById('c').innerHTML=AG.checks.map(x=>'<li>'+x.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))+'</li>').join('');
+document.getElementById('pr').onclick=()=>print();
+})();
+</script>
+</body>
+</html>

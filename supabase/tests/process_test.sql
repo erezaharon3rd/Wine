@@ -26,7 +26,7 @@ begin
   update profiles set role='winery', status='active', org_id=o_win2 where id=u_win2;
   update profiles set role='printer', status='active', org_id=o_prn where id=u_prn;
   update profiles set role='curator', status='active' where id=u_cur;
-  insert into artists (user_id, gallery_id, name, floor_price) values (u_art, o_gal, 'בדיקה: אמן', 2500) returning id into a_id;
+  insert into artists (user_id, gallery_id, name, floor_price, agreement_version) values (u_art, o_gal, 'בדיקה: אמן', 2500, '2026-11') returning id into a_id;
   insert into wines (winery_id, name, vintage, type, bottles) values (o_win, 'בדיקה: אדום', 2024, 'red', 3000) returning id into wine1;
   ph := substr(md5(random()::text),1,16); ph2 := lpad(to_hex(('x'||ph)::bit(64)::bigint # x'ffffffffffffffff'::bit(64)::bigint),16,'0');
   rep := rep || E'\n' || '1. הצטרפות' || E'\n';

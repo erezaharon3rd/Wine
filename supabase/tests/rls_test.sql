@@ -30,8 +30,8 @@ update profiles set role='winery', status='active', org_id='10000000-0000-0000-0
 update profiles set role='winery', status='active', org_id='10000000-0000-0000-0000-0000000000b2' where email='win2@t';
 update profiles set role='gallery',status='active', org_id='10000000-0000-0000-0000-0000000000c1' where email='gal@t';
 update profiles set role='artist', status='active' where email='art@t';
-insert into artists (id, user_id, gallery_id, name, floor_price) values
- ('20000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-0000000000d1','10000000-0000-0000-0000-0000000000c1','אמן',2500);
+insert into artists (id, user_id, gallery_id, name, floor_price, agreement_version) values
+ ('20000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-0000000000d1','10000000-0000-0000-0000-0000000000c1','אמן',2500,'2026-11');
 insert into storage.objects (bucket_id, name) values ('works','00000000-0000-0000-0000-0000000000d1/1.jpg');
 insert into works (id, artist_id, title, status, image_path) values (1,'20000000-0000-0000-0000-000000000001','חורשה','live','00000000-0000-0000-0000-0000000000d1/1.jpg'),(2,'20000000-0000-0000-0000-000000000001','טיוטה','pending',null);
 insert into wines (id, winery_id, name, type, vintage) values (1,'10000000-0000-0000-0000-0000000000b1','אדום','red',2024),(2,'10000000-0000-0000-0000-0000000000b2','לבן','white',2024);
@@ -455,5 +455,43 @@ insert into works (artist_id, title, image_path, px_w, px_h, phash, rights_ok, r
 select t_fail($$update works set rights_ok = false where title = 'עם הצהרה'$$, 'אי אפשר לבטל הצהרה');
 reset role;
 select t_eq((select rights_by::text from works where title = 'עם הצהרה'), '00000000-0000-0000-0000-0000000000d1', 'נשמר מי הצהיר ומתי');
+
+
+-- ---------- הסכם אמן ובלעדיות ----------
+reset role;
+select set_config('ga.sign','1',false);
+update artists set agreement_version = null where id = '20000000-0000-0000-0000-000000000001';
+select set_config('ga.sign','',false);
+select t_as('00000000-0000-0000-0000-0000000000c1');
+set role authenticated;
+insert into works (artist_id, title, status, image_path, px_w, px_h, phash, rights_ok, rights_commission_ok) values ('20000000-0000-0000-0000-000000000001','של הגלריה בלי חתימה','pending','x/95.jpg',2400,3000,'5555666677778888', true, true);
+set role authenticated; select t_as('00000000-0000-0000-0000-0000000000d1');
+select t_fail($$insert into works (artist_id, title, image_path, px_w, px_h, phash, rights_ok, rights_commission_ok) values ('20000000-0000-0000-0000-000000000001','לפני חתימה','x/92.jpg',2400,3000,'9999888877776666', true, true)$$, 'אמן שלא חתם לא מעלה יצירות');
+select t_fail($$update artists set agreement_version = '2026-11' where user_id = auth.uid()$$, 'אי אפשר לסמן חתימה בלי לחתום');
+select t_fail($$select sign_artist_agreement('2026-11', 'נוסח אחר', 'אמן', '{"vb":[300,120],"d":"M10 10L200 90L210 95Z M5 5L6 6L7 7Z"}', 'test')$$, 'נוסח שלא תואם נדחה');
+select t_fail($$select sign_artist_agreement('2026-11', (select body from agreement_texts where version='2026-11'), 'אמן', '{"vb":[300,120],"d":"<script>alert(1)</script>"}', 'test')$$, 'חתימה שאינה נתיב נדחית');
+select t_fail($$insert into artist_signatures (artist_id, user_id, agreement_version, body_hash, full_name, signature) values ('20000000-0000-0000-0000-000000000001', auth.uid(), '2026-11', 'x', 'x', 'x')$$, 'אי אפשר לזייף רשומת חתימה');
+reset role;
+set role authenticated; select t_as('00000000-0000-0000-0000-0000000000c1');
+select t_eq((select status::text from works where title='של הגלריה בלי חתימה'), 'pending', 'יצירה שהגלריה העלתה מחכה לחתימת האמן');
+select t_fail($$update works set status='live' where title='של הגלריה בלי חתימה'$$, 'הגלריה לא מפרסמת יצירה של אמן שלא חתם');
+reset role;
+set role authenticated; select t_as('00000000-0000-0000-0000-0000000000d1');
+select (sign_artist_agreement('2026-11', (select body from agreement_texts where version='2026-11'), ' אמן בדיקה ', '{"vb":[300,120],"d":"M10 10Q50 40 90 60L200 90L210 95Z"}', 'test-agent')->>'hash') is not null;
+insert into works (artist_id, title, image_path, px_w, px_h, phash, rights_ok, rights_commission_ok) values ('20000000-0000-0000-0000-000000000001','אחרי חתימה','x/93.jpg',2400,3000,'9999888877776665', true, true);
+update artist_signatures set full_name='אחר';
+delete from artist_signatures;
+select set_bottle_signature('{"vb":[260,120],"d":"M12 12Q60 50 100 70L220 95Z"}');
+reset role;
+select t_eq((select full_name || '|' || agreement_version || '|' || length(body_hash)::text from artist_signatures where artist_id='20000000-0000-0000-0000-000000000001'), 'אמן בדיקה|2026-11|64', 'החתימה נשמרה עם הנוסח והטביעה, ואי אפשר לשנות או למחוק אותה');
+select t_eq((select agreement_hash from artists where id='20000000-0000-0000-0000-000000000001'), (select body_hash from artist_signatures where artist_id='20000000-0000-0000-0000-000000000001'), 'האמן מסומן כחותם');
+select t_eq((select signature_svg like '%M12 12%' from artists where id='20000000-0000-0000-0000-000000000001'), true, 'החתימה על הבקבוק עודכנה');
+select t_eq((select signature like '%M10 10%' from artist_signatures where artist_id='20000000-0000-0000-0000-000000000001'), true, 'החתימה המקורית על ההסכם לא השתנתה');
+select t_eq((select count(*)::int from mail_outbox where to_email='art@t' and body like '%מזהה מסמך%'), 1, 'עותק ההסכם נשלח במייל');
+set role authenticated; select t_as('00000000-0000-0000-0000-0000000000c1');
+update works set status='live' where title='של הגלריה בלי חתימה';
+reset role;
+select t_eq((select status::text from works where title='של הגלריה בלי חתימה'), 'live', 'אחרי החתימה הגלריה מפרסמת');
+reset role;
 
 select 'כל הבדיקות עברו' as result;

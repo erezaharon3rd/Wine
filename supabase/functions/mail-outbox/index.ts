@@ -10,7 +10,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 const html = (body: string, link: string) => `<!doctype html><html lang="he" dir="rtl"><body style="margin:0;background:#EDEDEB;font-family:Arial,sans-serif;color:#1F1F1E">
 <div style="max-width:520px;margin:0 auto;padding:28px 22px;background:#FAFAF8">
 <div style="font-size:20px;margin-bottom:18px">Grape Arts</div>
-<p style="font-size:16px;line-height:1.7;margin:0 0 22px">${esc(body)}</p>
+<p style="font-size:16px;line-height:1.7;margin:0 0 22px">${esc(body).replace(/\n/g, "<br>")}</p>
 <a href="${link}" style="display:inline-block;background:#1F1F1E;color:#FAFAF8;text-decoration:none;padding:12px 20px;border-radius:6px">לפרטים</a>
 <p style="font-size:13px;color:#6B6B68;margin-top:28px">קיבלת את המייל הזה כי יש לך חשבון ב־Grape Arts. אמנות ישראלית על יין ישראלי.</p>
 </div></body></html>`;

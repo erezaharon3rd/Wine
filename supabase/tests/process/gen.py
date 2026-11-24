@@ -53,7 +53,7 @@ S("update profiles set role='winery', status='active', org_id=o_win where id=u_w
 S("update profiles set role='winery', status='active', org_id=o_win2 where id=u_win2")
 S("update profiles set role='printer', status='active', org_id=o_prn where id=u_prn")
 S("update profiles set role='curator', status='active' where id=u_cur")
-S("insert into artists (user_id, gallery_id, name, floor_price) values (u_art, o_gal, 'בדיקה: אמן', 2500) returning id into a_id")
+S("insert into artists (user_id, gallery_id, name, floor_price, agreement_version) values (u_art, o_gal, 'בדיקה: אמן', 2500, '2026-11') returning id into a_id")
 S("insert into wines (winery_id, name, vintage, type, bottles) values (o_win, 'בדיקה: אדום', 2024, 'red', 3000) returning id into wine1")
 S("ph := substr(md5(random()::text),1,16); ph2 := lpad(to_hex(('x'||ph)::bit(64)::bigint # x'ffffffffffffffff'::bit(64)::bigint),16,'0')")
 
