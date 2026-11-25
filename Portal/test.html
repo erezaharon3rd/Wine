@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Grape Arts · בדיקות לפי תפקיד</title>
+<style>
+:root{--bg:#F4EFE7;--card:#FFFDF9;--ink:#1F1B2D;--soft:#5B5466;--line:#E3D9CB;--ok:#2E5A3A;--bad:#9B2C2C}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Heebo,'IBM Plex Sans Hebrew',Arial,sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:980px;margin:0 auto;padding:22px 16px 48px}
+header{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+header svg{width:40px;height:40px;flex:none}
+header b{font-family:'Frank Ruhl Libre',Georgia,serif;font-size:15px;letter-spacing:.18em;direction:ltr}
+h1{font-family:'Frank Ruhl Libre',Georgia,serif;font-weight:500;font-size:34px;line-height:1.1;margin:18px 0 6px}
+.lead{font-size:16px;color:var(--soft);margin:0 0 18px;line-height:1.55;max-width:60ch}
+.now{display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:var(--card);border:1.5px solid var(--ink);border-radius:16px;padding:12px 14px;margin-bottom:20px}
+.now .who{flex:1;min-width:180px;font-size:15px}
+.now .who small{display:block;color:var(--soft);font-size:13px;direction:ltr;text-align:right}
+button{font:inherit;cursor:pointer}
+.btn{min-height:44px;border-radius:12px;border:1.5px solid var(--ink);background:var(--ink);color:#fff;font-weight:600;padding:0 16px}
+.btn.alt{background:transparent;color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (min-width:720px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.role{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;background:var(--card);border:1.5px solid var(--line);border-radius:20px;padding:14px 10px 16px;color:inherit;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease}
+.role:hover{border-color:var(--ink);transform:translateY(-2px);box-shadow:0 6px 0 var(--ink)}
+.role:focus-visible{outline:3px solid #2E6BD8;outline-offset:3px}
+.role[aria-current="true"]{border-color:var(--ink);box-shadow:0 4px 0 var(--ink)}
+.role[aria-current="true"]::after{content:'את/ה כאן';position:absolute;top:10px;inset-inline-start:10px;background:var(--ink);color:#fff;font-size:11.5px;font-weight:700;border-radius:999px;padding:3px 8px}
+.role .pic{width:112px;height:112px}
+.role .pic svg{width:100%;height:100%}
+.role b{font-size:18px;margin-top:2px}
+.role .nm{font-size:13.5px;color:var(--soft);line-height:1.35}
+.role .go{margin-top:8px;font-size:14px;font-weight:600;border-radius:999px;border:1.5px solid var(--ink);padding:6px 14px}
+.role.busy{opacity:.6;pointer-events:none}
+.role.busy .go::after{content:'…'}
+.msg{min-height:22px;font-size:14.5px;margin:12px 2px;color:var(--bad)}
+.note{font-size:13.5px;color:var(--soft);line-height:1.6;margin-top:22px;border-top:1px solid var(--line);padding-top:14px}
+.empty{background:var(--card);border-radius:16px;padding:22px;text-align:center;border:1.5px dashed var(--line)}
+.empty a{color:var(--ink);font-weight:700}
+@media (prefers-reduced-motion:reduce){.role{transition:none}.role:hover{transform:none}}
+</style>
+</head>
+<body>
+<main>
+<header><svg viewBox="0 0 120 120" aria-hidden="true"><g fill="none" stroke="#1F1B2D" stroke-linecap="round" stroke-linejoin="round"><path d="M55 8h10v22c0 6 15 11 15 26v52q0 4-4 4H44q-4 0-4-4V56c0-15 15-20 15-26z" stroke-width="3"/><rect x="45" y="62" width="30" height="34" stroke-width="2"/><path d="M51 86c5-9 9-12 12-7s6 2 8-6" stroke-width="2"/></g></svg><b>GRAPE ARTS</b></header>
+<h1>בדיקות לפי תפקיד</h1>
+<p class="lead">לוחצים על דמות ונכנסים לחשבון הבדיקה שלה, בלי קוד ובלי סיסמה. בכל רגע חוזרים לכאן, מהכפתור "להחליף תפקיד" שבתחתית המסך.</p>
+<div class="now" id="now" hidden></div>
+<div id="body" aria-live="polite"><div class="empty">טוענים…</div></div>
+<p class="msg" id="msg" role="alert"></p>
+<p class="note">רק מנהל המערכת יכול לעבור בין החשבונות האלה. חשבונות הבדיקה הם בכתובות @test.local, לא מקבלים מיילים ולא שייכים לאף לקוח אמיתי. כל מעבר נרשם ביומן.</p>
+</main>
+<script src="config.js"></script>
+<script src="guide.js?v=4"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+'use strict';
+const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ROLES=[['admin','מנהל המערכת'],['winery','יקב'],['gallery','גלריה'],['artist','אמן'],['curator','אוצר'],['printer','בית דפוס'],['customer','לקוח של יקב'],['buyer','קונה בחנות']];
+const KEY='ga-test-admin';
+const sb=supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+const side=()=>supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,storageKey:'ga-test-side'}});
+const $=id=>document.getElementById(id);
+let me=null,accts=[];
+try{GAGuide.data.css()}catch(e){}
+const pic=k=>{try{return `<svg viewBox="0 0 120 120" aria-hidden="true">${GAGuide.data.CH[k].svg()}</svg>`}catch(e){return ''}};
+const isAdmin=()=>me&&me.p.role==='admin'&&!me.p.is_test;
+const saved=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){return null}};
+
+async function current(){const {data:{session}}=await sb.auth.getSession();if(!session)return null;
+  const {data:p}=await sb.from('profiles').select('role,full_name,is_test,email,status').eq('id',session.user.id).maybeSingle();return {session,p:p||{}}}
+async function unwrap(r){if(r.error){let m='';try{m=(await r.error.context.json()).error}catch(e){}throw new Error(m||'אין חיבור לשרת. כדאי לנסות שוב')}if(r.data&&r.data.error)throw new Error(r.data.error);return r.data}
+async function asAdmin(body){
+  if(isAdmin())return unwrap(await sb.functions.invoke('test-switch',{body}));
+  const s=saved();if(!s)throw new Error('need-admin');
+  const c=side();const {data,error}=await c.auth.setSession(s);
+  if(error||!data.session){localStorage.removeItem(KEY);throw new Error('need-admin')}
+  localStorage.setItem(KEY,JSON.stringify({access_token:data.session.access_token,refresh_token:data.session.refresh_token}));
+  return unwrap(await c.functions.invoke('test-switch',{body}));
+}
+const roleOf=p=>p.is_test?(String(p.email||'').split('@')[0]):p.role==='admin'?'admin':null;
+function nowBox(){const b=$('now');if(!me){b.hidden=true;return}
+  const r=ROLES.find(x=>x[0]===roleOf(me.p));
+  b.hidden=false;b.innerHTML=`<span class="who">מחובר/ת עכשיו: <b>${E(r?r[1]:(me.p.role||'בלי תפקיד'))}</b>${me.p.full_name?' · '+E(me.p.full_name):''}<small>${E(me.p.email||'')}</small></span>
+  ${me.p.is_test&&saved()?'<button class="btn" id="back">חזרה לחשבון המנהל שלי</button>':''}<a class="btn alt" href="./" style="display:inline-flex;align-items:center;text-decoration:none">לאפליקציה</a>`;
+  $('back')?.addEventListener('click',back)}
+function grid(){const cur=me?roleOf(me.p):null;
+  $('body').innerHTML=`<div class="grid">${ROLES.map(([k,n])=>{const a=accts.find(x=>x.k===k);
+    const sub=k==='admin'?'החשבון שלך':a?`${E(a.name)}${a.org?' · '+E(a.org):''}`:'';
+    return `<button class="role" data-k="${k}" aria-current="${cur===k}"><span class="pic">${pic(k)}</span><b>${E(n)}</b><span class="nm">${sub}</span><span class="go">${cur===k?'להיכנס':'לעבור לכאן'}</span></button>`}).join('')}</div>`;
+  document.querySelectorAll('.role').forEach(b=>b.addEventListener('click',()=>go(b.dataset.k,b)))}
+function needAdmin(){$('body').innerHTML=`<div class="empty"><p style="margin-top:0">כדי לעבור בין תפקידים צריך להיכנס פעם אחת <b>כמנהל המערכת</b>, ואז לחזור לדף הזה.</p><a href="./">כניסה למערכת</a></div>`}
+async function go(k,btn){
+  $('msg').textContent='';
+  if(k==='admin'){if(isAdmin()){location.href='./';return}return back()}
+  if(me&&roleOf(me.p)===k){location.href=k==='buyer'?'shop.html':'./';return}
+  btn&&btn.classList.add('busy');
+  try{
+    if(isAdmin())localStorage.setItem(KEY,JSON.stringify({access_token:me.session.access_token,refresh_token:me.session.refresh_token}));
+    const r=await asAdmin({a:'go',k});
+    const {error}=await sb.auth.verifyOtp({token_hash:r.token_hash,type:'magiclink'});
+    if(error)throw new Error('הכניסה לחשבון הבדיקה לא הצליחה. כדאי לנסות שוב');
+    location.href=r.dest;
+  }catch(e){btn&&btn.classList.remove('busy');if(e.message==='need-admin')needAdmin();else $('msg').textContent=e.message}
+}
+async function back(){
+  const s=saved();if(!s){needAdmin();return}
+  const {data,error}=await sb.auth.setSession(s);
+  if(error||!data.session){localStorage.removeItem(KEY);needAdmin();return}
+  localStorage.removeItem(KEY);location.href='./';
+}
+(async()=>{
+  try{me=await current()}catch(e){}
+  nowBox();
+  if(!isAdmin()&&!saved()){needAdmin();return}
+  try{accts=(await asAdmin({a:'list'})).accounts||[];grid()}
+  catch(e){if(e.message==='need-admin')needAdmin();else{$('body').innerHTML='';$('msg').textContent=e.message;grid()}}
+})();
+})();
+</script>
+</body>
+</html>

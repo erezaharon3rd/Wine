@@ -528,4 +528,11 @@ select t_eq(join_org(:'tok_noy'), true, 'בעל המספר נכנס, בלי מי
 reset role;
 select t_eq((select role::text || '|' || org_id::text || '|' || full_name from profiles where id = '00000000-0000-0000-0000-0000000000a8'), 'winery|10000000-0000-0000-0000-0000000000b1|נוי', 'הצטרף ליקב הנכון עם השם מההזמנה');
 
+
+-- ---------- חשבונות בדיקה ----------
+set role authenticated; select t_as('00000000-0000-0000-0000-0000000000b1');
+select t_fail($$update profiles set is_test = true where id = auth.uid()$$, 'משתמש לא מסמן את עצמו כחשבון בדיקה');
+select t_fail($$select test_mark(auth.uid(), 'admin', null, 'x')$$, 'אי אפשר להפעיל את סימון הבדיקה מהאפליקציה');
+reset role;
+
 select 'כל הבדיקות עברו' as result;

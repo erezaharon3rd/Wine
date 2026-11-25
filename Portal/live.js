@@ -131,7 +131,10 @@ const JK='wl-j';try{const j=new URLSearchParams(location.search).get('j');if(j)l
 function J(){try{return localStorage.getItem(JK)||''}catch(e){return ''}}
 
 /* ── identity ── */
-async function loadMe(user){
+/* חשבון בדיקה: כפתור קבוע לחזרה לדף הבדיקות */
+function testPill(on){let a=document.getElementById('ga-testpill');if(!on){a&&a.remove();return}if(a)return;a=document.createElement('a');a.id='ga-testpill';a.href='test.html';a.textContent='חשבון בדיקה · להחליף תפקיד';
+  a.style.cssText='position:fixed;z-index:9998;inset-inline-start:12px;bottom:calc(84px + env(safe-area-inset-bottom));background:#1F1B2D;color:#fff;border-radius:999px;padding:9px 14px;font:600 13.5px Heebo,Arial,sans-serif;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.25)';document.body.appendChild(a)}
+async function loadMe(user){testPill(/@test\.local$/i.test(user&&user.email||''));
   try{
     const p=await q(sb.from('profiles').select('*, org:organizations(id,name,kind)').eq('id',user.id).maybeSingle());
     if(p&&!p.role&&p.status==='pending'&&J()){let ok=false;try{ok=await q(sb.rpc('join_org',{p_token:J()}))}catch(e){setTimeout(()=>toast(heb(e)),600)}try{localStorage.removeItem(JK)}catch(e){}if(ok)return loadMe(user)}

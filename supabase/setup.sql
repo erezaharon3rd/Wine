@@ -3611,3 +3611,38 @@ alter table wines drop constraint if exists wines_label_tpl_size;
 alter table wines add constraint wines_label_tpl_size check (label_tpl is null or octet_length(label_tpl::text) < 600000);
 alter table wines drop constraint if exists wines_bottle_size;
 alter table wines add constraint wines_bottle_size check (bottle is null or octet_length(bottle::text) < 2000);
+
+-- ---------- חשבונות בדיקה לפי תפקיד ----------
+-- מנהל המערכת עובר בין חשבונות הבדיקה מדף הבדיקות (Portal/test.html) בלי קוד, דרך פונקציית הענן test-switch.
+-- רק חשבון שסומן is_test (וכתובתו ב־@test.local) אפשר לפתוח כך. אף משתמש לא יכול לסמן את עצמו.
+alter table profiles add column if not exists is_test boolean not null default false;
+
+create or replace function guard_profile() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if not is_admin() and auth.uid() is not null and coalesce(current_setting('app.bypass', true),'') <> '1' and
+     (new.role is distinct from old.role or new.org_id is distinct from old.org_id
+      or new.status is distinct from old.status or new.is_test is distinct from old.is_test) then
+    raise exception 'רק מנהל המערכת יכול לשנות תפקיד, ארגון או סטטוס';
+  end if;
+  return new;
+end $$;
+
+create or replace function test_mark(p_user uuid, p_role text, p_org uuid, p_name text) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if (select email from auth.users where id = p_user) not like '%@test.local' then
+    raise exception 'רק חשבון בדיקה';
+  end if;
+  perform set_config('app.bypass', '1', true);
+  update profiles set role = nullif(p_role, '')::app_role,
+         status = case when coalesce(p_role, '') = '' then 'pending' else 'active' end,
+         org_id = case when p_role = 'artist' then null else p_org end,
+         full_name = p_name, is_test = true
+   where id = p_user;
+  if p_role = 'artist' and not exists (select 1 from artists where user_id = p_user) then
+    insert into artists (user_id, gallery_id, name, floor_price) values (p_user, p_org, p_name, 2500);
+  end if;
+end $$;
+revoke all on function test_mark(uuid, text, uuid, text) from public, anon, authenticated;
+grant execute on function test_mark(uuid, text, uuid, text) to service_role;
