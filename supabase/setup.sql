@@ -3602,3 +3602,12 @@ begin
   return true;
 end $$;
 grant execute on function join_org(text) to authenticated;
+
+-- ---------- הבקבוק והתווית של היקב, מצילום ----------
+-- bottle: צורה, צבע זכוכית וקפסולה. label_tpl: המלל, הלוגו, הצבעים והחלוקה לאזורים, כפי שנקראו מצילום התווית.
+alter table wines add column if not exists bottle    jsonb;
+alter table wines add column if not exists label_tpl jsonb;
+alter table wines drop constraint if exists wines_label_tpl_size;
+alter table wines add constraint wines_label_tpl_size check (label_tpl is null or octet_length(label_tpl::text) < 600000);
+alter table wines drop constraint if exists wines_bottle_size;
+alter table wines add constraint wines_bottle_size check (bottle is null or octet_length(bottle::text) < 2000);

@@ -15,10 +15,14 @@ window.toDataUrl=toDataUrl;
 /* label only, as a stand-alone SVG with the painting inlined (so the canvas stays clean) */
 async function labelSvg(type,workId,o){
   let svg=bottle(type,workId,{...o,label:true,wm:false,flat:true});
-  const m=svg.match(/<image href="([^"]+)"/);
-  if(m)svg=svg.replace(m[1],await toDataUrl(m[1]));
+  /* כל התמונות (הציור והלוגו של היקב) נכנסות לקובץ עצמו, אחרת הן לא מופיעות בציור ל־PNG */
+  for(const m of [...new Set([...svg.matchAll(/<image href="([^"]+)"/g)].map(x=>x[1]))])if(!m.startsWith('data:'))svg=svg.split(`href="${m}"`).join(`href="${await toDataUrl(m.replace(/&amp;/g,'&'))}"`);
+  const lb=svg.match(/data-label="([^"]+)"/);
+  if(lb){const [x,y,w,h]=lb[1].split(' ').map(Number);return svg.replace(/viewBox="[^"]+"/,`viewBox="${x} ${y} ${w} ${h}" width="600" height="${Math.round(600*h/w)}"`)}
   return svg.replace('viewBox="18 140 64 118"','viewBox="20 144 60 114" width="600" height="1140"');
 }
+/* מידות הקובץ שחזר מ־labelSvg */
+window.labelDims=svg=>{const m=svg.match(/width="(\d+)" height="(\d+)"/);return m?[+m[1],+m[2]]:[600,1140]};
 window.labelSvg=labelSvg;
 
 async function svgToCanvas(svg,w,h){

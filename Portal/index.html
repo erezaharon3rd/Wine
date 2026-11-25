@@ -300,7 +300,8 @@ const S={
     {id:11,t:'מגן דוד מכותנה',tag:'סמלי',tone:'בז׳',st:'review',av:true,y:2025,sz:'60×60',cells:{14:1,15:1,20:1,21:1}},
     {id:12,t:'חוטים אדומים',tag:'סמלי',tone:'בז׳',st:'pending',av:true,y:2025,sz:'50×70',cells:{}}
   ],
-  wines:[{id:1,n:'אדום הגבעה',y:2024,type:'red',q:4200},{id:2,n:'לבן הגבעה',y:2025,type:'white',q:2800},{id:3,n:'רוזה הגבעה',y:2025,type:'rose',q:1900}],
+  wines:[{id:1,n:'אדום הגבעה',y:2024,type:'red',q:4200},{id:2,n:'לבן הגבעה',y:2025,type:'white',q:2800},{id:3,n:'רוזה הגבעה',y:2025,type:'rose',q:1900},
+    {id:4,n:'בר קברנה סוביניון',y:2025,type:'red',q:3000,bot:{shape:'bordeaux',glass:'#1B231E',cap:'#C4CEB0'},tpl:{v:1,aspect:.785,bg:'#F2F3E2',art:[0,0,1,.3],logo:{box:[.331,.37,.306,.23],src:'img/samples/galil-bar-logo.png'},lines:[{t:'יקב הרי גליל',box:[.255,.61,.462,.068],c:'#3A46A6',f:'sans',w:400,r:'winery'},{t:'בר',box:[.398,.72,.169,.062],c:'#1E1E1E',f:'serif',w:700,r:'series'},{t:'קברנה סוביניון',box:[.274,.805,.43,.042],c:'#1E1E1E',f:'serif',w:700,r:'varietal'},{t:'Cabernet Sauvignon',box:[.162,.86,.653,.037],c:'#2A2A2A',f:'serif',w:400,r:'varietal'},{t:'2025',box:[.443,.92,.102,.032],c:'#2A2A2A',f:'serif',w:700,r:'vintage'}]}}],
   activeWine:1,
   designs:[{code:'R01',wine:1,work:3,pos:50,zoom:100},{code:'R02',wine:1,work:2,pos:50,zoom:100},{code:'W01',wine:2,work:8,pos:50,zoom:100},{code:'W02',wine:2,work:4,pos:40,zoom:110},{code:'RS01',wine:3,work:10,pos:50,zoom:100},{code:'RS02',wine:3,work:7,pos:55,zoom:100}],
   deals:[
@@ -949,11 +950,12 @@ if(window.LIVE){}else if(S.role){S.view=null;S.tab=S.tab||TABS[S.role][0][0];loc
 </script>
 <script src="quality.js?v=1"></script>
 <script src="customer.js?v=12"></script>
-<script src="docs.js?v=6"></script>
+<script src="docs.js?v=7"></script>
 <script src="motion.js?v=2"></script>
 <script src="guide.js?v=4"></script>
 <script src="agreement.js?v=2"></script>
 <script src="invite.js?v=1"></script>
-<script>if(window.LIVE)document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script><script src="live.js?v=19"><\/script><script src="ops.js?v=9"><\/script><script src="label.js?v=1"><\/script><script src="tiers.js?v=1"><\/script><script src="channels.js?v=1"><\/script>')</script>
+<script src="labels.js?v=1"></script>
+<script>if(window.LIVE)document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script><script src="live.js?v=20"><\/script><script src="ops.js?v=9"><\/script><script src="label.js?v=1"><\/script><script src="tiers.js?v=1"><\/script><script src="channels.js?v=1"><\/script>')</script>
 </body>
 </html>

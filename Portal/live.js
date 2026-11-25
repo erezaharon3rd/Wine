@@ -173,7 +173,7 @@ async function hydrate(){
   if(paths.length){try{const {data:r}=await sb.storage.from('works').createSignedUrls(paths,3600);(r||[]).forEach(x=>{if(x.signedUrl&&!x.error)full[x.path]=x.signedUrl})}catch(e){console.warn(e)}}
   (works||[]).forEach(w=>{urls[w.image_path]=urls['p:'+w.id]||full[w.image_path]||urls[w.image_path]});
   S.works=(works||[]).map(w=>({rej:false,id:w.id,t:w.title,tag:w.tag||'אחר',tone:w.tone||'—',st:w.status==='paused'?'live':w.status==='rejected'?'pending':w.status,rej:w.status==='rejected',note:w.review_note,av:w.available&&w.status!=='paused',pick:w.pick_rank||0,y:w.year,sz:w.size||'',tech:w.technique||'',orig:w.orig_status||'',cells:w.no_crop||{},phash:w.phash||null,rights:!!(w.rights_ok&&w.rights_commission_ok),src:urls[w.image_path]||BLANK,full:full[w.image_path]||null,thumb:urls['t:'+w.id]||null,path:w.image_path,prev:w.preview_path,artist:w.artist_id,artistN:AR[w.artist_id]?.name}));
-  S.wines=(wines||[]).map(w=>({id:w.id,n:w.name,y:w.vintage||'',type:WINE[w.type]?w.type:'red',q:w.bottles||0,org:w.winery_id}));
+  S.wines=(wines||[]).map(w=>({id:w.id,n:w.name,y:w.vintage||'',type:WINE[w.type]?w.type:'red',q:w.bottles||0,org:w.winery_id,bot:w.bottle||null,tpl:w.label_tpl||null}));
   if(!S.wines.some(w=>w.id===S.activeWine))S.activeWine=S.wines[0]?.id;
   S.designs=(designs||[]).map(d=>({code:d.code,wine:d.wine_id,work:d.work_id,pos:d.pos,zoom:d.zoom,shape:d.layout?.shape}));
   S.deals=(deals||[]).map(d=>{const inv=one(d.invoices),o=one(d.print_orders),wi=d.wine;return {
@@ -459,7 +459,7 @@ async function shootReal(spec){
   const left=await q(sb.rpc('render_quota_left'));if(left<=0)throw new Error('מכסת הצילומים לחודש הזה נגמרה. מנהל המערכת יכול להגדיל אותה');
   /* למנוע שולחים גרסה נקייה, בלי סימן המים של התצוגה המקדימה */
   const wk=(S.works||[]).find(x=>x.id===spec.work),keep=wk?.src;if(wk&&(wk.thumb||wk.full))wk.src=wk.thumb||wk.full;
-  let label,painting;try{label=(await svgToPng(await labelSvg(spec.type,spec.work,spec.o),600,1140)).split(',')[1];painting=await toDataUrl(img(spec.work))}finally{if(wk)wk.src=keep}const pm=painting.match(/^data:([^;]+);base64,(.*)$/);
+  let label,painting;try{{const ls=await labelSvg(spec.type,spec.work,spec.o),[lw,lh]=labelDims(ls);label=(await svgToPng(ls,lw,lh)).split(',')[1]}painting=await toDataUrl(img(spec.work))}finally{if(wk)wk.src=keep}const pm=painting.match(/^data:([^;]+);base64,(.*)$/);
   const parts=[{text:PROMPT(spec)},{inline_data:{mime_type:'image/png',data:label}}];if(pm)parts.push({inline_data:{mime_type:pm[1],data:pm[2]}});
   const m=await pickModel();const call=hq=>gfetch(`models/${m}:generateContent`,{contents:[{parts}],generationConfig:Object.assign({responseModalities:['TEXT','IMAGE']},hq?{imageConfig:{aspectRatio:'4:5'}}:{})});
   let r=await call(true);if(r.status===400)r=await call(false);
